@@ -1,0 +1,98 @@
+folderNms = cellstr(['02-0'; '03-0'; '03-1'; '04-0'; '04-1'; '05-0'; '05-1'; ...
+    '06-0'; '06-1'; '07-0'; '07-1'; '08-0'; '08-1'; '09-0'; '09-1']);
+path = '/home/zach/Documents/Sunny Data/asdf_networks_2013_jan/';
+fi1 = '/PDF_1_16_30ms.mat';
+fi2 = '/wgts_1_16ms.mat';
+fo1 = 'Data/';
+fo2 = 'asdf_data/';
+FiringRates = {};
+ka = {};
+kIna = {};
+kOuta = {};
+sumNZi = {};
+meanNZi = {};
+stdNZi = {};
+sumNZo = {};
+meanNZo = {};
+stdNZo = {};
+vers = {};
+stVers = {};
+nullVers = {};
+nullVersStL = {};
+nullVersStU = {};
+riAUC = {};
+kSpec = {};
+wtMats = cell(numel(folderNms));
+mCounts = zeros(length(folderNms), 13);
+biRatios = zeros(1, length(folderNms));
+asdfs = {};
+for i = 1:length(folderNms)
+    a1 = strcat(path, fo1, folderNms{i}, fi1);
+    a2 = strcat(path, fo2, num2str(i), '.mat');
+    a3 = strcat(path, fo1, folderNms{i}, fi2);
+    disp(a1);
+    disp(a2);
+    disp(a3);
+    load(a1); 
+    load(a2);
+    load(a3);
+    frs = zeros(1, numel(asdf_raw)-2);
+    numNeu = numel(asdf_raw)-2;
+    asdfs{i} = asdf_raw;
+for j = 1:numNeu
+   frs(j) =  numel(cell2mat(asdf_raw(j))) / ...
+       (asdf_raw{numel(asdf_raw)}(2) / 1000);
+end
+FiringRates{i} = frs;
+wt = wgt .* PDF(:, :, 47);
+wt = wt ./ max(max(wt));
+figure; 
+bin = wt ~= 0;
+[m, ~] = size(bin);
+N = sum(sum(bin));
+p = N / (m * (m-1)); 
+biRatios(i) = sum(sum(bin .* bin')) / (N * p * p);
+[rcc, ~, ~] = richClubDir(wt, (sum(bin) + sum(bin, 2)') ./ (2*m));
+riAUC{i} = rcc-1;
+title(strcat(folderNms{i}, ' Degree Rich-Club'), 'FontSize', 18);
+hold off;
+%figure;
+%mCounts(i, :) = songMotifs(bin);
+wtMats{i} = wt;
+[kinT, koutT, kT] = nodeDegrees(wtMats{i});
+kinT = kinT ./ numNeu;
+koutT = koutT ./ numNeu;
+kT = kT ./ (numNeu * 2);
+[sumT, meanT, stdT] = statsNZ(wtMats{i});
+ka{i} = kT;
+kIna{i} = kinT;
+kOuta{i} = koutT;
+sumNZi{i} = sumT;
+meanNZi{i} = meanT;
+stdNZi{i} = stdT;
+[sumT, meanT, stdT] = statsNZ(wtMats{i}');
+sumNZo{i} = sumT;
+meanNZo{i} = meanT;
+stdNZo{i} = stdT;
+ksp = kT ./ max(kT);
+kSpec{i} = ksp;
+[v, vs, nv, vnsL, vnsU] = StatSigVers(wt, ksp, 0);
+maxV = max([v nv]);
+v = v ./ maxV;
+nv = nv ./ maxV;
+vnsL = vnsL ./ maxV;
+vnsU = vnsU ./ maxV;
+vers{i} = v;
+stVers{i} = vs;
+nullVers{i} = nv;
+nullVersStL{i} = vnsL;
+nullVersStU{i} = vnsU;
+end
+
+meanMCounts = mean(mCounts);
+[stdL, stdU] = semistd(mCounts);
+figure; errorbar(kSpec, nullVers, nullVersStL, nullVersStU, 'bo'); hold on;
+a = 40;
+colormap hot;
+scatter(kSpec, vers, a, stVers, 'filled');
+
