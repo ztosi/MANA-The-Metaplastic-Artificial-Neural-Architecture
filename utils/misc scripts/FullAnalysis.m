@@ -35,10 +35,10 @@ lgNrmFitAndFig(wtValsEx, 50, max(wtValsEx)/100, max(wtValsEx));
 
 
 %% Plot Firing Rates
-lgNrmFitAndFig(FiringRates, 50, max(FiringRates)/1000, max(FiringRates));
-figure; [~, edge] = histcounts(FiringRates); ...
-    histogram(FiringRates(ei), edge); hold;...
-    histogram(FiringRates(~ei), edge); hold;
+%lgNrmFitAndFig(FiringRates, 50, max(FiringRates)/1000, max(FiringRates));
+%figure; [~, edge] = histcounts(FiringRates); ...
+%    histogram(FiringRates(ei), edge); hold;...
+%    histogram(FiringRates(~ei), edge); hold;
 
 
 %% Mean, std, sum

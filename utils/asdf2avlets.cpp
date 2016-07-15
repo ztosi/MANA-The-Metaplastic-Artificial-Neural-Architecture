@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <vector>
 #include <cstring>
+#include "asdf2avlets.h"
 
 /**
     asdf2avlets.cpp
@@ -15,25 +16,6 @@
     @author Zach Tosi
     @version 0.1 6/28/2016 
 */
-
-class SparseBitArray {
-
-	public:
-		
-		uint64_t *bitArr;
-		uint32_t *bitIndices;
-		uint32_t fullSze;
-		uint32_t sze;
-		uint32_t *pathData;
-		uint32_t pathLength;
-		
-		SparseBitArray (const mxArray 	*spkTimes,
-						double 			binSize,
-						uint32_t 		max_bins,
-						uint32_t 		*pData,
-						uint32_t		pLength );
-
-};
 
 SparseBitArray::SparseBitArray (
 	const mxArray 	*spkTimes,
@@ -78,21 +60,7 @@ SparseBitArray::SparseBitArray (
 	}
 }
 
-class BitRaster {
-	
-	public:
-		
-		SparseBitArray **raster;
-		uint32_t rows;
-		uint32_t cols;
-		uint32_t num8Bytes;
-		uint32_t avalanche;
-		
-		BitRaster(const mxArray *asdf);
-		void verifyRaster(	BitRaster 		*r,
-							const mxArray 	*asdf); 
 
-};
 
 BitRaster::BitRaster(const mxArray *asdf) 
 {
@@ -194,8 +162,7 @@ void Bitraster::verifyRaster(	BitRaster 		*r,
 	delete times;
 }
 
-
-SparseBitArray SparseBitArray::compare(	SparseBitArray *src,
+SparseBitArray* SparseBitArray::compare(SparseBitArray *src,
 										SparseBitArray *tar, 
 										uint32_t 		delay,
 										uint32_t 		nRanges,
@@ -293,6 +260,13 @@ SparseBitArray SparseBitArray::compare(	SparseBitArray *src,
 		nonzeros += shiftSrc[i] != 0 ? 1 : 0;
 	}
 
+	if (nonzeros == 0) {
+		// No causal connections found from src->tar, either they weren'r
+		// ever connected, or the path represented by src has terminated for
+		// all tar.
+		return NULL;
+	}
+
 	SparseBitArray *ret = new SparseBitArray;
 	uint64_t *ba = (uint64_t *) malloc(nonzeros * sizeof(uint64_t));
 	uint32_t *bi = (uint64_t *) malloc(nonzeros * sizeof(uint32_t));
@@ -309,12 +283,140 @@ SparseBitArray SparseBitArray::compare(	SparseBitArray *src,
 
 	ret->bitArr = ba;
 	ret->bitIndices = bi;
-
-
-
-
+	if (src->pathLength == 1){
+		ret->pathLength = 1 + tar->pathLength;
+		ret->pathData = (uint32_t *) malloc(ret->pathLength * sizeof(uint32_t));
+		ret->pathData[0] = src->pathData[0];
+		for (i = 0; i < tar->pathLength; i++) {
+			ret->pathData[i+1] = tar->pathData[i];
+		}
+	} else {
+		ret->pathLength = src->pathLength + tar->pathLength - 1;
+		ret->pathData = (uint32_t *) malloc(ret->pathLength * sizeof(uint32_t));
+		for (i = 0; i < src->pathLength; i++) {
+			ret->pathData[i] = src->pathData[i];
+		}
+		for (i = 1; i < tar->pathLength; i++) {
+			ret->pathData[i+src->pathLength-1] = tar->pathData[i];
+		}
+	}
+	return ret;
 }
 
+SparseBitArray** SparseBitArray::sweepIncoming (	BitRaster 		*home,
+													SparseBitArray 	*tar, 
+													uint32_t 		**delays,
+ 													uint32_t 		inDeg,
+ 													uint32_t 		nRanges,
+ 													int 			rangeStart,
+ 													int 			rangeEnd)
+{
+	SparseBitArray** incoming = (SparseBitArray*) malloc(inDeg
+		* sizeof(SparseBitArray*));
+	uint32_t k = 0;
+	uint32_t j = tar->pathData[tar->pathLength-1];
+	for (uint32_t i = 0; i < home->rows; i++) {
+		if (delays[i][j] ~= 0)
+		{
+			incoming[k++] = SparseBitArray.compare(home->raster[i], tar,
+				delays[i][j], nRanges, rangeStart, rangeEnd);
+		}
+	}
+	return incoming;
+}
+
+void SparseBitArray::findHeads (	SparseBitArray 	**incoming,
+									SparseBitArray 	*tar,
+									uint32_t		inDeg)
+{
+	for (uint32_t i = 0; i < inDeg; i++)
+	{
+		tar.eliminateOverlap(incoming[i]);
+	}
+	tar.reduce();
+}
+
+void SparseBitArray::reduce()
+{
+	std::vector<uint64_t> bits;
+	std::vector<uint32_t> indices;
+
+	for(uint32_t i = 0; i < this->sze; i++)
+	{
+		if (this->bitArr[i] != 0)
+		{
+			bits.push_back(this->bitArr[i]);
+			indices.push_back(this->bitIndices[i]);
+		}
+	}
+	uint32_t bytes = bits.size() * sizeof(uint64_t);
+	if (void *tempBa = realloc(this->bitArr, bytes)
+		&& void tempBi = realloc(this->bitIndices, bytes))
+	{
+		this->bitArr = static_cast<uint64_t*>(tempBa);
+		this->bitIndices = static_cast<uint32_t*>(tempBi);
+		memcpy(this->bitArr, bits.data(), bytes);
+		memcpy(this->bitIndices, indices.data(), bytes);
+	} 
+	else 
+	{
+		std::bad_alloc();
+	}
+	this->sze = bits.size();
+}
+
+void SparseBitArray::eliminateOverlap(SparseBitArray *inc)
+{
+	uint32_t i = 0;
+	uint32_t j = 0;
+	while (i < this->sze && j < inc->sze)
+	{
+		if(this->bitIndices[i] < inc->bitIndices[j])
+		{
+			i++;
+			continue;
+		}
+		if(this->bitIndices[i] > inc->bitIndices[j])
+		{
+			j++;
+			continue;
+		}
+		this->bitArr[i] = this->bitArr[i] ^ inc->bitArr[j];
+		i++;
+		j++;
+	}
+}
+
+CausalTreeDictionary* CausalTreeDictionary::buildDictionary(
+													BitRaster 	*bRast, 
+													uint32_t 	**delays,
+													uint32_t	*inDegrees,
+													uint32_t	*outDegrees)
+{
+
+	uint32_t num_neu = bRast->rows;
+
+	inDegrees = (uint32_t*) malloc(num_neu* sizeof(uint32_t));
+	outDegrees = (uint32_t*) malloc(num_neu * sizeof(uint32_t));
+
+	for(int i = 0; i < num_neu ; i++)
+	{
+		for (int j = 0; j < num_neu ; j++)
+		{
+			if (delays[i][j] != 0)
+			{
+				inDegrees[j]++;
+				outDegrees[i]++;
+			}
+		}
+	}
+
+	SparseBitArray*** holder = (SparseBitArray***) malloc(
+		num_neu * sizeof(SparseBitArray**));
+
+	
+
+}
 
 /* The gateway function */
 void mexFunction(int nlhs, mxArray *plhs[],
@@ -323,6 +425,8 @@ void mexFunction(int nlhs, mxArray *plhs[],
 	try {
 		BitRaster bob(prhs[0]);
 		bob.verifyRaster(&bob, prhs[0]);
+
+
 	} catch (int err) {
 		if (err == 1) {
 			std::cout << "Bit raster construction FAILED."<< '\n' 
