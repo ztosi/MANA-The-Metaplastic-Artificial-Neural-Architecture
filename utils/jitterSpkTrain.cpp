@@ -46,6 +46,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
 	const mxArray *spkTrain = prhs[0];
 	uint32_t sd = (uint32_t) mxGetScalar(prhs[1]);
 	int numel = (int) mxGetNumberOfElements(spkTrain);
+
 	switch(mxGetClassID(spkTrain))
 	{
 		case mxINT8_CLASS : {	

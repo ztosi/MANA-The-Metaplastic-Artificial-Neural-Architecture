@@ -11,6 +11,7 @@ inpMats = zeros(NUM_INP, NUM_NEU, TOT);
 exMats = zeros(NUM_EX, NUM_EX, TOT);
 allWts10 = zeros(NUM_NEU,NUM_NEU, TOT);
 frs = zeros(TOT, NUM_NEU);
+pfrs = zeros(TOT, NUM_NEU);
 mfrs = zeros(TOT, NUM_NEU);
 ths = zeros(TOT, NUM_NEU);
 mot3 = zeros(TOT, 13);
@@ -30,25 +31,26 @@ stdnU = zeros(3, NUM_NEU, TOT);
 kIn = zeros(TOT, NUM_NEU);
 kOut = zeros(TOT, NUM_NEU);
 kd = zeros(TOT, NUM_NEU);
-kIne = zeros(TOT, NUM_NEU);
-kOute = zeros(TOT, NUM_NEU);
-kde = zeros(TOT, NUM_NEU);
+kIne = zeros(TOT, NUM_EX);
+kOute = zeros(TOT, NUM_EX);
+kde = zeros(TOT, NUM_EX);
 kIn10 = zeros(TOT, NUM_NEU);
 kOut10 = zeros(TOT, NUM_NEU);
 kd10 = zeros(TOT, NUM_NEU);
-cumCurveAll = cell(TOT, 1);
-cumCurveInc = zeros(TOT, NUM_NEU);
-cumCurveOut = zeros(TOT, NUM_NEU);
-cumCurveIncNull1 = zeros(TOT, NUM_NEU);
-cumCurveOutNull1 = zeros(TOT, NUM_NEU);
-cumCurveIncNull2 = zeros(TOT, NUM_NEU);
-cumCurveOutNull2 = zeros(TOT, NUM_NEU);
-
+cumData = zeros(TOT, 5);
+ccd = cell(TOT,4);
+% cumCurveAll = cell(TOT, 1);
+% cumCurveInc = zeros(TOT, NUM_NEU);
+% cumCurveOut = zeros(TOT, NUM_NEU);
+% cumCurveIncNull1 = zeros(TOT, NUM_NEU);
+% cumCurveOutNull1 = zeros(TOT, NUM_NEU);
+% cumCurveIncNull2 = zeros(TOT, NUM_NEU);
+% cumCurveOutNull2 = zeros(TOT, NUM_NEU);
 
 k = 1;
 for j = 1:NUM_PAT
     for i = 1:NUM_SETS
-        dname = ['./1_HPNN_Gramm/Outputs/', num2str(j), '/'];
+        dname = ['./', num2str(j) ,'_HPNN_Gramm/Outputs/', num2str(i), '/'];
         load([dname, '4900000.0LAIP_FiringRates.mat']);
         load([dname, 'InAndDelay.mat']);
         load([dname, '4900000.0PrefFRs.mat']);
@@ -60,6 +62,7 @@ for j = 1:NUM_PAT
         inpMats(:,:,k) = inMat;
         exMats(:,:,k) = wtMat(ei,ei);
         frs(k, :) = FiringRates;
+        pfrs(k,:) = PrefFRs;
         mfrs(k,:) = mean(FRs(2:4900, :));
         ths(k,:) = Thresholds;
         [kIn(k,:), kOut(k,:), kd(k,:)] = nodeDegrees(wtMat);
@@ -73,8 +76,10 @@ for j = 1:NUM_PAT
         [kIne(k,:), kOute(k,:), kde(k,:)] = nodeDegrees(wtMat(ei,ei));
         exin(k, :) = ei;
  
-
-        
+      
+        [ccd{k,1}, ccd{k,2}, ccd{k,3}, ccd{k,4}, ...
+            cumData(k,1), cumData(k,2), cumData(k,3), cumData(k,4), ...
+            cumData(k,4)] = cumsum50(wtMat(ei,ei));
 %         cumCurveInc(k,:) = cumSum(sort(sum(abs(wtMat)), 'descend')) ...
 %             ./ sum(sum(abs(wtMat)));
 %         cumCurveOut(k,:) = cumSum(sort(sum(abs(wtMat),2), 'descend')) ...
@@ -103,7 +108,8 @@ for j = 1:NUM_PAT
         k = k+1;
     end
 end
-save(['NetworkData_' datetime]);
+
+save(['NetworkData_' datestr(datetime)]);
 
 L = k;
 k=1;

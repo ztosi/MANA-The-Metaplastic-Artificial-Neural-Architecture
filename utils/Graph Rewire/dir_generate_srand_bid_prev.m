@@ -5,7 +5,7 @@ function dir_srand=dir_generate_srand_bid_prev(s1,ntry)
 % ntry - (optional) the number of rewiring steps. If none is given ntry=4*(# of edges in the network)
 % Output: dir_srand - the adjacency matrix of a randomized network with the same set of in- and out-degrees as the original one 
 
-tic;
+%tic;
 dir_srand=s1;
 nrew=0;
 biOnly = (dir_srand ~= 0) & (dir_srand' ~= 0);
@@ -19,7 +19,7 @@ bidtable = [(length(i_srandBD)+1):(2*length(i_srandBD))...
 
 [Ne, ~]=size(i_srand);
 if (nargin < 2)
-    ntry=5*Ne;
+    ntry=6*Ne;
 end
 inds = 1:Ne;
 lpexecs = 0;
@@ -86,6 +86,6 @@ while lpexecs < ntry
        end
    end
 end
-toc;
+%toc;
 end
 

@@ -63,7 +63,7 @@ function [raster, binunit] = ASDFToRaster(asdf, varargin)
 		binsize = varargin{1};
 		if binsize < binunit
 			error('Cannot have custom bin size less than asdf time bin.');
-		end
+        end
     end
     nemp = find(cellfun(@isempty, asdf(1:end-2)));
     nemp = [setdiff(1:n_neu, nemp) n_neu+1 n_neu+2];    

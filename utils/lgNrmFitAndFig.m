@@ -48,7 +48,7 @@ function [ dat ] = lgNrmFitAndFig(data, varargin)
        dat = data(:);               
    end
    dat = nonzeros(dat); % removing zeros
-   
+   dat0 = dat;
    if isnan(censorLow)
        censorLow = min(dat);
    else
@@ -64,10 +64,12 @@ function [ dat ] = lgNrmFitAndFig(data, varargin)
    pd = fitdist(log(dat), 'normal')
   % pd2 = fitdist(log(dat), 'logistic')
    %bins = logspace(log10(censorLow), log10(censorHigh), NUM_BINS);
-   [bh, edges] = histcounts(log(dat), 'Normalization', 'pdf');
+   [bh, edges] = histcounts(log(dat0), 'Normalization', 'pdf');
    %sz = edges(2)-edges(1);
    binCent = edges(1:(length(edges)-1)) + (diff(edges)./2);
    xs = linspace(min(binCent), max(binCent), NUM_BINS*100);
+   dev=  std(log(dat));
+   xsplt = linspace(min(binCent)-dev, max(binCent)+dev, NUM_BINS*100);
    %histogram(dat, bins, 'Normalization','pdf');
 
    %plot(ax, xs, pdf(pd2, xs), 'LineWidth', 2);
@@ -92,8 +94,8 @@ function [ dat ] = lgNrmFitAndFig(data, varargin)
       errbar(binCent, mean(vals), L, U, 'k');
    end
     plot(ax, binCent(bh>0), bh(bh>0), 'k.-', 'MarkerSize', 25, 'LineWidth', 2);
-   plot(ax, xs, pdf(pd, xs), 'LineWidth', 2);
+   plot(ax, xsplt, pdf(pd, xsplt), 'LineWidth', 2);
    %plot(ax, xs, pdf(pd2, xs), 'LineWidth', 2);
-   %set(ax, 'XScale', 'log');
+  % set(ax, 'YScale', 'log');
 end
 

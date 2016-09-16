@@ -87,7 +87,7 @@ public class ElmanGrammarGenerator {
 			sentence(tkns, pntkns);
 		}
 		
-		MLArray tokens = new MLInt8("tokens", tkns.internalByteArray, 1);
+		MLArray tokens = new MLInt8("tokens", tkns.getArray(), 1);
 		MLArray pred = new MLCell("predTokens", new int[]{pntkns.size(), 1});
 		for (int i = 0; i < pntkns.size(); i++) {
 			((MLCell) pred).set(new MLInt8(""+i, pntkns.get(i), 1), i );

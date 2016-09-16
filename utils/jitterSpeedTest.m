@@ -1,5 +1,5 @@
 tic;
-parfor i=1:1000
-    js = jitterSpkTrain(spks, 5);
+parfor i=1:100000
+    js = jitterSpkTrain(spks, 10);
 end
 toc;

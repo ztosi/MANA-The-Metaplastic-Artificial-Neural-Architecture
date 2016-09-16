@@ -1,4 +1,6 @@
 tic;
+wtMatO = wtMat; %Save original
+wtMat = wtMat .* (abs(wtMat)>0.01);
 [N, m] = size(wtMat);
 nullMods = zeros(N,m,100, 'uint8');
 nullModsee = zeros(sum(ei),sum(ei),100, 'uint8');
@@ -18,7 +20,7 @@ end
 toc;
 disp('DONE');
 
-[P, EE, EI, IE, II] = eiratios(wtMat)
+[P, EE, EI, IE, II] = eiratios(wtMat, ei)
 [sumNZA, meanNZA, stdNZA] = statsNZ(abs(wtMat));
 
 [sumNZEE, meanNZEE, stdNZEE] = statsNZ(abs(wtMat(ei, ei)));
@@ -35,10 +37,10 @@ lgNrmFitAndFig(wtValsEx, 50, max(wtValsEx)/100, max(wtValsEx));
 
 
 %% Plot Firing Rates
-%lgNrmFitAndFig(FiringRates, 50, max(FiringRates)/1000, max(FiringRates));
-%figure; [~, edge] = histcounts(FiringRates); ...
-%    histogram(FiringRates(ei), edge); hold;...
-%    histogram(FiringRates(~ei), edge); hold;
+lgNrmFitAndFig(FiringRates, 50, min(FiringRates), max(FiringRates));
+figure; [~, edge] = histcounts(FiringRates); ...
+    histogram(FiringRates(ei), edge); hold;...
+    histogram(FiringRates(~ei), edge); hold;
 
 
 %% Mean, std, sum
@@ -65,9 +67,9 @@ degPlot(wtMat(ei, ei));
 %% Versatility and Connectivity Stats
 [ vers, stdVer, nullMV, nullStVL, nullStVU ]= StatSigVers(wtMat, k, nullMods, ...
     0.01, 1); % Degree Versatility
-[avgOIM, stdOIM] = sig_mean_std_out_of_ins(wtMat, nullMods, 0.01, ei, 1);
-[avgOIMee, stdOIMee] = sig_mean_std_out_of_ins(wtMat(ei, ei), nullModsee, ...
-    0.01, ones(1, sum(ei))>0, 1);
+%[avgOIM, stdOIM] = sig_mean_std_out_of_ins(wtMat, nullMods, 0.01, ei, 1);
+%[avgOIMee, stdOIMee] = sig_mean_std_out_of_ins(wtMat(ei, ei), nullModsee, ...
+%    0.01, ones(1, sum(ei))>0, 1);
 [ dynImp ] = dynamicalImportance( wtMat, vers, 1 );
 allRichClubs(wtMat, wtMatee, wtMEx10, nullMods, nullModsee, nullModsee10);
 %neighborHist(wtMat(ei, ei));

@@ -166,7 +166,13 @@ function [hcounts, edges, KL, p_vals, nsamp] = histInOutEdges( wtMat, varargin )
            G = 2 * (length(edges)-1) * KL(currInd);
            p_vals(currInd) = chi2cdf(G, length(edges)-1, 'upper');
        else
-           [~, p_vals(currInd)] = kstest2(nonzeros(wtMat(:,currInd)), useVec);
+           tval = nonzeros(wtMat(:, currInd));
+           if isempty(tval)
+               p_vals(currInd) = 0;
+           else
+               [~, p_vals(currInd)] = kstest2(nonzeros(wtMat(:,currInd)),...
+                   useVec);
+           end
        end
        nsamp(currInd) = sum(cnts);
        
