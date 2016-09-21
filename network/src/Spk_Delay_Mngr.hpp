@@ -15,7 +15,6 @@ class Spk_Delay_MNGR {
 
 		std::vector<af::array> cycSpkArr;
 	
-	
 	Spk_Delay_MNGR(AIFNeuron &host, uint32_t MAX_DLY);
 	~Spk_Delay_MNGR();
 	af::array getDelayedSpikes(uint32_t del) {

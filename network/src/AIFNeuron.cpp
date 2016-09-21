@@ -6,7 +6,7 @@ using namespace af;
 
 AIFNeuron::AIFNeuron(	const Network net,
 					const uint32_t size, 
-					const int polarity,
+					const uint8_t _polarity,
 				 	const float xmin,
 				 	const float xmax,
 				 	const float ymin,
@@ -32,13 +32,13 @@ AIFNeuron::AIFNeuron(	const Network net,
 	thresholds = new array(constant(INIT_THRESH, dim4(1,size), f32));
 	lastSpkTime = new array(constant(DEF_V_rest, dim4(1,size), u32));
 	lst_buff = new array(constant(DEF_V_rest, dim4(1,size), f32));
-	if (polarity==1) {
+	if (_polarity==1) {
 		adpt = new array(2*randu(dim4(1,size), f32)+7);
-		excite = 1;
+		polarity = 1;
 		refP = DEF_E_REF;
 	} else {
 		adpt = new array(2*randu(dim4(1,size), f32)+6);
-		excite = 0;
+		polarity = 0;
 		refP = DEF_I_REF;
 	}
 

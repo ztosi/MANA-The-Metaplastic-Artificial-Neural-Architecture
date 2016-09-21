@@ -66,12 +66,12 @@ class AIFNeuron {
 		float* z;
 
 		uint32_t size;
-		int excite : 1;
+		uint8_t polarity;
 
-		//AIFNeuron(const Network net, const uint32_t size, const int polarity);
+		//TODO: give option to lay out in lattice: more efficient
 		AIFNeuron(	const Network net,
 					const uint32_t size, 
-					const int polarity,
+					const uint8_t _polarity,
 				 	const float xmin,
 				 	const float xmax,
 				 	const float ymin,

@@ -1,35 +1,39 @@
 #include <arrayfire.h>
+#include <vector>
 #include <cstdint>
+#include "Spk_Delay_MNGR.h"
+#include "SynMatrices.h"
 
 #ifndef UDFPLASTICITY_H_
 #define UDFPLASTICITY_H_
 
-#define DEF_SCALE_FAC 10
-#define EE_RU_MN 0.5
-#define EE_RU_SD 0.25
-#define EE_RD_MN 1100 //ms
-#define EE_RD_SD 550 //ms
-#define EE_RF_MN 50 // ms
-#define EE_RF_SD 25 //ms
-#define EI_RU_MN 0.05
-#define EI_RU_SD 0.025
-#define EI_RD_MN 125 //ms
-#define EI_RD_SD 62.5 //ms
-#define EI_RF_MN 1200 // ms
-#define EI_RF_SD 600 //ms
-#define IE_U_MN 0.25
-#define IE_RU_SD 0.125
-#define IE_RD_MN 700 //ms
-#define IE_RD_SD 350 //ms
-#define IE_RF_MN 20 // ms
-#define IE_RF_SD 10 //ms
-#define II_RU_MN 0.32
-#define II_RU_SD 0.16
-#define II_RD_MN 144 //ms
-#define II_RD_SD 72 //ms
-#define II_RF_MN 60 // ms
-#define II_RF_SD 30 //ms
+#define DEF_SCALE_FAC 10f
+#define EE_U_MN 0.5f
+#define EE_U_SD 0.25f
+#define EE_D_MN 1100f //ms
+#define EE_D_SD 550f //ms
+#define EE_F_MN 50f // ms
+#define EE_F_SD 25f //ms
+#define EI_U_MN 0.05f
+#define EI_U_SD 0.025f
+#define EI_D_MN 125f //ms
+#define EI_D_SD 62.5f //ms
+#define EI_F_MN 1200f // ms
+#define EI_F_SD 600f //ms
+#define IE_U_MN 0.25f
+#define IE_U_SD 0.125f
+#define IE_D_MN 700f //ms
+#define IE_D_SD 350f //ms
+#define IE_F_MN 20f // ms
+#define IE_F_SD 10f //ms
+#define II_U_MN 0.32f
+#define II_U_SD 0.16f
+#define II_D_MN 144f //ms
+#define II_D_SD 72f //ms
+#define II_F_MN 60f // ms
+#define II_F_SD 30f //ms
 
+using namespace af;
 
 class UDFPlasticity {
 
@@ -37,16 +41,20 @@ class UDFPlasticity {
 
 		SynMatrices &host;
 
-		af::array &U;
-		af::array &D;
-		af::array &F;
-		af::array &u;
-		af::array &R;
+		//std::vector<array> U;
+		//std::vector<array> D;
+		//std::vector<array> F;
+		//std::vector<array> u;
+		//std::vector<array> R;
+
+		std::vector<array> UDFuR; // row major
 
 		float scaleFactor;
 
 		UDFPlasticity(SynMatrices &hostSyns);
-		void perform(const uint32_t time, const float timeStep);
+		array perform(	const array udfur,
+						const array tdiff,
+						const array wts	);
 
 };
 

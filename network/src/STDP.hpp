@@ -66,8 +66,8 @@ class mexicanHatSTDP : public STDP
 		float sigma;
 		mexicanHatSTDP(const SynMatrices &host);
 		~mexicanHatSTDP();
-		void postTrigger(const uint32_t simTime);
-		void preTrigger(const uint32_t simTime);
+		void postTrigger(const uint32_t simTime, af::spks);
+		void preTrigger(const uint32_t simTime, af::array &spksAtDly);
 };
 
 #endif // SOMODULE_H_
