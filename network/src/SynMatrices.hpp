@@ -21,22 +21,16 @@ class SynMatrices {
 
 		AIFNeuron &srcHost;
 		AIFNeuron &tarHost;
-		Spk_Delay_Mngr &manager;
-
+		//Spk_Delay_Mngr &manager;
+		STDP splas;
 
 		std::vector<array> wt_And_dw; // column major
 		std::vecotr<array> lastUp;
 		std::vector<array> lastArrT;
-		
-
-
 
 		std::vector<array> indices;
 		std::vector<array> indicesActual;
-		std::vector<array> ptrs;
-
-
-
+		//std::vector<array> ptrs;
 
 		std::vector<array> dlyChange;
 		std::vector<array> masks;
@@ -51,20 +45,57 @@ class SynMatrices {
 		uint8_t srcPol;
 		uint8_t tarPol;
 
-		SynMatrices( const AIFNeuron &src,
-					 const AIFNeuron &tar, 
+		SynMatrices( const AIFNeuron &_src,
+					 const AIFNeuron &_tar, 
 					 const Spk_Delay_Mngr &_manager,
+					 const STDP &_splas,
 					 const uint32_t _maxDly,
 					 const uint32_t _minDly);
 
-		void changeWtsConstrained(); // TODO: Figure out how to make constrained wt Updates less taxing...
-		void changeWtsConstrained(const array &delta_W);
-		uint32_t** calcDelayMat(const AIFNeuron* src, const AIFNeuron* tar, uint32_t maxDly);
-		void propagate(const uint32_t time, const float dt);
+		//SynMatrices( const AIFNeuron &_src,
+		//			 const AIFNeuron &_tar, 
+		//			 const Spk_Delay_Mngr &_manager,
+		//			 const STDP &_splas,
+		//			 const uint32_t _maxDly,
+		//			 const uint32_t _minDly,
+		//			 const Connector &_con	);
+
+		SynMatrices::SynMatrices* connectNeurons(AIFNeuron &_src,
+										AIFNeuron &_tar,
+										//const Spk_Delay_Mngr &_manager,
+										const STDP &_splas,
+										const uint32_t _maxDly,
+										const uint32_t _minDly );
+
+		uint32_t** calcDelayMat(const AIFNeuron* src,
+								const AIFNeuron* tar,
+								uint32_t _maxDly	);
+		void propagateSelective(const uint32_t _time,
+								const float dt,
+								const UDFPlasticity &udf);
 		array dampen(const array duration, const array initVal, const array dv);
 		array dampen(const array initVal, const array dv);
 
 
 };
+
+//class Connector 
+//{
+//	public:
+//		enum ConnectorType : uint8_t
+//		{
+//			NONE=0,
+//			RANDOM,
+//			INV_DIST
+//		};
+
+
+//		Connector();
+
+//		uint32_t** produceConnectedPairs(AIFNeuron &_src, AIFNeuron &_tar);
+
+
+
+//};
 
 #endif // SYNMATRICES_H_

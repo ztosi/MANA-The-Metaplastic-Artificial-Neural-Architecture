@@ -1,18 +1,14 @@
 #include <arrayfire.h>
 #include "AIFNeuron.h"
-
+#include "Utils.h"
 
 using namespace af;
 
 AIFNeuron::AIFNeuron(	const Network net,
 					const uint32_t size, 
 					const uint8_t _polarity,
-				 	const float xmin,
-				 	const float xmax,
-				 	const float ymin,
-				 	const float ymax,
-				 	const float zmin,
-				 	const float zmax) : 
+				 	const Position minPos,
+				 	const Position maxPos) : 
 	online(constant(1, dim4(1, size), b8)),
 	spks(constant(0, dim4(1,size), b8)),
 	I_e(constant(0, dim4(1,size), f32)),
@@ -45,13 +41,14 @@ AIFNeuron::AIFNeuron(	const Network net,
 	exInDegs = new uint32_t[size];
 	inInDegs = new uint32_t[size];
 	outDegs = new uint32_t[size];
+
 	x = new float[size];
 	y = new float[size];
 	z = new float[size];
 
-	array X = ((xmax-xmin)*randu(dim4(1, size)))+xmin;
-	array Y = ((ymax-ymin)*randu(dim4(1, size)))+ymin;
-	array Z = ((zmax-zmin)*randu(dim4(1, size)))+zmin;
+	array X = ((maxPos.x-minPos.x)*randu(dim4(1, size)))+minPos.x;
+	array Y = ((maxPos.y-minPos.y)*randu(dim4(1, size)))+minPos.y;
+	array X = ((maxPos.z-minPos.z)*randu(dim4(1, size)))+minPos.z;
 
 	X.host(x);
 	Y.host(y);
@@ -86,7 +83,7 @@ AIFNeuron::~AIFNeuron()
 }
 
 
-AIFNeuron::void runForward(const uint32_t t, const float dt) {
+void AIFNeuron::runForward(const uint32_t t, const float dt) {
 
 	online = t > (*lastSpkTime + refP); // disable refractory
 
@@ -106,9 +103,12 @@ AIFNeuron::void runForward(const uint32_t t, const float dt) {
 	// calculate the new last spike times
 	*lst_buff = (*lastSpkTime * !spks) + (t * spks);
 
+	I_e -= dt * I_e/eDecay;
+	I_i -= dt * I_i/iDecay;
+
 }
 
-AIFNeuron::void pushBuffers() {
+void AIFNeuron::pushBuffers() {
 	
 	array* holder = V_mem;
 	V_mem = V_buff;
@@ -123,3 +123,19 @@ AIFNeuron::void pushBuffers() {
 	lst_buff = holder;
 
 }
+
+Position* AIFNeuron::getPositions()
+{
+	Positions* p = new Positions[size];
+	for (uint32_t i=0; i < size; i++)
+	{
+		p[i] = Position(x[i], y[i], z[i]);
+	}
+	return p;
+}
+
+Position AIFNeuron::getPosition(uint32_t index)
+{
+	return Position(x[index], y[index], z[index]);
+}
+

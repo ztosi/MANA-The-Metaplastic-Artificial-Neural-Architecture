@@ -1,6 +1,8 @@
 #include <arrayfire.h>
 #include <cstdint>
 #include <vector>
+#include "Utils.h"
+
 
 #ifndef AIFNEURON_H_
 #define AIFNEURON_H_
@@ -39,14 +41,18 @@ class AIFNeuron {
 
 		af::array online;
 		af::array spks; // No need to buffer; copied by SynMat
-		af::array I_e;
-		af::array I_i;
-		af::array I_bg;
-		af::array S_e;
-		af::array S_i;
+		af::array spkHistory;
+		af::array* I_e;
+		af::array* I_i;
+		af::array* I_bg;
+		af::array* S_e;
+		af::array* S_i;
 		af::array Cm;
+		af::array eFlip;
+		af::array iFlip;
 
-		std::vector<SynMatrices> incoSyns;
+		std::vector<SynMatrices> incoExcSyns;
+		std::vector<SynMatrices> incoInhSyns;
 
 		uint32_t* exInDegs; //useful to keep these for pruner
 		uint32_t* inInDegs;
@@ -72,16 +78,14 @@ class AIFNeuron {
 		AIFNeuron(	const Network net,
 					const uint32_t size, 
 					const uint8_t _polarity,
-				 	const float xmin,
-				 	const float xmax,
-				 	const float ymin,
-				 	const float ymax,
-				 	const float zmin,
-				 	const float zmax);
+				 	const Position minPos,
+				 	const Position maxPos );
 		~AIFNeuron();
 
 		void runForward(const uint32_t t, const float dt);
 		void pushBuffers();
+		Position* getPositions();
+		Position getPosition(uint32_t index);
 
 };
 

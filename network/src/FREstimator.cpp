@@ -14,7 +14,7 @@ FREstimator::FREstimator(const array* _pfrs, const uint32_t size)
 	pfrs = pfrs;
 }
 
-af::array estimate(const float dt)
+af::array FREstimator::estimate(const float dt)
 {
 	array tau = numer / sqrt(*pfrs);
 	epsilon += dt * (-epsilon/tau) + host.spks;

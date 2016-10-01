@@ -11,8 +11,9 @@
 #ifndef SOMODULE_H_
 #define SOMODULE_H_
 
-#define DEF_INH_TRIGGER 1.5
-#define DEF_EXC_TRIGGER 1.1
+#define DEF_INH_TRIGGER 1.4f
+#define DEF_EXC_TRIGGER 0.9f
+#define DEF_IE_RATIO 0.2f
 
 
 ////////////////////////////////////////////////////////////////////////////
@@ -30,38 +31,43 @@ class SOModule {
 	public:
 
 		Network &host;
-		AIFNeuron &src;
-		AIFNeuron &tar; 
-		SynMatrices &synComp; // Interfaces with host.tarHost
+		AIFNeuron &excNeuGrp;
+		AIFNeuron &inhNeuGrp;
+
+		static SOModule* buildSOModule(	const Network &host,
+										const uint32_t size,
+										const Position minPos,
+										const Position maxPos	);
+		static SOModule* buildSOModule(	const Network &host,
+										const uint32_t size,
+										const Position minPos,
+										const Position maxPos,
+										const float ieRatio	);
+
+
+		af::array iterateOne();
+		af::array runForward(uint32_t numIters);
+
+	private:
 		
+		SynMatrices* synGrps;
 		HPComponent* hpComp;
 		IPComponent* ipComp;
 		UDFPlasticity* UDFComp;
 		STDP* stdp;
-
+		HpSynScaler* synScale;
+		SynNormalizer* norman;
 
 		SOModule(	const Network &host,
-					const uint32_t srcSz,
-					const uint32_t tarSz,
-					const bool srcExc,
-					const bool tarExc,
-					const float sparsity);
-		
-		SOModule (	const Network &host
-					const uint32_t stSize,
-					const bool exc,
-					const float sparsity);
-		
-		SOModule(	const Network &host,
-					const AIFNeuron &src,
-					const AIFNeuron &tar,
-					const SynMatrices &synComp,
-					const HPComponent* hpComp,
-					const IPComponent* ipComp
-					const UDFPlasticity* UDFComp,
-					const STDP* stdp);
+					const uint32_t size,
+					const Position minPos,
+					const Position maxPos	);
+		SOModule (	const Network &host,
+					const uint32_t size, 
+					const Position minPos,
+					const Position maxPos,
+					const float ieRatio 	);
 
-		void runForward(const uint32_t t, const float dt);
 
 
 };

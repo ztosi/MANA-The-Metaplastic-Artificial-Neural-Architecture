@@ -18,7 +18,7 @@ IPComponent::IPComponent(const AIFNeuron &hostNeurons, const HPComponent* hpCoop
 	eta_f = DEF_ETAF; 
 }
 
-IPComponent::void perform(const float dt)
+void IPComponent::perform(const float dt)
 {
 	array thTerm = abs(hpCoop->meanTh - *(host.thresholds)) * hpCoop->dThdt
 		* hpCoop->lambda;
@@ -42,7 +42,7 @@ IPComponent::void perform(const float dt)
 
 }
 
-IPComponent::void pushBuffers()
+void IPComponent::pushBuffers()
 {
 	array* holder = prefFR;
 	prefFR = prefFR_Buff;

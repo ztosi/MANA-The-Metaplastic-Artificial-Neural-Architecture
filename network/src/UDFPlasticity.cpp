@@ -100,11 +100,13 @@ UDFPlasticity::UDFPlasticity(const SynMatrices &hostSyns)
 			f32, AF_STORAGE_COO )	); 
 	}
 
-UDFPlasticity::array perform(	const array udfur,
-								const array tdiff,
-								const array wts	);
-
-}
-
-
+UDFPlasticity::array perform(	const array &udfur,
+								const array &tdiff,
+								const array &wts	)
+{
+	udfur.row(3) = udfur.row(0) + 
+		(udfur.row(3) * (1 - udfur.row(0)) * af::exp(-tdiff/udfur.row(2)));
+	udfur.row(4) = 1 + ((udfur.row(4) - (udfur.row(3) * udfur.row(3)) - 1)
+		* af::exp(-tdiff/udfur.row(1)));
+	return scaleFactor * wts * udfur.row(3) * udfur.row(4);
 }

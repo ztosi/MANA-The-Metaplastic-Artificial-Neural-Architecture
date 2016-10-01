@@ -39,13 +39,13 @@ HPComponent::HPComponent(	const AIFNeuron &hostNeu,
 	lambda = DEF_LAMBDA0;
 }
 
-HPComponent::void perform(const float dt) 
+void HPComponent::perform(const float dt) 
 {
 	array tooFast = watcher->nu_E > pfrs;
 	perform(dt, tooFast);
 }
 
-void perform(const float dt, array tooFast)
+void HPComponent::perform(const float dt, array tooFast)
 {
 	array ratio = ((watcher->nu_E + NORM_FAC)/(*pfrs + NORM_FAC) - 1) * tooFast
 		+ (1 - (*pfrs + NORM_FAC)/(watcher->nu_E + NORM_FAC)) * !tooFast;
@@ -55,7 +55,7 @@ void perform(const float dt, array tooFast)
 	*threshBuff = *(host.thresholds) + dThdt;
 }
 		
-void pushBuffers()
+void HPComponent::pushBuffers()
 {
 	array* holder = host.thresholds;
 	host.thresholds = threshBuff;

@@ -16,12 +16,12 @@ class HpSynScaler {
 		SynMatrices &synHost; // Interfaces with host.tarHost
 		HPComponent &hpHost;
 
-		af::array &thresh_e;
-		af::array &thresh_i;
+		af::array *thresh_e;
+		af::array *thresh_i;
 
 		float rho;
 
-		HpSynScaler(const SynMatrices &hostSyns); //hp
+		HpSynScaler(const SynMatrices &synHost, const HPComponent &_hpHost); //hp
 		~HpSynScaler();
 		void perform();
 
@@ -35,6 +35,9 @@ class SynNormalizer {
 
 		af::array e_triggered;
 		af::array i_triggered;
+
+		af::array sValExc;
+		af::array sValInh;
 
 		float e_trigger;
 		float i_trigger;
