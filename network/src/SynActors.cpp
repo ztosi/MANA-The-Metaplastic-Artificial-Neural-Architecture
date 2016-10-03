@@ -22,6 +22,7 @@ SynNormalizer::SynNormalizer(const AIFNeuron &_neuHost)
 
 }
 
+// TODO: include new theta terms in normalization...
 void SynNormalizer::perform()
 {
 	uint32_t numExc = neuHost.incoExcSyns.size();

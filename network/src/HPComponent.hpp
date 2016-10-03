@@ -6,40 +6,45 @@
 #ifndef HPCOMPONENT_H_
 #define HPCOMPONENT_H_
 
-#define DEF_LAMBDA0 1E5f
+#define DEF_LAMBDA0 1E7f
 #define DEF_LAMBDAF 1E5f
-#define DEF_LAM_D 5E-6f
+//#define DEF_LAM_D 5E-6f
 #define DEF_PFR 1f
-#define NORM_FAC 0.001
+#define DEF_NORM_FAC 0.001
+
+using namespace af;
 
 class HPComponent {
 
 	public:
 
-		AIFNeuron &host;
+		HPComponent( 	const AIFNeuron &_neuHost,
+						const FREstimator* _watcher	);
+		HPComponent( 	const AIFNeuron &_neuHost,
+						const FREstimator* _watcher,
+						const float _lambda_0,
+						const float _lambda_f,
+						const float _normFac	);
+
+		void perform(const float dt, const array pfrs);
+		//void perform(const float dt, array tooFast);
+		void pushBuffers(const float dt);
+
+	private:
+
+		AIFNeuron &neuHost;
 		FREstimator* watcher;
 
-		af::array* threshBuff;
-		af::array* pfrs;
-		af::array meanTh;
-		af::array dThdt;
+		array dThdt;
 		//af::array &exTh;
 		//af::array &inTh;
 
-		float lambda_0;
-		float lambda_f;
-		float lamDec;
-		float lambda;
+		const float lambda_0;
+		const float lambda_f;
+		const float normFac;
 
-		HPComponent(const AIFNeuron &hostNeu);
-		HPComponent( 	const AIFNeuron &hostNeu,
-						const array* _pfrs,
-						const FREstimator* _watcher);
 
-		void perform(const float dt);
-		void perform(const float dt, array tooFast);
-		void pushBuffers();
-
+	friend class DataRecorder;
 };
 
 

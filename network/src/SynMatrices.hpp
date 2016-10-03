@@ -42,8 +42,8 @@ class SynMatrices {
 		uint32_t dlyRange;
 		uint32_t minDly;
 
-		uint8_t srcPol;
-		uint8_t tarPol;
+		bool srcPol;
+		bool tarPol;
 
 		SynMatrices( const AIFNeuron &_src,
 					 const AIFNeuron &_tar, 
@@ -64,8 +64,8 @@ class SynMatrices {
 										AIFNeuron &_tar,
 										//const Spk_Delay_Mngr &_manager,
 										const STDP &_splas,
-										const uint32_t _maxDly,
-										const uint32_t _minDly );
+										const uint32_t _minDly,
+										const uint32_t _maxDly );
 
 		uint32_t** calcDelayMat(const AIFNeuron* src,
 								const AIFNeuron* tar,

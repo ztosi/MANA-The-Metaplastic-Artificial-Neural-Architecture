@@ -33,14 +33,21 @@ class STDP
 {
 
 	public:
+
+		const bool srcPol;
+		const bool tarPol;
+
 		//SynMatrices &host;
-		float eta;
 		STDP(const bool srcPol, const bool tarPol);
-		~STDP();
 		virtual void postTrigger(const uint32_t simTime)=0;
 		virtual array preTrigger(	const uint32_t simTime,
 									const uint32_t lastPostSpk,
 									const array lastArr	)=0;
+	private:
+
+		float eta;
+
+	friend class DataRecorder;
 };
 
 class StandardSTDP : public STDP 
@@ -48,31 +55,62 @@ class StandardSTDP : public STDP
 
 	public:
 
+		StandardSTDP(	const bool _srcPol,
+						const bool _tarPol,
+						const bool _hebbian);
+
+		StandardSTDP(	const bool _srcPol,
+						const bool _tarPol,
+						const bool _hebbian,
+						const float _w_p,
+						const float _w_m,
+						const float _tau_p
+						const float _tau_m	);
+
+		virtual void postTrigger(const uint32_t simTime);
+		virtual array preTrigger(	const uint32_t simTime,
+							const uint32_t lastPostSpk,
+							const array lastArr	);
+
+	private:
+
+		bool hebbian;
 		float w_p;
 		float w_m;
 		float tau_p;
 		float tau_m;
-		bool hebbian;
 
-		StandardSTDP(const bool srcPol, const bool tarPol);
-		~StandardSTDP();
-		void postTrigger(const uint32_t simTime);
-		array preTrigger(	const uint32_t simTime,
-							const uint32_t lastPostSpk,
-							const array lastArr	);
+
+	friend class DataRecorder;
 };
 
-class mexicanHatSTDP : public STDP
+class SymStdSTDP : public StandardSTDP
+{
+
+
+
+};
+
+class MexicanHatSTDP : public STDP
 {
 
 	public:
 
 		float a;
 		float sigma;
-		mexicanHatSTDP(const bool srcPol, const bool tarPol);
-		~mexicanHatSTDP();
+		MexicanHatSTDP(	const bool _srcPol,
+		 				const bool _tarPol 	);
+
+		MexicanHatSTDP(	const bool _srcPol,
+		 				const bool _tarPol,
+		 				const float _a,
+		 				const float _sigma 	);
+
+
 		void postTrigger(const uint32_t simTime, af::spks);
 		array preTrigger(const uint32_t simTime, af::array &spksAtDly);
+
+	friend class DataRecorder;
 };
 
 #endif // SOMODULE_H_

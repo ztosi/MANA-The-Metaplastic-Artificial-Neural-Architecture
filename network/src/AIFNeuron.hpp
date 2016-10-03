@@ -27,29 +27,27 @@
 
 class AIFNeuron {
 
-	public:
+	//Poor encapsulation, I know, but half the other classes would
+	//need to be friends...
+	public: 
 
-		af::array* V_mem;
-		af::array* V_buff;
-		af::array* w;
-		af::array* w_buff;
-		af::array* thresholds;
-
-		af::array* lastSpkTime;
-		af::array* lst_buff;
-		af::array* adpt;
+		af::array V_mem;
+		af::array V_buff;
+		af::array w;
+		af::array w_buff;
+		
+		af::array thresholds;
+		af::array lastSpkTime;
+		af::array lst_buff;
+		af::array adpt;
 
 		af::array online;
 		af::array spks; // No need to buffer; copied by SynMat
 		af::array spkHistory;
-		af::array* I_e;
-		af::array* I_i;
-		af::array* I_bg;
-		af::array* S_e;
-		af::array* S_i;
+		af::array I_e;
+		af::array I_i;
+		af::array I_bg;
 		af::array Cm;
-		af::array eFlip;
-		af::array iFlip;
 
 		std::vector<SynMatrices> incoExcSyns;
 		std::vector<SynMatrices> incoInhSyns;
@@ -58,12 +56,12 @@ class AIFNeuron {
 		uint32_t* inInDegs;
 		uint32_t* outDegs;
 
-		float iDecay;
-		float eDecay;
-		float V_rest;
-		float V_reset;
-		float tauW;
-		float noiseSD;
+		const float iDecay;
+		const float eDecay;
+		const float V_rest;
+		const float V_reset;
+		const float tauW;
+		const float noiseSD;
 		//uint32_t network_id;
 		uint32_t refP;
 
@@ -71,8 +69,8 @@ class AIFNeuron {
 		float* y;
 		float* z;
 
-		uint32_t size;
-		uint8_t polarity;
+		const uint32_t size;
+		const uint8_t polarity;
 
 		//TODO: give option to lay out in lattice: more efficient
 		AIFNeuron(	const Network net,
@@ -86,6 +84,8 @@ class AIFNeuron {
 		void pushBuffers();
 		Position* getPositions();
 		Position getPosition(uint32_t index);
+
+		friend class DataRecorder;
 
 };
 

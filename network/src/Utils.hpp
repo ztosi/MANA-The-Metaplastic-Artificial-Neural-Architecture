@@ -34,5 +34,11 @@ class Position {
 		} 
 };
 
+class DataRecorder {
+
+	//TODO: Everybody is friends with this class, which will be used to record all data
+
+};
+
 
 #endif // UTILS_H_

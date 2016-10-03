@@ -11,8 +11,8 @@ SynMatrices::SynMatrices(	const AIFNeuron &_src,
 							const AIFNeuron &_tar,
 							const Spk_Delay_Mngr &_manager,
 							const STDP &_splas,
-							const uint32_t _maxDly,
-							const uint32_t _minDly ) 
+							const uint32_t _minDly,
+							const uint32_t _maxDly ) 
 	: srcHost(_src), tarHost(_tar), splas(_splas)//, manager(_manager)
 {
 	maxDly = _maxDly;
@@ -80,8 +80,8 @@ SynMatrices* SynMatrices::connectNeurons(AIFNeuron &_src,
 										AIFNeuron &_tar,
 										const Spk_Delay_Mngr &_manager,
 										const STDP &_splas,
-										const uint32_t _maxDly,
-										const uint32_t _minDly )
+										const uint32_t _minDly,
+										const uint32_t _maxDly )
 {
 	SynMatrices* syns = new SynMatrices(_src, _tar, _manager, _splas,
 		_maxDly, _minDly); 
@@ -126,6 +126,7 @@ uint32_t** SynMatrices::calcDelayMat(AIFNeuron* src, AIFNeuron* tar, uint32_t ma
 	return dlys;
 }
 
+	// TODO: Order of synapse actions needs to be re-written
 void SynMatrices::propagate_selective(	const uint32_t _time,
 										const float dt,
 										const UDFPlasticity &udf)

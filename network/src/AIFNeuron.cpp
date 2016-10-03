@@ -9,31 +9,31 @@ AIFNeuron::AIFNeuron(	const Network net,
 					const uint8_t _polarity,
 				 	const Position minPos,
 				 	const Position maxPos) : 
-	online(constant(1, dim4(1, size), b8)),
-	spks(constant(0, dim4(1,size), b8)),
-	I_e(constant(0, dim4(1,size), f32)),
-	I_i(constant(0, dim4(1,size), f32)),
-	I_bg(constant(DEF_I_BG, dim4(1,size), f32)),
-	S_e(constant(1, dim4(1,size), f32)),
-	S_i(constant(1, dim4(1,size), f32)),
-	Cm(polarity == 1 ? constant(DEF_CM_EXC, dim4(1,size), f32)) 
-		:  constant(DEF_CM_INH, dim4(1,size), f32))),
-	incoSyns(2) // Likely minimum 1 excitatory and 1 inhbitory
+	online(constant(1, dim4(size, 1), b8)),
+	spks(constant(0, dim4(size, 1), b8)),
+	I_e(constant(0, dim4(size, 1), f32)),
+	I_i(constant(0, dim4(size, 1), f32)),
+	I_bg(constant(DEF_I_BG, dim4(size, 1), f32)),
+	Cm(polarity == 1 ? constant(DEF_CM_EXC, dim4(size, 1), f32)) 
+		:  constant(DEF_CM_INH, dim4(size, 1), f32)))
 
 {
-	V_mem = new array(constant(DEF_V_rest, dim4(1,size), f32));
-	V_buff = new array(constant(DEF_V_rest, dim4(1,size), f32));
-	w = new array(constant(DEF_V_rest, dim4(1,size), f32));
-	w_buff = new array(constant(DEF_V_rest, dim4(1,size), f32));
-	thresholds = new array(constant(INIT_THRESH, dim4(1,size), f32));
-	lastSpkTime = new array(constant(DEF_V_rest, dim4(1,size), u32));
-	lst_buff = new array(constant(DEF_V_rest, dim4(1,size), f32));
+	V_mem = constant(DEF_V_rest, dim4(size, 1), f32);
+	V_buff = constant(DEF_V_rest, dim4(size, 1), f32);
+	w = constant(DEF_V_rest, dim4(size, 1), f32);
+	w_buff = constant(DEF_V_rest, dim4(size, 1), f32);
+	thresholds = constant(INIT_THRESH, dim4(size, 1), f32);
+	mnTh = constant(INIT_THRESH, dim4(size, 1), f32);
+	lastSpkTime = constant(DEF_V_rest, dim4(size, 1), u32);
+	lst_buff = constant(DEF_V_rest, dim4(size, 1), u32);
+
+	// TODO: Deal with this
 	if (_polarity==1) {
-		adpt = new array(2*randu(dim4(1,size), f32)+7);
+		adpt = 2*randu(dim4(size, 1), f32)+7;
 		polarity = 1;
 		refP = DEF_E_REF;
 	} else {
-		adpt = new array(2*randu(dim4(1,size), f32)+6);
+		adpt = 2*randu(dim4(size, 1), f32)+6;
 		polarity = 0;
 		refP = DEF_I_REF;
 	}
@@ -46,9 +46,9 @@ AIFNeuron::AIFNeuron(	const Network net,
 	y = new float[size];
 	z = new float[size];
 
-	array X = ((maxPos.x-minPos.x)*randu(dim4(1, size)))+minPos.x;
-	array Y = ((maxPos.y-minPos.y)*randu(dim4(1, size)))+minPos.y;
-	array X = ((maxPos.z-minPos.z)*randu(dim4(1, size)))+minPos.z;
+	array X = ((maxPos.x-minPos.x)*randu(dim4(size, 1)))+minPos.x;
+	array Y = ((maxPos.y-minPos.y)*randu(dim4(size, 1)))+minPos.y;
+	array X = ((maxPos.z-minPos.z)*randu(dim4(size, 1)))+minPos.z;
 
 	X.host(x);
 	Y.host(y);
@@ -85,23 +85,22 @@ AIFNeuron::~AIFNeuron()
 
 void AIFNeuron::runForward(const uint32_t t, const float dt) {
 
-	online = t > (*lastSpkTime + refP); // disable refractory
+	online = t > (lastSpkTime + refP); // disable refractory
 
-	*V_buff = (*V_mem) + (dt * (( (V_rest-(*V_mem)) // membrane leak
-		+ I_e*S_e - I_i*S_i // Scaled synapse currents
-		 + I_bg + randn(dim4(1, size), f32)*noiseSD 
-		 	- (*w)) // Adapt 
-			/Cm) // capacitance
+	V_buff = (V_mem) + (dt * (( (V_rest-(V_mem)) // membrane leak
+		+ I_e - I_i // Scaled synapse currents
+		 + I_bg + randn(dim4(size, 1), f32)*noiseSD 
+		 	- w) / Cm)
 			* online); // Only non refractory
 
 	// determine who will spike on next time-step
-	spks = *V_buff > *thresholds; 
+	spks = V_buff > thresholds; 
 
 	// calculate adaptation
-	*w_buff = *w + (dt * (-(*w)/tauW + (*spks) * (*adpt)));
+	w_buff = w + (dt * (-(w)/tauW + (spks) * (adpt)));
 
 	// calculate the new last spike times
-	*lst_buff = (*lastSpkTime * !spks) + (t * spks);
+	lst_buff = (lastSpkTime * !spks) + (t * spks);
 
 	I_e -= dt * I_e/eDecay;
 	I_i -= dt * I_i/iDecay;
@@ -109,19 +108,11 @@ void AIFNeuron::runForward(const uint32_t t, const float dt) {
 }
 
 void AIFNeuron::pushBuffers() {
-	
-	array* holder = V_mem;
 	V_mem = V_buff;
-	V_buff = holder;
-
-	holder = w;
 	w = w_buff;
-	w_buff = holder;
-
-	holder = lastSpkTime;
 	lastSpkTime = lst_buff;
-	lst_buff = holder;
-
+	spikeHistory = af::shift(spikeHistory, size);
+	spikeHistory(seq(size)) = spks;
 }
 
 Position* AIFNeuron::getPositions()

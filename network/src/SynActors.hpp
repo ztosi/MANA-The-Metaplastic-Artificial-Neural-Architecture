@@ -3,49 +3,92 @@
 #include "SynMatrices.h"
 #include "HPComponent.h"
 
-#ifndef SynActors_H_
-#define SynActors_H_
+#ifndef SYNACTOR_H_
+#define SYNACTOR_H_
 
-#define DEF_INH_TRIGGER 1.5
-#define DEF_EXC_TRIGGER 1.1
+#define DEF_INH_TRIGGER 1.4
+#define DEF_EXC_TRIGGER 0.9
 
-class HpSynScaler {
+using namespace af;
+
+class SynActor 
+{
 
 	public:
+		AIFNeuron &neuHost;
+		
+		array getFullFlip() { return fullFlip; }
 
-		SynMatrices &synHost; // Interfaces with host.tarHost
-		HPComponent &hpHost;
+	protected:
+		array eFlip;
+		array iFlip;
+		array fullFlip;
 
-		af::array *thresh_e;
-		af::array *thresh_i;
 
-		float rho;
-
-		HpSynScaler(const SynMatrices &synHost, const HPComponent &_hpHost); //hp
-		~HpSynScaler();
-		void perform();
+	friend class DataRecorder;
 
 };
 
-class SynNormalizer {
+//class HpSynScaler : public SynActor 
+//{
+
+//	public:
+		
+//		HPComponent &hpHost;
+//
+//		HpSynScaler(	const AIFNeuron &_neuHost,
+//						const HPComponent &_hpHost	); //hp
+//		HpSynScaler(	const AIFNeuron &_neuHost,
+//						const HPComponent &_hpHost,
+//						const float _rho	); //hp
+//		~HpSynScaler();
+//		void perform();
+//
+//	private:
+//
+//		array thresh_e;
+//		array thresh_i;
+//
+//		float rho;
+
+//	friend class DataRecorder;
+
+//};
+
+class SynNormalizer : public SynActor 
+{
 
 	public:
 
-		AIFNeuron &neuHost;
-
-		af::array e_triggered;
-		af::array i_triggered;
-
-		af::array sValExc;
-		af::array sValInh;
-
-		float e_trigger;
-		float i_trigger;
-
-
-		SynNormalizer(const AIFNeuron &hostNeu);
+		SynNormalizer(const AIFNeuron &_neuHost);
+		SynNormalizer(	const AIFNeuron &_neuHost,
+						const float _omega_a,
+						const float _omega_b,
+						const float _rho	);
+		SynNormalizer(	const AIFNeuron &_neuHost,
+						const float _omega_a,
+						const float _omega_b,
+						const float e_maxMean,
+						const float i_maxMean,
+						const float _rho	);
 
 		void perform();
+
+	private:
+
+		array sValExc;
+		array sValInh;
+		array thExcF;
+		array thInhF;
+
+		const float omega_a;
+		const float omega_b;
+		const float rho;
+		const float e_maxMean;
+		const float i_maxMean;
+
+
+	friend class DataRecorder;
 
 };
 
