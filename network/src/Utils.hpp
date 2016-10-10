@@ -8,9 +8,9 @@ class Position {
 
 	public:
 
-		float x;
-		float y;
-		float z;
+		const float x;
+		const float y;
+		const float z;
 
 		Position(const float _x, const float _y, const float _z)
 			: x(_x), y(_y), z(_z)

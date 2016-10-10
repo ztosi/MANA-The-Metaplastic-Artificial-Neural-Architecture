@@ -1,5 +1,6 @@
 #include <arrayfire.h>
 #include <cstdint>
+#include <math.h>
 #include "AIFNeuron.h"
 #include "SynMatrices.h"
 
@@ -34,20 +35,23 @@ class STDP
 
 	public:
 
-		const bool srcPol;
-		const bool tarPol;
+		const GenericNeuron::Polarity srcPol;
+		const GenericNeuron::Polarity tarPol;
 
 		//SynMatrices &host;
-		STDP(const bool srcPol, const bool tarPol);
-		virtual void postTrigger(const uint32_t simTime)=0;
-		virtual array preTrigger(	const uint32_t simTime,
-									const uint32_t lastPostSpk,
-									const array lastArr	)=0;
-	private:
+		STDP(){}
+		~STDP(){}
+		virtual void postTrigger(	const af::array &lastPostSpk,
+								 	const af::array &lastArr)=0;
+
+		virtual array preTrigger(	const uint32_t lastPostSpk,
+									const af::array &lastArr	)=0;
+	protected:
 
 		float eta;
 
-	friend class DataRecorder;
+
+	friend class DataRecorder
 };
 
 class StandardSTDP : public STDP 
@@ -55,12 +59,18 @@ class StandardSTDP : public STDP
 
 	public:
 
-		StandardSTDP(	const bool _srcPol,
-						const bool _tarPol,
+		StandardSTDP(	const GenericNeuron::Polarity _srcPol,
+						const GenericNeuron::Polarity _tarPol,
+						const float _eta);
+
+		StandardSTDP(	const GenericNeuron::Polarity _srcPol,
+						const GenericNeuron::Polarity _tarPol,
+						const float _eta,
 						const bool _hebbian);
 
-		StandardSTDP(	const bool _srcPol,
-						const bool _tarPol,
+		StandardSTDP(	const GenericNeuron::Polarity _srcPol,
+						const GenericNeuron::Polarity _tarPol,
+						const float _eta,
 						const bool _hebbian,
 						const float _w_p,
 						const float _w_m,
@@ -70,7 +80,7 @@ class StandardSTDP : public STDP
 		virtual void postTrigger(const uint32_t simTime);
 		virtual array preTrigger(	const uint32_t simTime,
 							const uint32_t lastPostSpk,
-							const array lastArr	);
+							const af::array &lastArr	);
 
 	private:
 
@@ -84,31 +94,43 @@ class StandardSTDP : public STDP
 	friend class DataRecorder;
 };
 
-class SymStdSTDP : public StandardSTDP
-{
-
-
-
-};
-
 class MexicanHatSTDP : public STDP
 {
 
 	public:
 
-		float a;
-		float sigma;
-		MexicanHatSTDP(	const bool _srcPol,
-		 				const bool _tarPol 	);
+		MexicanHatSTDP(	const GenericNeuron::Polarity _srcPol,
+		 				const GenericNeuron::Polarity _tarPol,
+		 				const float _eta 	);
 
-		MexicanHatSTDP(	const bool _srcPol,
-		 				const bool _tarPol,
+		MexicanHatSTDP(	const GenericNeuron::Polarity _srcPol,
+		 				const GenericNeuron::Polarity _tarPol,
+		 				const float _eta,
 		 				const float _a,
 		 				const float _sigma 	);
 
 
 		void postTrigger(const uint32_t simTime, af::spks);
 		array preTrigger(const uint32_t simTime, af::array &spksAtDly);
+
+		void setSigma(const float _s) 
+		{
+			sigma = _s;
+			// Pre-compute terms of the mexican-hat wavelet for speed...
+			sigma_sq = _s * _s;
+			nrmTerm = 2.0f/((float) sqrt(3.0f*_s) * pi4thRt);
+		}
+		float getSigma(){ return sigma; }
+		void setA(const float _a) { a = _a }
+		float getA() { return a; }
+
+	private:
+
+		float a;
+		float sigma;
+		float sigma_sq;
+		static const float pi4thRt = (float) pow(3.1415, 0.25);
+		float nrmTerm;
 
 	friend class DataRecorder;
 };

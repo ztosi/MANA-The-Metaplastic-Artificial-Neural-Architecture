@@ -14,7 +14,21 @@ class Network {
 
 	public:
 
-		// Dummy
+		const float dt;
+
+
+
+		uint32_t getTime() { return simTime; }
+
+	private:
+
+		uint32_t simTime;
+
+		std::vector<Module> modules;
+		std::vector<GenericNeuron> floatingNeurons;
+		std::vector<SynMatrices> floatingSynapses;
+
+
 
 };
 

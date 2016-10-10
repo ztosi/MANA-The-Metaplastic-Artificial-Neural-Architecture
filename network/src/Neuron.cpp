@@ -1,21 +1,27 @@
 #include <arrayfire.h>
-#include "AIFNeuron.h"
-#include "Utils.h"
+#include <cstring>
+#include <stdio.h>
+#include <vector>
+#include "Neuron.hpp"
+#include "SynMatrices.hpp"
+#include "Utils.hpp"
 
 using namespace af;
 
-AIFNeuron::AIFNeuron(	const Network net,
+AIFNeuron::AIFNeuron(	const Network &_host,
 					const uint32_t size, 
-					const uint8_t _polarity,
+					const Polarity _pol,
 				 	const Position minPos,
 				 	const Position maxPos) : 
+	host(_host),
 	online(constant(1, dim4(size, 1), b8)),
 	spks(constant(0, dim4(size, 1), b8)),
 	I_e(constant(0, dim4(size, 1), f32)),
 	I_i(constant(0, dim4(size, 1), f32)),
 	I_bg(constant(DEF_I_BG, dim4(size, 1), f32)),
-	Cm(polarity == 1 ? constant(DEF_CM_EXC, dim4(size, 1), f32)) 
-		:  constant(DEF_CM_INH, dim4(size, 1), f32)))
+	Cm(_pol == GenericNeuron::Exc ? constant(DEF_CM_EXC, dim4(size, 1), f32)) 
+		:  constant(DEF_CM_INH, dim4(size, 1), f32))),
+	pol(_pol)
 
 {
 	V_mem = constant(DEF_V_rest, dim4(size, 1), f32);
@@ -71,14 +77,7 @@ AIFNeuron::~AIFNeuron()
 	delete[] x;
 	delete[] y;
 	delete[] z;
-	delete V_mem;
-	delete V_buff;
-	delete w;
-	delete w_buff;
-	delete thresholds;
-	delete lastSpkTime;
-	delete lst_buff;
-	delete adpt;
+
 	
 }
 

@@ -94,7 +94,7 @@ class MANA_Module
 		~MANA_Module();
 
 		void iterateOne();
-		void runForward(uint32_t numIters);
+		voi runForward(uint32_t numIters);
 
 	private:
 

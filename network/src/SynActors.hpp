@@ -20,8 +20,7 @@ class SynActor
 		array getFullFlip() { return fullFlip; }
 
 	protected:
-		array eFlip;
-		array iFlip;
+
 		array fullFlip;
 
 
@@ -76,6 +75,8 @@ class SynNormalizer : public SynActor
 
 	private:
 
+		array eFlip;
+		array iFlip;
 		array sValExc;
 		array sValInh;
 		array thExcF;
@@ -91,5 +92,7 @@ class SynNormalizer : public SynActor
 	friend class DataRecorder;
 
 };
+
+class SynNormSimple : public SynActor
 
 #endif // SYNACTORS_H_

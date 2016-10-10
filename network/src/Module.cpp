@@ -151,7 +151,7 @@ void MANA_Module::iterateOne()
 			ieUDF );
 	}
 	sNrmExc.perform();
-	excNeuGrp.runForward(host.simTime, host.dt);
+	excNeuGrp.runForward(host.getTime(), host.dt);
 	hpExc.perform(host.dt, ipExc.getPrefFRs());
 	ipExc.perform(host.dt, sNrmExc.getFullFlipped());
 
@@ -171,7 +171,7 @@ void MANA_Module::iterateOne()
 			iiUDF );
 	}
 	sNrmInh.perform();
-	inhNeuGrp.runForward(host.simTime, host.dt);
+	inhNeuGrp.runForward(host.getTime(), host.dt);
 	hpInh.perform(host.dt, ipInh.getPrefFRs());
 	ipInh.perform(host.dt, sNrmInh.getFullFlipped());
 
