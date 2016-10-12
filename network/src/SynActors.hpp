@@ -1,27 +1,32 @@
 #include <arrayfire.h>
-#include "AIFNeuron.h"
-#include "SynMatrices.h"
-#include "HPComponent.h"
+#include "Neuron.hpp"
 
 #ifndef SYNACTOR_H_
 #define SYNACTOR_H_
 
-#define DEF_INH_TRIGGER 1.4
-#define DEF_EXC_TRIGGER 0.9
+#define DEF_INH_MXMU 1.4f
+#define DEF_EXC_MXMU 0.9f
+#define DEF_OMEGA_A 5.0f
+#define DEF_OMEGA_B 100.0f
+#define DEF_RHO 5.0f
 
 using namespace af;
 
 class SynActor 
 {
 
+	// TODO: get rid of this unless I can find compelling 
+	// subclasses other than SynNormalizer
+
 	public:
-		AIFNeuron &neuHost;
+		GenericNeuron &neuHost;
 		
 		array getFullFlip() { return fullFlip; }
 
 	protected:
 
 		array fullFlip;
+		bool allFlipped = 0;
 
 
 	friend class DataRecorder;
@@ -35,9 +40,9 @@ class SynActor
 		
 //		HPComponent &hpHost;
 //
-//		HpSynScaler(	const AIFNeuron &_neuHost,
+//		HpSynScaler(	const GenericNeuron &_neuHost,
 //						const HPComponent &_hpHost	); //hp
-//		HpSynScaler(	const AIFNeuron &_neuHost,
+//		HpSynScaler(	const GenericNeuron &_neuHost,
 //						const HPComponent &_hpHost,
 //						const float _rho	); //hp
 //		~HpSynScaler();
@@ -59,34 +64,37 @@ class SynNormalizer : public SynActor
 
 	public:
 
-		SynNormalizer(const AIFNeuron &_neuHost);
-		SynNormalizer(	const AIFNeuron &_neuHost,
+		SynNormalizer(	const GenericNeuron &_neuHost);
+		SynNormalizer(	const GenericNeuron &_neuHost,
 						const float _omega_a,
 						const float _omega_b,
 						const float _rho	);
-		SynNormalizer(	const AIFNeuron &_neuHost,
+		SynNormalizer(	const GenericNeuron &_neuHost,
 						const float _omega_a,
 						const float _omega_b,
-						const float e_maxMean,
-						const float i_maxMean,
-						const float _rho	);
+						const float _rho,
+						const float _exc_maxMean,
+						const float _inh_maxMean	);
 
-		void perform();
+		void calcSatVals(	const array &prefFRs	);
+		void perform(	const array &thExc,
+						const array &thInh	);
 
 	private:
 
-		array eFlip;
-		array iFlip;
+		array excFlip;
+		array iinhFlip;
 		array sValExc;
 		array sValInh;
-		array thExcF;
-		array thInhF;
 
 		const float omega_a;
 		const float omega_b;
 		const float rho;
-		const float e_maxMean;
-		const float i_maxMean;
+		const float exc_maxMean;
+		const float inh_maxMean;
+
+		bool allExcFlipped = 0;
+		bool allInhFlipped = 0;
 
 
 	friend class DataRecorder;
@@ -94,5 +102,8 @@ class SynNormalizer : public SynActor
 };
 
 class SynNormSimple : public SynActor
+{
+	// TODO;
+};
 
 #endif // SYNACTORS_H_

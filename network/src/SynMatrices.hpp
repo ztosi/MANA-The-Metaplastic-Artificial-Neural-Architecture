@@ -2,6 +2,9 @@
 #include <cstdint>
 #include <vector>
 #include <math.h>
+#include "Neuron.hpp"
+#include "UDFPlasticity.hpp"
+
 
 #ifndef SYNMATRICES_H_
 #define SYNMATRICES_H_
@@ -40,10 +43,12 @@ class SynMatrices {
 		uint32_t** dlyMat;
 
 		uint32_t dlyRange;
-		uint32_t minDly;
+		const uint32_t minDly;
 
-		bool srcPol;
-		bool tarPol;
+		const uint32_t maxCap;
+
+		GenericNeuron::Polarity srcPol;
+		GenericNeuron::Polarity tarPol;
 
 		SynMatrices( const AIFNeuron &_src,
 					 const AIFNeuron &_tar, 
@@ -73,6 +78,9 @@ class SynMatrices {
 		void propagateSelective(const uint32_t _time,
 								const float dt,
 								const UDFPlasticity &udf);
+
+	private:
+		float MAX_DIST;
 		array dampen(const array duration, const array initVal, const array dv);
 		array dampen(const array initVal, const array dv);
 

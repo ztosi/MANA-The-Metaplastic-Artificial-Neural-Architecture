@@ -2,18 +2,19 @@
 #include <math.h>
 #include <cstdint>
 #include <vector>
-#include <algorithm>
-#include "SynMatrices.h"
+#include "SynMatrices.hpp"
+#include "Neuron.hpp"
 
 using namespace af;
 
 SynMatrices::SynMatrices(	const AIFNeuron &_src,
 							const AIFNeuron &_tar,
-							const Spk_Delay_Mngr &_manager,
 							const STDP &_splas,
 							const uint32_t _minDly,
 							const uint32_t _maxDly ) 
-	: srcHost(_src), tarHost(_tar), splas(_splas)//, manager(_manager)
+	: srcHost(_src), tarHost(_tar), splas(_splas),
+	 minDly(_minDly), maxDly(_maxDly),
+	 maxCap(&_src == &_tar ? _src.size*(_src.size - 1) : _src.size * _tar.size)
 {
 	maxDly = _maxDly;
 	minDly = _minDly;
@@ -98,7 +99,7 @@ SynMatrices* SynMatrices::connectNeurons(AIFNeuron &_src,
 uint32_t** SynMatrices::calcDelayMat(AIFNeuron* src, AIFNeuron* tar, uint32_t maxDly) 
 {
 	float** dists = new float *[src->size];
-	float MAX_DIST = 0;
+	MAX_DIST = 0;
 	for (int i = 0; i < src->size; i++) {
 		dists[i] = new float[tar->size];
 		for (int j = 0; j < tar->size; j++) {

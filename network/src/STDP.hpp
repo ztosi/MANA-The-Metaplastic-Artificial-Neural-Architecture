@@ -1,8 +1,9 @@
 #include <arrayfire.h>
 #include <cstdint>
 #include <math.h>
-#include "AIFNeuron.h"
-#include "SynMatrices.h"
+#include "Network.hpp"
+#include "Neuron.hpp"
+#include "SynMatrices.hpp"
 
 #ifndef STDP_H_
 #define STDP_H_
@@ -34,15 +35,13 @@ class STDP
 {
 
 	public:
-
+		const Network &host;
 		const GenericNeuron::Polarity srcPol;
 		const GenericNeuron::Polarity tarPol;
 
 		//SynMatrices &host;
-		STDP(){}
-		~STDP(){}
 		virtual void postTrigger(	const af::array &lastPostSpk,
-								 	const af::array &lastArr)=0;
+								 	const af::array &lastArr	)=0;
 
 		virtual array preTrigger(	const uint32_t lastPostSpk,
 									const af::array &lastArr	)=0;
@@ -59,16 +58,19 @@ class StandardSTDP : public STDP
 
 	public:
 
-		StandardSTDP(	const GenericNeuron::Polarity _srcPol,
+		StandardSTDP(	const Network &_host,
+						const GenericNeuron::Polarity _srcPol,
 						const GenericNeuron::Polarity _tarPol,
 						const float _eta);
 
-		StandardSTDP(	const GenericNeuron::Polarity _srcPol,
+		StandardSTDP(	const Network &_host,
+						const GenericNeuron::Polarity _srcPol,
 						const GenericNeuron::Polarity _tarPol,
 						const float _eta,
 						const bool _hebbian);
 
-		StandardSTDP(	const GenericNeuron::Polarity _srcPol,
+		StandardSTDP(	const Network &_host,
+						const GenericNeuron::Polarity _srcPol,
 						const GenericNeuron::Polarity _tarPol,
 						const float _eta,
 						const bool _hebbian,
@@ -77,9 +79,9 @@ class StandardSTDP : public STDP
 						const float _tau_p
 						const float _tau_m	);
 
-		virtual void postTrigger(const uint32_t simTime);
-		virtual array preTrigger(	const uint32_t simTime,
-							const uint32_t lastPostSpk,
+		array postTrigger(	const af::array &lastPostSpk,
+							const af::array &lastArr	);
+		array preTrigger(	const uint32_t lastPostSpk,
 							const af::array &lastArr	);
 
 	private:
@@ -99,19 +101,23 @@ class MexicanHatSTDP : public STDP
 
 	public:
 
-		MexicanHatSTDP(	const GenericNeuron::Polarity _srcPol,
+		MexicanHatSTDP(	const Network &_host,
+						const GenericNeuron::Polarity _srcPol,
 		 				const GenericNeuron::Polarity _tarPol,
 		 				const float _eta 	);
 
-		MexicanHatSTDP(	const GenericNeuron::Polarity _srcPol,
+		MexicanHatSTDP(	const Network &_host,
+						const GenericNeuron::Polarity _srcPol,
 		 				const GenericNeuron::Polarity _tarPol,
 		 				const float _eta,
 		 				const float _a,
 		 				const float _sigma 	);
 
 
-		void postTrigger(const uint32_t simTime, af::spks);
-		array preTrigger(const uint32_t simTime, af::array &spksAtDly);
+		array postTrigger(	const af::array &lastPostSpk,
+							const af::array &lastArr	);
+		array preTrigger(	const uint32_t lastPostSpk,
+							const af::array &lastArr	);
 
 		void setSigma(const float _s) 
 		{

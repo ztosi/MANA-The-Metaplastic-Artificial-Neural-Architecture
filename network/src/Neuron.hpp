@@ -37,10 +37,8 @@ class GenericNeuron
 
 		const uint32_t size;
 		const Polarity pol;
-		//array getSpks() { return spks; }
-		//array getSpkHistory() { return spkHistory; }
 
-		array spks; // No need to buffer; copied by SynMat
+		array spks; 
 		array spkHistory;
 		array I_bg;
 

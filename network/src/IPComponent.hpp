@@ -1,7 +1,7 @@
 #include <arrayfire.h>
-#include "AIFNeuron.h"
-#include "HPComponent.h"
-#include "FREstimator.h"
+#include "Neuron.hpp"
+#include "HPComponent.hpp"
+#include "FREstimator.hpp"
 
 #ifndef IPCOMPONENT_H_
 #define IPCOMPONENT_H_
@@ -15,6 +15,8 @@
 #define DEF_ETAF 1E-6
 //#define DEF_ETA_DEC 2.5E-6
 #define DEF_NOISE_SD 0.25
+
+using namespace af;
 
 class IPComponent {
 
@@ -37,12 +39,12 @@ class IPComponent {
 		HPComponent* hpHost;
 		FREstimator* watcher; 
 
-		af::array tooFast;
-		af::array prefFR;
-		af::array prefFR_Buff;
-		af::array mThresh;
-		af::array eta;
-		af::array zeta;
+		array tooFast;
+		array prefFR;
+		array prefFR_Buff;
+		array mThresh;
+		array eta;
+		array zeta;
 
 		const float minPFR; //Hz 
 		const float lowFR; // Hz

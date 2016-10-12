@@ -94,7 +94,9 @@ class MANA_Module
 		~MANA_Module();
 
 		void iterateOne();
-		voi runForward(uint32_t numIters);
+		void runForward(uint32_t numIters);
+		void setSynModFreq(uint32_t _iter_Interval);
+		void setSynModFreq(double _time_Interval);
 
 	private:
 

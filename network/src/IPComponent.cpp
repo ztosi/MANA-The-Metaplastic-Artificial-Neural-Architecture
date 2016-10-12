@@ -3,36 +3,37 @@
 #include "HPComponent.h"
 #include "FREstimator.h"
 
+using namespace af;
 
 IPComponent::IPComponent(	const AIFNeuron &_neuHost,
 							const HPComponent* _hpHost	)
 
-	: neuHost(_neuHost), tooFast(constant(0, dim4(1, hostNeurons.size), f32)),
-	zeta(constant(1, dim4(1, hostNeurons.size), f32)),
-	eta(constant(DEF_ETA0, dim4(1, hostNeurons.size), f32)), minPFR(DEF_MIN_PFR),
+	: neuHost(_neuHost), tooFast(constant(0, dim4(hostNeurons.size, 1), f32)),
+	zeta(constant(1, dim4(hostNeurons.size, 1), f32)),
+	eta(constant(DEF_ETA0, dim4(hostNeurons.size, 1), f32)), minPFR(DEF_MIN_PFR),
 	lowFR(DEF_LOW_FR), beta(DEF_BETA), eta_0(DEF_ETA0), eta_f(DEF_ETAF),
 	noiseSD(DEF_NOISE_SD)
 {
 	hpHost = _hpHost;
 	watcher = _hpHost->watcher;
-	prefFR = new array(constant(DEF_LOW_FR, dim4(1, hostNeurons.size), f32));
-	prefFR_Buff = new array(constant(DEF_LOW_FR, dim4(1, hostNeurons.size), f32));
+	prefFR = new array(constant(DEF_LOW_FR, dim4(hostNeurons.size, 1), f32));
+	prefFR_Buff = new array(constant(DEF_LOW_FR, dim4(hostNeurons.size, 1), f32));
 }
 
 IPComponent::IPComponent(	const AIFNeuron &_neuHost,
 							const HPComponent* _hpHost
 							const float eta_f	)
 
-	: neuHost(_neuHost), tooFast(constant(0, dim4(1, hostNeurons.size), f32)),
-	zeta(constant(1, dim4(1, hostNeurons.size), f32)),
-	eta(constant(DEF_ETA0, dim4(1, hostNeurons.size), f32)), minPFR(DEF_MIN_PFR),
+	: neuHost(_neuHost), tooFast(constant(0, dim4(hostNeurons.size, 1), f32)),
+	zeta(constant(1, dim4(hostNeurons.size, 1), f32)),
+	eta(constant(DEF_ETA0, dim4(hostNeurons.size, 1), f32)), minPFR(DEF_MIN_PFR),
 	normFactor(DEF_NRM_FAC), lowFR(DEF_LOW_FR), beta(DEF_BETA), eta_0(DEF_ETA0),
 	eta_dec(DEF_ETA_DEC), noiseSD(DEF_NOISE_SD)
 {
 	hpHost = _hpHost;
 	watcher = _hpHost->watcher;
-	prefFR = new array(constant(DEF_LOW_FR, dim4(1, hostNeurons.size), f32));
-	prefFR_Buff = new array(constant(DEF_LOW_FR, dim4(1, hostNeurons.size), f32));
+	prefFR = new array(constant(DEF_LOW_FR, dim4(hostNeurons.size, 1), f32));
+	prefFR_Buff = new array(constant(DEF_LOW_FR, dim4(hostNeurons.size, 1), f32));
 	eta_f = DEF_ETAF; 
 }
 

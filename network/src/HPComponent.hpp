@@ -26,9 +26,9 @@ class HPComponent {
 						const float _lambda_f,
 						const float _normFac	);
 
-		void perform(const float dt, const array pfrs);
+		void perform(const array &pfrs);
 		//void perform(const float dt, array tooFast);
-		void pushBuffers(const float dt);
+		void pushBuffers(const array &hpOn);
 
 	private:
 

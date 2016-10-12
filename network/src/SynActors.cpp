@@ -1,29 +1,68 @@
 #include <arrayfire.h>
-#include "AIFNeuron.h"
-#include "SynMatrices.h"
-#include "HPComponent.h"
+#include "Neuron.hpp"
+#include "SynMatrices.hpp"
 
-HpSynScaler::HpSynScaler(const AIFNeuron &_neuHost)
-	: neuHost(_neuHost)
+SynNormalizer::SynNormalizer(	const GenericNeuron &_neuHost	)
+	: SynNormalizer(_neuHost, DEF_OMEGA_A, DEF_OMEGA_B, DEF_RHO,
+		DEF_EXC_MXMU, DEF_INH_MXMU) {};
+
+SynNormalizer::SynNormalizer(	const GenericNeuron &_neuHost,
+								const float _omega_a, 
+								const float _omega_b,
+								const float _rho	)
+	: SynNormalizer(_neuHost, _omega_a, _omega_b, _rho,
+		DEF_EXC_MXMU, DEF_INH_MXMU) {};
+
+SynNormalizer::SynNormalizer(	const GenericNeuron &_neuHost,
+								const float _omega_a, 
+								const float _omega_b,
+								const float _rho,
+								const float _exc_maxMean,
+								const float _inh_maxMean	)
+	: neuHost(_neuHost), omega_a(_omega_a), omega_b(_omega_b), rho(_rho),
+	exc_maxMean(_exc_maxMean), inh_maxMean(_inh_maxMean),
+	fullFlip(constant(0, dim4(_neuHost.size, 1), b8)),
+	excFlip(constant(0, dim4(_neuHost.size, 1), b8)),
+	inhFlip(constant(0, dim4(_neuHost.size, 1), b8)),
+	sValExc(constant(0, dim4(_neuHost.size, 1), f32)),
+	sValInh(constant(0, dim4(_neuHost.size, 1), f32)) {}
+
+
+// Calculates the appropriate saturation values from the
+// preferred firing rates of the neurons. Does not also
+// factor in threshold-dependent synaptic scaling (i.e. 
+// synaptic scaling as it relates to firing rate homeostasis).
+// Also checks if all exc and inh have already flipped,
+// (the sum of thein incoming exc/inh synapses has met or
+// surpassed the saturation value [or max mean] at one 
+// time in the past), but does not test which elements
+// should be flipped. Returns after doing noting if
+// all saturation values have been appropriately calculated
+// (everyone flipped).
+void SynNormalizer::calcSatVals( 	const array &prefFRs	)
 {
-
+	if (!allFlipped)
+	{
+		if (!allExcFlipped)
+		{
+			sValExc = (sValExc * excFlip)
+				+ (!excFlip * (omega_a * prefFRs + omega_b));
+			bool* aef = allTrue(excFlip).host<bool>();
+			allExcFlipped = *aef;	
+		}
+		if (!allInhFlipped)
+		{
+			sValInh = (sValInh * inhFlip)
+				+ (!inhFlip * (omega_a * prefFRs + omega_b));
+			bool* aif = allTrue(inhFlip).host<bool>();
+			allInhFlipped = *aif;	
+		}
+		allFlipped = allExcFlipped && allInhFlipped;
+	}
 }
 
-void HpSynScaler::perform()
-{
-	*thresh_e = (*thresh_e) * (*neuHost.eFlip)
-		+ 
-	*(neuHost.S_e) = af
-}
-
-SynNormalizer::SynNormalizer(const AIFNeuron &_neuHost)
-	: neuHost(_neuHost)
-{
-
-}
-
-// TODO: include new theta terms in normalization...
-void SynNormalizer::perform()
+void SynNormalizer::perform(	const array &thExc,
+								const array &thInh	)
 {
 	uint32_t numExc = neuHost.incoExcSyns.size();
 	uint32_t numInh = neuHost.incoInhSyns.size();

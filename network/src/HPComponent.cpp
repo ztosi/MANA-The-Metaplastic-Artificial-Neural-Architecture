@@ -33,9 +33,10 @@ HPComponent::HPComponent(	const AIFNeuron &_neuHost,
 	dThdt = constant(0, dim4(_neuHost.size, 1), f32);
 }
 
-void HPComponent::perform(const float dt, const array pfrs) 
+void HPComponent::perform(const array &pfrs) 
 {
-	dThdt = dt * af::log((watcher->nu_E + normFac)/(pfrs + normFac));
+	dThdt = neuHost.host.dt * 
+		log((watcher->nu_E + normFac)/(pfrs + normFac));
 }
 
 //void HPComponent::perform(const float dt, array tooFast)
@@ -48,7 +49,7 @@ void HPComponent::perform(const float dt, const array pfrs)
 //	threshBuff = (host.thresholds) + dThdt;
 //}
 		
-void HPComponent::pushBuffers()
+void HPComponent::pushBuffers(const array &hpOn)
 {
-	neuHost.thresholds += dThdt;
+	neuHost.thresholds += dThdt * hpOn;
 }
