@@ -1,9 +1,10 @@
 #include <arrayfire.h>
 #include <cstdint>
 #include <vector>
-#include <math.h>
 #include "Neuron.hpp"
 #include "UDFPlasticity.hpp"
+#include "STDP.hpp"
+#include "Utils.hpp"
 
 
 #ifndef SYNMATRICES_H_
@@ -22,27 +23,24 @@ class SynMatrices {
 
 	public:
 
-		AIFNeuron &srcHost;
-		AIFNeuron &tarHost;
-		//Spk_Delay_Mngr &manager;
-		STDP splas;
+		const Network &netHost;
+		const GenericNeuron &srcHost;
+		const GenericNeuron &tarHost;
 
-		std::vector<array> wt_And_dw; // column major
+		// All column major
+		std::vector<array> wt_And_dw; 
 		std::vecotr<array> lastUp;
 		std::vector<array> lastArrT;
 
+		// Indices of the src neurons each connects from
 		std::vector<array> indices;
+		// Indices of the src neurons shifted based on
+		// their delay (index in the delay spk train)
 		std::vector<array> indicesActual;
-		//std::vector<array> ptrs;
-
-		std::vector<array> dlyChange;
-		std::vector<array> masks;
-
-		std::vector<array> result;
 		
 		uint32_t** dlyMat;
-
 		uint32_t dlyRange;
+
 		const uint32_t minDly;
 
 		const uint32_t maxCap;
@@ -50,60 +48,53 @@ class SynMatrices {
 		GenericNeuron::Polarity srcPol;
 		GenericNeuron::Polarity tarPol;
 
-		SynMatrices( const AIFNeuron &_src,
-					 const AIFNeuron &_tar, 
-					 const Spk_Delay_Mngr &_manager,
-					 const STDP &_splas,
-					 const uint32_t _maxDly,
-					 const uint32_t _minDly);
+		static SynMatrices* connectNeurons(	GenericNeuron &_src,
+											GenericNeuron &_tar,
+											const STDP &_splas,
+											const uint32_t _minDly,
+											const uint32_t _maxDly,
+											const bool useUDF );
 
-		//SynMatrices( const AIFNeuron &_src,
-		//			 const AIFNeuron &_tar, 
-		//			 const Spk_Delay_Mngr &_manager,
-		//			 const STDP &_splas,
-		//			 const uint32_t _maxDly,
-		//			 const uint32_t _minDly,
-		//			 const Connector &_con	);
+		static uint32_t** calcDelayMat(	const GenericNeuron* src,
+										const GenericNeuron* tar,
+										uint32_t _maxDly	);
 
-		SynMatrices::SynMatrices* connectNeurons(AIFNeuron &_src,
-										AIFNeuron &_tar,
-										//const Spk_Delay_Mngr &_manager,
-										const STDP &_splas,
-										const uint32_t _minDly,
-										const uint32_t _maxDly );
+		static uint32_t calcDelay(	const Position &p1,
+									const Position &p2 	);
 
-		uint32_t** calcDelayMat(const AIFNeuron* src,
-								const AIFNeuron* tar,
-								uint32_t _maxDly	);
 		void propagateSelective(const uint32_t _time,
 								const float dt,
 								const UDFPlasticity &udf);
 
-	private:
-		float MAX_DIST;
-		array dampen(const array duration, const array initVal, const array dv);
-		array dampen(const array initVal, const array dv);
+		static array dampen(	const array &duration,
+								const array &initVal,
+								const array &dv	);
 
+		static array dInteg(const array &val);
+
+		bool isUsingUDF() { return usingUDF; }
+
+		void setUsingUDF(const bool _usingUDF) { usingUDF = _usingUDF; }
+
+	private:
+
+		float MAX_DIST;
+		SynMatrices( const GenericNeuron &_src,
+			 const GenericNeuron &_tar, 
+			 const STDP &_splas,
+			 const uint32_t _maxDly,
+			 const uint32_t _minDly);
+
+		//std::vector<array> dlyChange;
+		std::vector<array> masks;
+		std::vector<array> result;
+		STDP splas;
+		UDFPlasticity* udf;
+		bool usingUDF;
+
+		friend class DataRecorder;
+		friend class SynGrowthManager;
 
 };
-
-//class Connector 
-//{
-//	public:
-//		enum ConnectorType : uint8_t
-//		{
-//			NONE=0,
-//			RANDOM,
-//			INV_DIST
-//		};
-
-
-//		Connector();
-
-//		uint32_t** produceConnectedPairs(AIFNeuron &_src, AIFNeuron &_tar);
-
-
-
-//};
 
 #endif // SYNMATRICES_H_

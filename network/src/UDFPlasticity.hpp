@@ -1,6 +1,7 @@
 #include <arrayfire.h>
 #include <vector>
 #include <cstdint>
+#include <random>
 #include "Spk_Delay_MNGR.h"
 #include "SynMatrices.h"
 
@@ -55,6 +56,13 @@ class UDFPlasticity {
 		array perform(	const array udfur,
 						const array tdiff,
 						const array wts	);
+
+		static float* generateUDFVals(	const GenericNeuron::Polarity srcPol,
+										const GenericNeuron::Polarity tarPol	);
+
+	private:
+		static std::default_random_engine gen;
+		static std::normal_distribution<float> normDist(0, 1);
 
 };
 

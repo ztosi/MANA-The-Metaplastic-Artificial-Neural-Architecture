@@ -1,5 +1,6 @@
 #include <arrayfire.h>
 #include <cstring>
+#include <cstdint>
 #include <stdio.h>
 #include <vector>
 #include "Neuron.hpp"

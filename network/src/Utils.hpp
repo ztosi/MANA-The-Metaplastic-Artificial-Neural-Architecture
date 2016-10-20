@@ -18,7 +18,7 @@ class Position {
 					const float _z	)
 			: x(_x), y(_y), z(_z) {}
 
-		float euclidean (	const Position &p1,
+		static float euclidean (	const Position &p1,
 							const Position &p2	)
 		{
 			return sqrt(pow(p1.x - p2.x, 2) 
@@ -26,7 +26,7 @@ class Position {
 				+ pow(p1.z - p2.z, 2));
 		}
 
-		float euclidean (	const float &x1,
+		static float euclidean (	const float &x1,
 							const float &y1,
 							const float &z1,
 							const float &x2,
@@ -37,6 +37,11 @@ class Position {
 				+ pow(y1 - y2, 2) 
 				+ pow(z1 - z2, 2));
 		}
+
+		static double rand_float( double low, double high )
+		{
+    		return ( ( double )rand() * ( high - low ) ) / ( double )RAND_MAX + low;
+		}		
 
 		bool operator<(const Position &lhs, const Position &rhs)
 		{

@@ -1,18 +1,21 @@
 #include <arrayfire.h>
-#include <math.h>
+#include <assert.h>
+#include <cmath>
 #include <cstdint>
 #include <vector>
 #include "SynMatrices.hpp"
 #include "Neuron.hpp"
+#include "UDFPlasticity.hpp"
+#include "Utils.hpp"
 
 using namespace af;
 
-SynMatrices::SynMatrices(	const AIFNeuron &_src,
-							const AIFNeuron &_tar,
+SynMatrices::SynMatrices(	const GenericNeuron &_src,
+							const GenericNeuron &_tar,
 							const STDP &_splas,
 							const uint32_t _minDly,
-							const uint32_t _maxDly ) 
-	: srcHost(_src), tarHost(_tar), splas(_splas),
+							const uint32_t _maxDly	) 
+	: netHost(_src.host), srcHost(_src), tarHost(_tar), splas(_splas),
 	 minDly(_minDly), maxDly(_maxDly),
 	 maxCap(&_src == &_tar ? _src.size*(_src.size - 1) : _src.size * _tar.size)
 {
@@ -60,15 +63,18 @@ SynMatrices::SynMatrices(	const AIFNeuron &_src,
 			}
 		}
 
-		indices.push_back(inds_loc);
-		indicesActual.push_back(inds_emp_loc);
-		ptrs.push_back(ptr_loc);
+		indices.push_back(inds_emp_loc);
+		indicesActual.push_back(inds_loc);
+		//ptrs.push_back(ptr_loc);
 
-		incWts.push_back(constant(START_WT, totSz, f32));
-		incDw.push_back(constant(0, totSz, f32));
+		//incWts.push_back(constant(START_WT, totSz, f32));
+		//incDw.push_back(constant(0, totSz, f32));
+		wt_And_dw.push_back(constant(0, dim4(totSz, 2), f32));
+		wt_And_dw[j].col(0) = constant(START_WT, dim4(totSz,1), f32);
+		wt_And_dw[j].col(1) = constant(0, dim4(totSz,1), f32);
 		lastUp.push_back(constant(0, totSz, u32));
 		lastArrT.push_back(constant(0, totSz, u32));
-		incDw.push_back(constant(0, totSz, f32));
+		//incDw.push_back(constant(0, totSz, f32));
 
 	}
 
@@ -77,13 +83,15 @@ SynMatrices::SynMatrices(	const AIFNeuron &_src,
 
 }
 
-SynMatrices* SynMatrices::connectNeurons(AIFNeuron &_src,
-										AIFNeuron &_tar,
-										const Spk_Delay_Mngr &_manager,
-										const STDP &_splas,
-										const uint32_t _minDly,
-										const uint32_t _maxDly )
+SynMatrices* SynMatrices::connectNeurons(	const GenericNeuron &_src,
+											const GenericNeuron &_tar,
+											const STDP &_splas,
+											const uint32_t _minDly,
+											const uint32_t _maxDly,
+											const bool useUDF )
 {
+	assert(_src.host == _tar.host);
+
 	SynMatrices* syns = new SynMatrices(_src, _tar, _manager, _splas,
 		_maxDly, _minDly); 
 	if (_src.polarity)
@@ -92,11 +100,17 @@ SynMatrices* SynMatrices::connectNeurons(AIFNeuron &_src,
 	} else {
 		_tar.incoInhSyns.push_back(*syns);
 	}
+	if (useUDF)
+	{
+		udf = new UDFPlasticity(*syns);
+	}
 	return syns;
 }
 
 
-uint32_t** SynMatrices::calcDelayMat(AIFNeuron* src, AIFNeuron* tar, uint32_t maxDly) 
+uint32_t** SynMatrices::calcDelayMat(	const GenericNeuron* src,
+										const GenericNeuron* tar,
+										const uint32_t maxDly) 
 {
 	float** dists = new float *[src->size];
 	MAX_DIST = 0;
@@ -106,7 +120,7 @@ uint32_t** SynMatrices::calcDelayMat(AIFNeuron* src, AIFNeuron* tar, uint32_t ma
 			float xdist = src->x[i] - tar->x[j];
 			float ydist = src->y[i] - tar->y[j];
 			float zdist = src->z[i] - tar->z[j];
-			float dist = sqrt(xdist*xdist + ydist*ydist + zdist*zdist);
+			float dist = std::sqrt(xdist*xdist + ydist*ydist + zdist*zdist);
 			dists[i][j] = dist;
 			if (dist > MAX_DIST) {
 				MAX_DIST = dist;
@@ -127,11 +141,22 @@ uint32_t** SynMatrices::calcDelayMat(AIFNeuron* src, AIFNeuron* tar, uint32_t ma
 	return dlys;
 }
 
-	// TODO: Order of synapse actions needs to be re-written
-void SynMatrices::propagate_selective(	const uint32_t _time,
-										const float dt,
-										const UDFPlasticity &udf)
+uint32_t SynMatrices::calcDelay(	const Position &p1,
+									const Position &p2,
+									const uint32_t maxDly 	)
 {
+	uint32_t dist = Utils::euclidean(p1, p2);
+	dist = dist > MAX_DIST ? MAX_DIST : dist;
+	return (uint32_t) (maxDly * dist / MAX_DIST);
+}
+
+	// TODO: Order of synapse actions needs to be re-written
+void SynMatrices::propagate_selective()
+{
+
+	float dt = netHost.dt;
+	uint32_t _time = netHost.getTime();
+
 	array allSpks = src.getSpkHistory();
 	std::vector<array> upSyns(host.tar.size);
 
@@ -154,40 +179,40 @@ void SynMatrices::propagate_selective(	const uint32_t _time,
 		// whether or not allSpks is "1" at these indices indicating
 		// a spike arrived from that neuron at this time.
 		// mask [i] will be same size as indicesAcutal[i]
-		mask[i] = lookup(allSpks, indicesActual[i], 1);
+		masks[i] = lookup(allSpks, indicesActual[i], 1);
 		
 		// Since all Spks is only 0s or 1s a sum tells us how many
 		// pre-synaptic spikes we need to deal with
-		uint32_t num2up = sum(mask);
+		uint32_t num2up = sum(masks[i]);
 		
 		// determine what actual indices in the pre-synaptic arrays
 		// have incoming spikes right now
-		mask[i] = where(mask[i]); 
+		masks[i] = where(masks[i]); 
 		
 		// Select out the wts that will be changed
-		array wts2Up = wt_And_dw[i](mask[i], 1);
+		array wts2Up = wt_And_dw[i](masks[i], 1);
 		
 		// find the time differential between the last time the weight
 		// was updated and the current time to apply dw
-		array tdiff = (_time-lastUp[i](mask[i]))*dt;
-		lastUp[i](mask[i]) = _time;
+		array tdiff = (_time-lastUp[i](masks[i]))*dt;
+		lastUp[i](masks[i]) = _time;
 
 		// Integrate using the dampening function to prevent wt overgrowth
-		wts2Up = dampen(tdiff,  wts2Up, wt_And_dw[i](mask[i], 2));
+		wts2Up = dampen(tdiff,  wts2Up, wt_And_dw[i](masks[i], 2));
 
 		// Find all the UDF variables that will need to be updated
-		array all2Up = udf.UDFuR(span, mask[i]);
+		array all2Up = udf->UDFuR(span, masks[i]);
 		// Perform UDF calculations
-		results[i] = udf.perform(all2Up, tdiff, wts2Up);
+		results[i] = udf->perform(all2Up, tdiff, wts2Up);
 		
 		// TODO Make sure that this is okay:
-		udf.UDFuR(span, mask[i]) = all2Up;
-		wt_And_dw[i](mask, 1) = wts2Up;
+		udf->UDFuR(span, mask[i]) = all2Up;
+		wt_And_dw[i].col(0)(masks[i]) = wts2Up;
 
-		wt_And_dw[i](mask, 2) = stdpFunc(_time,
+		wt_And_dw[i].col(1)(masks[i]) = stdpFunc(_time,
 			lastSpks(i), lastArrT[i]);
 
-		lastArrT[i](mask) = _time;
+		lastArrT[i](mask[i]) = _time;
 	}
 
 
@@ -202,11 +227,90 @@ void SynMatrices::propagate_selective(	const uint32_t _time,
 			host.tar.I_i(i) += sum(results[i]);
 		}
 	}
-
 	
 
 }
 
+void SynMatrices::propagate_brute(	const uint32_t _time,
+										const float dt)
+{
+
+	float dt = netHost.dt;
+	uint32_t _time = netHost.getTime();
+
+	array allSpks = src.getSpkHistory();
+	std::vector<array> upSyns(host.tar.size);
+
+	// Since branching is not allowed in gfor, pre-select the 
+	// pre-triggered STDP function
+	array (*stdpFunc)(uint32_t, array &);
+	stdpFun = splas.hebb ? &(splas.preTriggerHebb)
+		: &(splas.preTriggerAntiHebb);
+
+	array lastSpks = *(host.tar.lastSpkTime);	
+
+	std::vector<array>results(host.tar.size);
+
+	//Least efficient part of the whole process... lots of cache misses gonna 
+	// happen here...
+	gfor (seq i, host.tar.size)
+	{
+		// Take the indices of the neurons projecting onto this neuron
+		// (which are shifted based on their delay) and "lookup"
+		// whether or not allSpks is "1" at these indices indicating
+		// a spike arrived from that neuron at this time.
+		// mask [i] will be same size as indicesAcutal[i]
+		masks[i] = lookup(allSpks, indicesActual[i], 1);
+		
+		// Since all Spks is only 0s or 1s a sum tells us how many
+		// pre-synaptic spikes we need to deal with
+		uint32_t num2up = sum(masks[i]);
+		
+		// determine what actual indices in the pre-synaptic arrays
+		// have incoming spikes right now
+		masks[i] = where(masks[i]); 
+		
+		// Select out the wts that will be changed
+		array wts2Up = wt_And_dw[i](masks[i], 1);
+		
+		// find the time differential between the last time the weight
+		// was updated and the current time to apply dw
+		array tdiff = (_time-lastUp[i](masks[i]))*dt;
+		lastUp[i](masks[i]) = _time;
+
+		// Integrate using the dampening function to prevent wt overgrowth
+		wts2Up = dampen(tdiff,  wts2Up, wt_And_dw[i](masks[i], 2));
+
+		// Find all the UDF variables that will need to be updated
+		array all2Up = udf_loc->UDFuR(span, masks[i]);
+		// Perform UDF calculations
+		results[i] = udf->perform(all2Up, tdiff, wts2Up);
+		
+		// TODO Make sure that this is okay:
+		udf->UDFuR(span, mask[i]) = all2Up;
+		wt_And_dw[i].col(0)(masks[i]) = wts2Up;
+
+		wt_And_dw[i].col(1)(masks[i]) = stdpFunc(_time,
+			lastSpks(i), lastArrT[i]);
+
+		lastArrT[i](mask[i]) = _time;
+	}
+
+
+	if (host.srcPol) {
+		gfor (seq i, host.tar.size)
+		{
+			host.tar.I_e(i) += sum(results[i]);
+		}
+	} else {
+		gfor (seq i, host.tar.size)
+		{
+			host.tar.I_i(i) += sum(results[i]);
+		}
+	}
+	
+
+}
 
 array SynMatrices::dampen(const array &duration, const array &initVal, const &array dv)
 {

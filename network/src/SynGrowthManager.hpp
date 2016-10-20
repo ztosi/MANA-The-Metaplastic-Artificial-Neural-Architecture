@@ -28,7 +28,12 @@ class SynGrowthManager
 							const float _decFac	);
 
 		void initLambda(float maxDist);
+		double connectProb(const Position &p1, const Position &p2);
 		void invoke();
+
+		// TODO: Create multiple elimination/growth rules
+		// and machinery for their aribitrary selection and use
+		// in invoke()
 
 	private:
 
@@ -37,6 +42,8 @@ class SynGrowthManager
 		// The cutoff for deletion elegibility as a proportion
 		// of the strongest synapse in the group.
 		float delThresh = DEF_PRUNE_THRESH;
+
+		float minDel = DEF_MIN_DEL;
 
 		// Constant scalar factor in determining how likely
 		// a connection is to be made based on distance
