@@ -1,8 +1,4 @@
-ArrayFire Project Templates
-========================================
+MANA: The Metaplastic Artificial Neural Architecture
+=========================================================
 
-This repository contains project templates for various IDEs and build
-mechanisms. This is to help users get started on ArrayFire projects quickly.
-
-Each of these sub-directory has a README.md file containing the instructions
-on how to use that build mechanism.
+This repository contains a C++ implementation of a MANA network and a SORN (Self-Organizing Recurrent Network). It is uncertain at the time of writing how much more general this software will be made. The code runs on GPUs courtesy of arrayfire. 
