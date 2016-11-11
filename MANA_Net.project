@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeLite_Project Name="MANA_Net" InternalType="">
+  <Plugins>
+    <Plugin Name="qmake">
+      <![CDATA[00010001N0005Debug000000000000]]>
+    </Plugin>
+  </Plugins>
+  <VirtualDirectory Name="CMake">
+    <VirtualDirectory Name="build">
+      <VirtualDirectory Name="CMakeFiles">
+        <VirtualDirectory Name="3.5.1">
+          <VirtualDirectory Name="CompilerIdC">
+            <File Name="CMake/build/CMakeFiles/3.5.1/CompilerIdC/CMakeCCompilerId.c"/>
+          </VirtualDirectory>
+          <VirtualDirectory Name="CompilerIdCXX">
+            <File Name="CMake/build/CMakeFiles/3.5.1/CompilerIdCXX/CMakeCXXCompilerId.cpp"/>
+          </VirtualDirectory>
+        </VirtualDirectory>
+        <File Name="CMake/build/CMakeFiles/feature_tests.cxx"/>
+        <File Name="CMake/build/CMakeFiles/feature_tests.c"/>
+      </VirtualDirectory>
+    </VirtualDirectory>
+    <VirtualDirectory Name="src">
+      <File Name="CMake/src/SynMatrices.cpp"/>
+      <File Name="CMake/src/Neuron.cpp"/>
+      <File Name="CMake/src/SynGrowthManager.cpp"/>
+      <File Name="CMake/src/UDFPlasticity.cpp"/>
+      <File Name="CMake/src/IPComponent.cpp"/>
+      <File Name="CMake/src/HPComponent.cpp"/>
+      <File Name="CMake/src/SynActors.cpp"/>
+      <File Name="CMake/src/main.cpp"/>
+      <File Name="CMake/src/Module.cpp"/>
+      <File Name="CMake/src/STDP.cpp"/>
+      <File Name="CMake/src/Network.cpp"/>
+    </VirtualDirectory>
+    <VirtualDirectory Name="include">
+      <File Name="CMake/include/HPComponent.hpp"/>
+      <File Name="CMake/include/Neuron.hpp"/>
+      <File Name="CMake/include/DataRecorder.hpp"/>
+      <File Name="CMake/include/SynActors.hpp"/>
+      <File Name="CMake/include/STDP.hpp"/>
+      <File Name="CMake/include/IPComponent.hpp"/>
+      <File Name="CMake/include/SynGrowthManager.hpp"/>
+      <File Name="CMake/include/Module.hpp"/>
+      <File Name="CMake/include/SynMatrices.hpp"/>
+      <File Name="CMake/include/Network.hpp"/>
+      <File Name="CMake/include/Utils.hpp"/>
+      <File Name="CMake/include/UDFPlasticity.hpp"/>
+    </VirtualDirectory>
+    <VirtualDirectory Name="CMakeModules">
+      <File Name="CMake/CMakeModules/cuda_compute_capability.c"/>
+    </VirtualDirectory>
+  </VirtualDirectory>
+  <Description/>
+  <Dependencies/>
+  <Settings Type="Dynamic Library">
+    <GlobalSettings>
+      <Compiler Options="" C_Options="" Assembler="">
+        <IncludePath Value="."/>
+      </Compiler>
+      <Linker Options="">
+        <LibraryPath Value="."/>
+      </Linker>
+      <ResourceCompiler Options=""/>
+    </GlobalSettings>
+    <Configuration Name="Debug" CompilerType="GCC ( 4.8 )" DebuggerType="GNU gdb debugger" Type="Dynamic Library" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
+      <Compiler Options="-g" C_Options="-g" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
+        <IncludePath Value="."/>
+      </Compiler>
+      <Linker Options="" Required="yes"/>
+      <ResourceCompiler Options="" Required="no"/>
+      <General OutputFile="" IntermediateDirectory="./Debug" Command="$(WorkspacePath)/cmake-build-$(WorkspaceConfiguration)/bin/$(ProjectName)" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>
+      <BuildSystem Name="CMake"/>
+      <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
+        <![CDATA[]]>
+      </Environment>
+      <Debugger IsRemote="no" RemoteHostName="" RemoteHostPort="" DebuggerPath="" IsExtended="no">
+        <DebuggerSearchPaths/>
+        <PostConnectCommands/>
+        <StartupCommands/>
+      </Debugger>
+      <PreBuild/>
+      <PostBuild/>
+      <CustomBuild Enabled="yes">
+        <RebuildCommand/>
+        <CleanCommand>cd ./build/ &amp;&amp; make clean</CleanCommand>
+        <BuildCommand>cd ./build/ &amp;&amp; make</BuildCommand>
+        <PreprocessFileCommand/>
+        <SingleFileCommand/>
+        <MakefileGenerationCommand/>
+        <ThirdPartyToolName>None</ThirdPartyToolName>
+        <WorkingDirectory>/home/zach/MANA_Net/CMake</WorkingDirectory>
+      </CustomBuild>
+      <AdditionalRules>
+        <CustomPostBuild/>
+        <CustomPreBuild/>
+      </AdditionalRules>
+      <Completion EnableCpp11="no" EnableCpp14="no">
+        <ClangCmpFlagsC/>
+        <ClangCmpFlags/>
+        <ClangPP/>
+        <SearchPaths/>
+      </Completion>
+    </Configuration>
+    <Configuration Name="Release" CompilerType="GCC ( 4.8 )" DebuggerType="GNU gdb debugger" Type="Dynamic Library" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
+      <Compiler Options="" C_Options="" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
+        <IncludePath Value="."/>
+      </Compiler>
+      <Linker Options="-O2" Required="yes"/>
+      <ResourceCompiler Options="" Required="no"/>
+      <General OutputFile="" IntermediateDirectory="./Release" Command="$(WorkspacePath)/cmake-build-$(WorkspaceConfiguration)/bin/$(ProjectName)" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>
+      <BuildSystem Name="CMake"/>
+      <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
+        <![CDATA[]]>
+      </Environment>
+      <Debugger IsRemote="no" RemoteHostName="" RemoteHostPort="" DebuggerPath="" IsExtended="no">
+        <DebuggerSearchPaths/>
+        <PostConnectCommands/>
+        <StartupCommands/>
+      </Debugger>
+      <PreBuild/>
+      <PostBuild/>
+      <CustomBuild Enabled="yes">
+        <RebuildCommand/>
+        <CleanCommand>make clean</CleanCommand>
+        <BuildCommand>make</BuildCommand>
+        <PreprocessFileCommand/>
+        <SingleFileCommand/>
+        <MakefileGenerationCommand/>
+        <ThirdPartyToolName>None</ThirdPartyToolName>
+        <WorkingDirectory>$(WorkspacePath)</WorkingDirectory>
+      </CustomBuild>
+      <AdditionalRules>
+        <CustomPostBuild/>
+        <CustomPreBuild/>
+      </AdditionalRules>
+      <Completion EnableCpp11="no" EnableCpp14="no">
+        <ClangCmpFlagsC/>
+        <ClangCmpFlags/>
+        <ClangPP/>
+        <SearchPaths/>
+      </Completion>
+    </Configuration>
+  </Settings>
+</CodeLite_Project>
