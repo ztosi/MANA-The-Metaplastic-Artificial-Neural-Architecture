@@ -69,6 +69,7 @@ MANA_Net__cuda_EXTERNAL_OBJECTS = \
 "/home/zach/MANA_Net/CMake/build/src/CMakeFiles/MANA_CORE.dir/IPComponent.cpp.o" \
 "/home/zach/MANA_Net/CMake/build/src/CMakeFiles/MANA_CORE.dir/HPComponent.cpp.o" \
 "/home/zach/MANA_Net/CMake/build/src/CMakeFiles/MANA_CORE.dir/SynActors.cpp.o" \
+"/home/zach/MANA_Net/CMake/build/src/CMakeFiles/MANA_CORE.dir/Network.cpp.o" \
 "/home/zach/MANA_Net/CMake/build/src/CMakeFiles/MANA_CORE.dir/main.cpp.o" \
 "/home/zach/MANA_Net/CMake/build/src/CMakeFiles/MANA_CORE.dir/Module.cpp.o" \
 "/home/zach/MANA_Net/CMake/build/src/CMakeFiles/MANA_CORE.dir/STDP.cpp.o"
@@ -80,6 +81,7 @@ MANA_Net__cuda_EXTERNAL_OBJECTS = \
 ../bin/MANA_Net-cuda: src/CMakeFiles/MANA_CORE.dir/IPComponent.cpp.o
 ../bin/MANA_Net-cuda: src/CMakeFiles/MANA_CORE.dir/HPComponent.cpp.o
 ../bin/MANA_Net-cuda: src/CMakeFiles/MANA_CORE.dir/SynActors.cpp.o
+../bin/MANA_Net-cuda: src/CMakeFiles/MANA_CORE.dir/Network.cpp.o
 ../bin/MANA_Net-cuda: src/CMakeFiles/MANA_CORE.dir/main.cpp.o
 ../bin/MANA_Net-cuda: src/CMakeFiles/MANA_CORE.dir/Module.cpp.o
 ../bin/MANA_Net-cuda: src/CMakeFiles/MANA_CORE.dir/STDP.cpp.o

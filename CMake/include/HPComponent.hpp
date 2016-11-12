@@ -16,8 +16,8 @@ class HPComponent {
 
 	public:
 
-		HPComponent( 	const AIFNeuron &_neuHost );
-		HPComponent( 	const AIFNeuron &_neuHost,
+		HPComponent( 	AIFNeuron &_neuHost );
+		HPComponent( 	AIFNeuron &_neuHost,
 						//const FREstimator* _watcher,
 						const float _lambda_0,
 						const float _lambda_f,
@@ -36,15 +36,15 @@ class HPComponent {
 		array dThdt;
 		//af::array &exTh;
 		//af::array &inTh;
+        float lambda;
+		float lambda_f;
 
 		const float lambda_0;
-		const float lambda_f;
 		const float lambda_dec;
-		const float lambda;
 		const float normFac;
 
-
 	friend class DataRecorder;
+    
 };
 
 

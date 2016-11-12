@@ -10,33 +10,22 @@
 class SynMatrices;
 class DataRecorder;
 
+const float DEF_PRUNE_THRESH = 0.05;
+const float DEF_MIN_VAL = 1E-5;
+const float DEF_MIN_DENS = 0.1;
+const float DEF_MIN_DEL_PROB = 0.001;
+
 class SynGrowthManager
 {
 	public:
 
-		static const float DEF_PRUNE_THRESH = 0.05;
-		static const float DEF_DIST_MOD = 0.4;
-		static const float DEF_DECAY_FAC = 0.9;
-		static const float MIN_BASE_CON_PROB = 0.01;
-		// Max number of connections that can be grown per invocation
-		// shall be 0.1% of the maximum possible number of synapses
-		// TODO: make this settable...
-		static const float MAX_NCON_FRAC = 0.001;
-
-		SynGrowthManager(const SynMatrices &_synHost);
-		SynGrowthManager(	const SynMatrices &_synHost,
+		SynGrowthManager(   SynMatrices &_synHost) : synHost(_synHost){}
+		SynGrowthManager(	SynMatrices &_synHost,
 							const float _delThresh,
-							const float _distMod,
-							const float _lambda,
-							const float _decFac	);
+							const float _minVal,
+                            const float _minDensity);
 
-		void initLambda(float maxDist);
-		double connectProb(const Position &p1, const Position &p2);
 		void invoke();
-
-		// TODO: Create multiple elimination/growth rules
-		// and machinery for their aribitrary selection and use
-		// in invoke()
 
 	private:
 
@@ -45,25 +34,12 @@ class SynGrowthManager
 		// The cutoff for deletion elegibility as a proportion
 		// of the strongest synapse in the group.
 		float delThresh = DEF_PRUNE_THRESH;
+        
+        float minDelProb = DEF_MIN_DEL_PROB;
 
-		float minDel = DEF_MIN_DEL;
-
-		// Constant scalar factor in determining how likely
-		// a connection is to be made based on distance
-		float distMod = DEF_DIST_MOD;
-
-		// The "mean distance" of established new connections
-		float lambda_sq;
-
-		// Proportion of the number synapses lost in pruning
-		// to add to the synapse group
-		float decFac = DEF_DECAY_FAC;
-
-		uint32_t maxNewCons;
-
-		std::vector<std::list<uint32_t>> unconnectMap; 
-
-	friend class DataRecorder;
+		float minVal = DEF_MIN_VAL;
+        
+        float minDensity = DEF_MIN_DENS;
 
 };
 

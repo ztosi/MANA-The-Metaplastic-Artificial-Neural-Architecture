@@ -6,6 +6,7 @@ file(REMOVE_RECURSE
   "CMakeFiles/MANA_CORE.dir/IPComponent.cpp.o"
   "CMakeFiles/MANA_CORE.dir/HPComponent.cpp.o"
   "CMakeFiles/MANA_CORE.dir/SynActors.cpp.o"
+  "CMakeFiles/MANA_CORE.dir/Network.cpp.o"
   "CMakeFiles/MANA_CORE.dir/main.cpp.o"
   "CMakeFiles/MANA_CORE.dir/Module.cpp.o"
   "CMakeFiles/MANA_CORE.dir/STDP.cpp.o"

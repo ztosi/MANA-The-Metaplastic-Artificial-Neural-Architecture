@@ -2,11 +2,10 @@
 #include <vector>
 #include <cstdint>
 #include <random>
+#include "Neuron.hpp"
 
 #ifndef UDFPLASTICITY_H_
 #define UDFPLASTICITY_H_
-
-using namespace af;
 
 const float DEF_SCALE_FAC = 10.0;
 const float EE_U_MN = 0.5;
@@ -34,16 +33,15 @@ const float II_D_SD = 72.0; //ms
 const float II_F_MN = 60.0; // ms
 const float II_F_SD = 30.0; //ms
 
-class GenericNeuron;
-class SynMatrices;
+using namespace af;
 
-#include "Neuron.hpp"
+class SynMatrices;
 
 class UDFPlasticity {
 
 	public:
 
-		SynMatrices &synHost;
+		const SynMatrices &synHost;
 
 		array FUuRD; // column major
 

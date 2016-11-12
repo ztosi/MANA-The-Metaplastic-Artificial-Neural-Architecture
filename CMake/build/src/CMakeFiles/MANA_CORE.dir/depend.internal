@@ -4,7 +4,9 @@
 src/CMakeFiles/MANA_CORE.dir/HPComponent.cpp.o
  /home/zach/MANA_Net/CMake/include/HPComponent.hpp
  /home/zach/MANA_Net/CMake/include/IPComponent.hpp
+ /home/zach/MANA_Net/CMake/include/Network.hpp
  /home/zach/MANA_Net/CMake/include/Neuron.hpp
+ /home/zach/MANA_Net/CMake/include/Utils.hpp
  /home/zach/MANA_Net/CMake/src/HPComponent.cpp
  /usr/local/include/af/algorithm.h
  /usr/local/include/af/arith.h
@@ -38,7 +40,10 @@ src/CMakeFiles/MANA_CORE.dir/HPComponent.cpp.o
  /usr/local/include/arrayfire.h
 src/CMakeFiles/MANA_CORE.dir/IPComponent.cpp.o
  /home/zach/MANA_Net/CMake/include/IPComponent.hpp
+ /home/zach/MANA_Net/CMake/include/Network.hpp
  /home/zach/MANA_Net/CMake/include/Neuron.hpp
+ /home/zach/MANA_Net/CMake/include/SynMatrices.hpp
+ /home/zach/MANA_Net/CMake/include/Utils.hpp
  /home/zach/MANA_Net/CMake/src/IPComponent.cpp
  /usr/local/include/af/algorithm.h
  /usr/local/include/af/arith.h
@@ -79,7 +84,41 @@ src/CMakeFiles/MANA_CORE.dir/Module.cpp.o
  /home/zach/MANA_Net/CMake/include/SynActors.hpp
  /home/zach/MANA_Net/CMake/include/SynMatrices.hpp
  /home/zach/MANA_Net/CMake/include/UDFPlasticity.hpp
+ /home/zach/MANA_Net/CMake/include/Utils.hpp
  /home/zach/MANA_Net/CMake/src/Module.cpp
+ /usr/local/include/af/algorithm.h
+ /usr/local/include/af/arith.h
+ /usr/local/include/af/array.h
+ /usr/local/include/af/backend.h
+ /usr/local/include/af/blas.h
+ /usr/local/include/af/compatible.h
+ /usr/local/include/af/complex.h
+ /usr/local/include/af/constants.h
+ /usr/local/include/af/data.h
+ /usr/local/include/af/defines.h
+ /usr/local/include/af/device.h
+ /usr/local/include/af/dim4.hpp
+ /usr/local/include/af/exception.h
+ /usr/local/include/af/features.h
+ /usr/local/include/af/gfor.h
+ /usr/local/include/af/graphics.h
+ /usr/local/include/af/image.h
+ /usr/local/include/af/index.h
+ /usr/local/include/af/lapack.h
+ /usr/local/include/af/random.h
+ /usr/local/include/af/seq.h
+ /usr/local/include/af/signal.h
+ /usr/local/include/af/sparse.h
+ /usr/local/include/af/statistics.h
+ /usr/local/include/af/timing.h
+ /usr/local/include/af/traits.hpp
+ /usr/local/include/af/util.h
+ /usr/local/include/af/version.h
+ /usr/local/include/af/vision.h
+ /usr/local/include/arrayfire.h
+src/CMakeFiles/MANA_CORE.dir/Network.cpp.o
+ /home/zach/MANA_Net/CMake/include/Network.hpp
+ /home/zach/MANA_Net/CMake/src/Network.cpp
  /usr/local/include/af/algorithm.h
  /usr/local/include/af/arith.h
  /usr/local/include/af/array.h
@@ -151,6 +190,7 @@ src/CMakeFiles/MANA_CORE.dir/STDP.cpp.o
  /home/zach/MANA_Net/CMake/include/Neuron.hpp
  /home/zach/MANA_Net/CMake/include/STDP.hpp
  /home/zach/MANA_Net/CMake/include/SynMatrices.hpp
+ /home/zach/MANA_Net/CMake/include/Utils.hpp
  /home/zach/MANA_Net/CMake/src/STDP.cpp
  /usr/local/include/af/algorithm.h
  /usr/local/include/af/arith.h
@@ -183,8 +223,11 @@ src/CMakeFiles/MANA_CORE.dir/STDP.cpp.o
  /usr/local/include/af/vision.h
  /usr/local/include/arrayfire.h
 src/CMakeFiles/MANA_CORE.dir/SynActors.cpp.o
+ /home/zach/MANA_Net/CMake/include/Network.hpp
  /home/zach/MANA_Net/CMake/include/Neuron.hpp
+ /home/zach/MANA_Net/CMake/include/SynActors.hpp
  /home/zach/MANA_Net/CMake/include/SynMatrices.hpp
+ /home/zach/MANA_Net/CMake/include/Utils.hpp
  /home/zach/MANA_Net/CMake/src/SynActors.cpp
  /usr/local/include/af/algorithm.h
  /usr/local/include/af/arith.h
@@ -217,8 +260,11 @@ src/CMakeFiles/MANA_CORE.dir/SynActors.cpp.o
  /usr/local/include/af/vision.h
  /usr/local/include/arrayfire.h
 src/CMakeFiles/MANA_CORE.dir/SynGrowthManager.cpp.o
+ /home/zach/MANA_Net/CMake/include/Network.hpp
  /home/zach/MANA_Net/CMake/include/Neuron.hpp
+ /home/zach/MANA_Net/CMake/include/SynGrowthManager.hpp
  /home/zach/MANA_Net/CMake/include/SynMatrices.hpp
+ /home/zach/MANA_Net/CMake/include/UDFPlasticity.hpp
  /home/zach/MANA_Net/CMake/include/Utils.hpp
  /home/zach/MANA_Net/CMake/src/SynGrowthManager.cpp
  /usr/local/include/af/algorithm.h
@@ -254,6 +300,7 @@ src/CMakeFiles/MANA_CORE.dir/SynGrowthManager.cpp.o
 src/CMakeFiles/MANA_CORE.dir/SynMatrices.cpp.o
  /home/zach/MANA_Net/CMake/include/Network.hpp
  /home/zach/MANA_Net/CMake/include/Neuron.hpp
+ /home/zach/MANA_Net/CMake/include/STDP.hpp
  /home/zach/MANA_Net/CMake/include/SynMatrices.hpp
  /home/zach/MANA_Net/CMake/include/UDFPlasticity.hpp
  /home/zach/MANA_Net/CMake/include/Utils.hpp
@@ -289,9 +336,11 @@ src/CMakeFiles/MANA_CORE.dir/SynMatrices.cpp.o
  /usr/local/include/af/vision.h
  /usr/local/include/arrayfire.h
 src/CMakeFiles/MANA_CORE.dir/UDFPlasticity.cpp.o
+ /home/zach/MANA_Net/CMake/include/Network.hpp
  /home/zach/MANA_Net/CMake/include/Neuron.hpp
  /home/zach/MANA_Net/CMake/include/SynMatrices.hpp
  /home/zach/MANA_Net/CMake/include/UDFPlasticity.hpp
+ /home/zach/MANA_Net/CMake/include/Utils.hpp
  /home/zach/MANA_Net/CMake/src/UDFPlasticity.cpp
  /usr/local/include/af/algorithm.h
  /usr/local/include/af/arith.h
@@ -331,6 +380,7 @@ src/CMakeFiles/MANA_CORE.dir/main.cpp.o
  /home/zach/MANA_Net/CMake/include/STDP.hpp
  /home/zach/MANA_Net/CMake/include/SynMatrices.hpp
  /home/zach/MANA_Net/CMake/include/UDFPlasticity.hpp
+ /home/zach/MANA_Net/CMake/include/Utils.hpp
  /home/zach/MANA_Net/CMake/src/main.cpp
  /usr/local/include/af/algorithm.h
  /usr/local/include/af/arith.h

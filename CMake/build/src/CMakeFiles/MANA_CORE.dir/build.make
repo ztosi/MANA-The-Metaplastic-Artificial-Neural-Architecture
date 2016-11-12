@@ -225,9 +225,33 @@ src/CMakeFiles/MANA_CORE.dir/SynActors.cpp.o.provides: src/CMakeFiles/MANA_CORE.
 src/CMakeFiles/MANA_CORE.dir/SynActors.cpp.o.provides.build: src/CMakeFiles/MANA_CORE.dir/SynActors.cpp.o
 
 
+src/CMakeFiles/MANA_CORE.dir/Network.cpp.o: src/CMakeFiles/MANA_CORE.dir/flags.make
+src/CMakeFiles/MANA_CORE.dir/Network.cpp.o: ../src/Network.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/zach/MANA_Net/CMake/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object src/CMakeFiles/MANA_CORE.dir/Network.cpp.o"
+	cd /home/zach/MANA_Net/CMake/build/src && /usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/MANA_CORE.dir/Network.cpp.o -c /home/zach/MANA_Net/CMake/src/Network.cpp
+
+src/CMakeFiles/MANA_CORE.dir/Network.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/MANA_CORE.dir/Network.cpp.i"
+	cd /home/zach/MANA_Net/CMake/build/src && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/zach/MANA_Net/CMake/src/Network.cpp > CMakeFiles/MANA_CORE.dir/Network.cpp.i
+
+src/CMakeFiles/MANA_CORE.dir/Network.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/MANA_CORE.dir/Network.cpp.s"
+	cd /home/zach/MANA_Net/CMake/build/src && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/zach/MANA_Net/CMake/src/Network.cpp -o CMakeFiles/MANA_CORE.dir/Network.cpp.s
+
+src/CMakeFiles/MANA_CORE.dir/Network.cpp.o.requires:
+
+.PHONY : src/CMakeFiles/MANA_CORE.dir/Network.cpp.o.requires
+
+src/CMakeFiles/MANA_CORE.dir/Network.cpp.o.provides: src/CMakeFiles/MANA_CORE.dir/Network.cpp.o.requires
+	$(MAKE) -f src/CMakeFiles/MANA_CORE.dir/build.make src/CMakeFiles/MANA_CORE.dir/Network.cpp.o.provides.build
+.PHONY : src/CMakeFiles/MANA_CORE.dir/Network.cpp.o.provides
+
+src/CMakeFiles/MANA_CORE.dir/Network.cpp.o.provides.build: src/CMakeFiles/MANA_CORE.dir/Network.cpp.o
+
+
 src/CMakeFiles/MANA_CORE.dir/main.cpp.o: src/CMakeFiles/MANA_CORE.dir/flags.make
 src/CMakeFiles/MANA_CORE.dir/main.cpp.o: ../src/main.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/zach/MANA_Net/CMake/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object src/CMakeFiles/MANA_CORE.dir/main.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/zach/MANA_Net/CMake/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object src/CMakeFiles/MANA_CORE.dir/main.cpp.o"
 	cd /home/zach/MANA_Net/CMake/build/src && /usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/MANA_CORE.dir/main.cpp.o -c /home/zach/MANA_Net/CMake/src/main.cpp
 
 src/CMakeFiles/MANA_CORE.dir/main.cpp.i: cmake_force
@@ -251,7 +275,7 @@ src/CMakeFiles/MANA_CORE.dir/main.cpp.o.provides.build: src/CMakeFiles/MANA_CORE
 
 src/CMakeFiles/MANA_CORE.dir/Module.cpp.o: src/CMakeFiles/MANA_CORE.dir/flags.make
 src/CMakeFiles/MANA_CORE.dir/Module.cpp.o: ../src/Module.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/zach/MANA_Net/CMake/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object src/CMakeFiles/MANA_CORE.dir/Module.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/zach/MANA_Net/CMake/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object src/CMakeFiles/MANA_CORE.dir/Module.cpp.o"
 	cd /home/zach/MANA_Net/CMake/build/src && /usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/MANA_CORE.dir/Module.cpp.o -c /home/zach/MANA_Net/CMake/src/Module.cpp
 
 src/CMakeFiles/MANA_CORE.dir/Module.cpp.i: cmake_force
@@ -275,7 +299,7 @@ src/CMakeFiles/MANA_CORE.dir/Module.cpp.o.provides.build: src/CMakeFiles/MANA_CO
 
 src/CMakeFiles/MANA_CORE.dir/STDP.cpp.o: src/CMakeFiles/MANA_CORE.dir/flags.make
 src/CMakeFiles/MANA_CORE.dir/STDP.cpp.o: ../src/STDP.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/zach/MANA_Net/CMake/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object src/CMakeFiles/MANA_CORE.dir/STDP.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/zach/MANA_Net/CMake/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object src/CMakeFiles/MANA_CORE.dir/STDP.cpp.o"
 	cd /home/zach/MANA_Net/CMake/build/src && /usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/MANA_CORE.dir/STDP.cpp.o -c /home/zach/MANA_Net/CMake/src/STDP.cpp
 
 src/CMakeFiles/MANA_CORE.dir/STDP.cpp.i: cmake_force
@@ -304,6 +328,7 @@ MANA_CORE: src/CMakeFiles/MANA_CORE.dir/UDFPlasticity.cpp.o
 MANA_CORE: src/CMakeFiles/MANA_CORE.dir/IPComponent.cpp.o
 MANA_CORE: src/CMakeFiles/MANA_CORE.dir/HPComponent.cpp.o
 MANA_CORE: src/CMakeFiles/MANA_CORE.dir/SynActors.cpp.o
+MANA_CORE: src/CMakeFiles/MANA_CORE.dir/Network.cpp.o
 MANA_CORE: src/CMakeFiles/MANA_CORE.dir/main.cpp.o
 MANA_CORE: src/CMakeFiles/MANA_CORE.dir/Module.cpp.o
 MANA_CORE: src/CMakeFiles/MANA_CORE.dir/STDP.cpp.o
@@ -323,6 +348,7 @@ src/CMakeFiles/MANA_CORE.dir/requires: src/CMakeFiles/MANA_CORE.dir/UDFPlasticit
 src/CMakeFiles/MANA_CORE.dir/requires: src/CMakeFiles/MANA_CORE.dir/IPComponent.cpp.o.requires
 src/CMakeFiles/MANA_CORE.dir/requires: src/CMakeFiles/MANA_CORE.dir/HPComponent.cpp.o.requires
 src/CMakeFiles/MANA_CORE.dir/requires: src/CMakeFiles/MANA_CORE.dir/SynActors.cpp.o.requires
+src/CMakeFiles/MANA_CORE.dir/requires: src/CMakeFiles/MANA_CORE.dir/Network.cpp.o.requires
 src/CMakeFiles/MANA_CORE.dir/requires: src/CMakeFiles/MANA_CORE.dir/main.cpp.o.requires
 src/CMakeFiles/MANA_CORE.dir/requires: src/CMakeFiles/MANA_CORE.dir/Module.cpp.o.requires
 src/CMakeFiles/MANA_CORE.dir/requires: src/CMakeFiles/MANA_CORE.dir/STDP.cpp.o.requires

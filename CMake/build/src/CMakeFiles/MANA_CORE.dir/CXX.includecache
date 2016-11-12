@@ -19,11 +19,27 @@ arrayfire.h
 -
 cstdint
 -
+Neuron.hpp
+/home/zach/MANA_Net/CMake/include/Neuron.hpp
+SynMatrices.hpp
+/home/zach/MANA_Net/CMake/include/SynMatrices.hpp
+HPComponent.hpp
+/home/zach/MANA_Net/CMake/include/HPComponent.hpp
+IPComponent.hpp
+/home/zach/MANA_Net/CMake/include/IPComponent.hpp
+SynActors.hpp
+/home/zach/MANA_Net/CMake/include/SynActors.hpp
+UDFPlasticity.hpp
+/home/zach/MANA_Net/CMake/include/UDFPlasticity.hpp
+Utils.hpp
+/home/zach/MANA_Net/CMake/include/Utils.hpp
 
 /home/zach/MANA_Net/CMake/include/Network.hpp
 arrayfire.h
 -
 cstdint
+-
+list
 -
 
 /home/zach/MANA_Net/CMake/include/Neuron.hpp
@@ -35,6 +51,10 @@ vector
 -
 cstring
 -
+Network.hpp
+/home/zach/MANA_Net/CMake/include/Network.hpp
+Utils.hpp
+/home/zach/MANA_Net/CMake/include/Utils.hpp
 
 /home/zach/MANA_Net/CMake/include/STDP.hpp
 arrayfire.h
@@ -43,18 +63,32 @@ cstdint
 -
 math.h
 -
-Network.hpp
+../include/Network.hpp
 /home/zach/MANA_Net/CMake/include/Network.hpp
-Neuron.hpp
+../include/Neuron.hpp
 /home/zach/MANA_Net/CMake/include/Neuron.hpp
-SynMatrices.hpp
+../include/SynMatrices.hpp
 /home/zach/MANA_Net/CMake/include/SynMatrices.hpp
+../include/Utils.hpp
+/home/zach/MANA_Net/CMake/include/Utils.hpp
 
 /home/zach/MANA_Net/CMake/include/SynActors.hpp
 arrayfire.h
 -
 Neuron.hpp
 /home/zach/MANA_Net/CMake/include/Neuron.hpp
+
+/home/zach/MANA_Net/CMake/include/SynGrowthManager.hpp
+arrayfire.h
+-
+cstdint
+-
+Neuron.hpp
+/home/zach/MANA_Net/CMake/include/Neuron.hpp
+SynMatrices.hpp
+/home/zach/MANA_Net/CMake/include/SynMatrices.hpp
+Utils.hpp
+/home/zach/MANA_Net/CMake/include/Utils.hpp
 
 /home/zach/MANA_Net/CMake/include/SynMatrices.hpp
 arrayfire.h
@@ -105,6 +139,8 @@ cstdint
 /home/zach/MANA_Net/CMake/include/Neuron.hpp
 ../include/IPComponent.hpp
 /home/zach/MANA_Net/CMake/include/IPComponent.hpp
+../include/SynMatrices.hpp
+/home/zach/MANA_Net/CMake/include/SynMatrices.hpp
 
 /home/zach/MANA_Net/CMake/src/Module.cpp
 arrayfire.h
@@ -127,6 +163,10 @@ cstdint
 /home/zach/MANA_Net/CMake/include/Network.hpp
 ../include/Module.hpp
 /home/zach/MANA_Net/CMake/include/Module.hpp
+
+/home/zach/MANA_Net/CMake/src/Network.cpp
+../include/Network.hpp
+/home/zach/MANA_Net/CMake/include/Network.hpp
 
 /home/zach/MANA_Net/CMake/src/Neuron.cpp
 arrayfire.h
@@ -167,6 +207,8 @@ arrayfire.h
 /home/zach/MANA_Net/CMake/include/Neuron.hpp
 ../include/SynMatrices.hpp
 /home/zach/MANA_Net/CMake/include/SynMatrices.hpp
+../include/SynActors.hpp
+/home/zach/MANA_Net/CMake/include/SynActors.hpp
 
 /home/zach/MANA_Net/CMake/src/SynGrowthManager.cpp
 arrayfire.h
@@ -189,6 +231,10 @@ random
 /home/zach/MANA_Net/CMake/include/SynMatrices.hpp
 ../include/Utils.hpp
 /home/zach/MANA_Net/CMake/include/Utils.hpp
+../include/SynGrowthManager.hpp
+/home/zach/MANA_Net/CMake/include/SynGrowthManager.hpp
+../include/UDFPlasticity.hpp
+/home/zach/MANA_Net/CMake/include/UDFPlasticity.hpp
 
 /home/zach/MANA_Net/CMake/src/SynMatrices.cpp
 arrayfire.h
@@ -213,6 +259,8 @@ algorithm
 /home/zach/MANA_Net/CMake/include/Utils.hpp
 ../include/Network.hpp
 /home/zach/MANA_Net/CMake/include/Network.hpp
+../include/STDP.hpp
+/home/zach/MANA_Net/CMake/include/STDP.hpp
 
 /home/zach/MANA_Net/CMake/src/UDFPlasticity.cpp
 arrayfire.h

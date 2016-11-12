@@ -9,7 +9,7 @@
 
 UDFPlasticity::UDFPlasticity(const SynMatrices &_synHost)
 	: synHost(_synHost), scaleFactor(DEF_SCALE_FAC),
-	FUuRD(constant(0, _synHost.size(), 5, f32))
+	FUuRD(constant(0, _synHost.getSize(), 5, f32))
 {
 
 
@@ -51,7 +51,7 @@ UDFPlasticity::UDFPlasticity(const SynMatrices &_synHost)
 UDFPlasticity* UDFPlasticity::instantiateUDF(const SynMatrices &_synHost)
 {
 	UDFPlasticity* udf = new UDFPlasticity(_synHost);
-	uint32_t sz = _synHost.size();
+	uint32_t sz = _synHost.getSize();
 	udf->FUuRD(span, 0) =  abs((udf->F_std*randn(sz, f32))+udf->F_mean);
 	udf->FUuRD(span, 1) =  abs((udf->U_std*randn(sz, f32))+udf->U_mean);
 	udf->FUuRD(span, 4) =  abs((udf->D_std*randn(sz, f32))+udf->D_mean);
@@ -63,13 +63,13 @@ UDFPlasticity* UDFPlasticity::instantiateUDF(const SynMatrices &_synHost)
 array UDFPlasticity::perform(	const array &ISIs,
 								const array &wts	)
 {
-	FUuRD.col(2) = FUuRD.col(1) + FUuRD.col(2)*(1-FUuRd.col(1)) * exp(ISIs/FUuRD.col(0));
+	FUuRD.col(2) = FUuRD.col(1) + FUuRD.col(2)*(1-FUuRD.col(1)) * exp(ISIs/FUuRD.col(0));
 	FUuRD.col(3) = 1 + (FUuRD.col(3) - (FUuRD.col(2)*FUuRD.col(3)) - 1) * exp(ISIs/FUuRD.col(4));
 	return FUuRD.col(2) * FUuRD.col(3) * wts * scaleFactor;
 }
 
-float* UDFPlasticity::generateUDFVals(	const GenericNeuron::Polarity srcPol,
-										const GenericNeuron::Polarity tarPol	)
+float* UDFPlasticity::generateUDFVals(	const Polarity srcPol,
+										const Polarity tarPol	)
 {
 	float* udfs = new float[5];
 	float U_mean;

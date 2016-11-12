@@ -236,6 +236,33 @@ Module.cpp.s:
 	cd /home/zach/MANA_Net/CMake/build && $(MAKE) -f src/CMakeFiles/MANA_CORE.dir/build.make src/CMakeFiles/MANA_CORE.dir/Module.cpp.s
 .PHONY : Module.cpp.s
 
+Network.o: Network.cpp.o
+
+.PHONY : Network.o
+
+# target to build an object file
+Network.cpp.o:
+	cd /home/zach/MANA_Net/CMake/build && $(MAKE) -f src/CMakeFiles/MANA_CORE.dir/build.make src/CMakeFiles/MANA_CORE.dir/Network.cpp.o
+.PHONY : Network.cpp.o
+
+Network.i: Network.cpp.i
+
+.PHONY : Network.i
+
+# target to preprocess a source file
+Network.cpp.i:
+	cd /home/zach/MANA_Net/CMake/build && $(MAKE) -f src/CMakeFiles/MANA_CORE.dir/build.make src/CMakeFiles/MANA_CORE.dir/Network.cpp.i
+.PHONY : Network.cpp.i
+
+Network.s: Network.cpp.s
+
+.PHONY : Network.s
+
+# target to generate assembly for a file
+Network.cpp.s:
+	cd /home/zach/MANA_Net/CMake/build && $(MAKE) -f src/CMakeFiles/MANA_CORE.dir/build.make src/CMakeFiles/MANA_CORE.dir/Network.cpp.s
+.PHONY : Network.cpp.s
+
 Neuron.o: Neuron.cpp.o
 
 .PHONY : Neuron.o
@@ -445,6 +472,9 @@ help:
 	@echo "... Module.o"
 	@echo "... Module.i"
 	@echo "... Module.s"
+	@echo "... Network.o"
+	@echo "... Network.i"
+	@echo "... Network.s"
 	@echo "... Neuron.o"
 	@echo "... Neuron.i"
 	@echo "... Neuron.s"

@@ -6,13 +6,13 @@
 
 using namespace af;
 
-const float DEF_INH_MXMU = 1.4;
-const float DEF_EXC_MXMU = 0.9;
+//const float DEF_INH_MXMU = 1.4;
+//const float DEF_EXC_MXMU = 0.9;
 const float DEF_OMEGA_A = 300;
 const float DEF_OMEGA_B = 0.1;
+const float DEF_OMEGA_C = 100;
 const float DEF_RHO = 5.0;
 
-class GenericNeuron;
 class DataRecorder;
 
 class SynActor 
@@ -21,12 +21,11 @@ class SynActor
 	// subclasses other than SynNormalizer
 
 	public:
-		GenericNeuron &neuHost;
-		
 		array getFullFlip() { return fullFlip; }
 
-	protected:
-
+    protected:
+        GenericNeuron &neuHost;
+        SynActor(GenericNeuron & _neuHost) : neuHost(_neuHost) {}
 		array fullFlip;
 		bool allFlipped = 0;
 
@@ -35,37 +34,36 @@ class SynActor
 
 };
 
-class SynNormalizer : public SynActor 
+class MANA_SynNormalizer : public SynActor 
 {
 
 	public:
+		MANA_SynNormalizer(	ThresholdedNeuron &_neuHost);
+		MANA_SynNormalizer(	ThresholdedNeuron &_neuHost,
+                            const float _omega_a,
+                            const float _omega_b,
+                            const float _omega_c,
+                            const float _rho	);
+		//SynNormalizer(	const GenericNeuron &_neuHost,
+		//				const float _omega_a,
+		//				const float _omega_b,
+		//				const array &_omega_c,
+		//				const float _rho,
+		//				const float _exc_maxMean,
+		//				const float _inh_maxMean	);
 
-		SynNormalizer(	const GenericNeuron &_neuHost);
-		SynNormalizer(	const GenericNeuron &_neuHost,
-						const float _omega_a,
-						const float _omega_b,
-						const array &_omega_c,
-						const float _rho	);
-		SynNormalizer(	const GenericNeuron &_neuHost,
-						const float _omega_a,
-						const float _omega_b,
-						const array &_omega_c,
-						const float _rho,
-						const float _exc_maxMean,
-						const float _inh_maxMean	);
-
-		void calcSatVals(	const array &prefFRs	);
-		void perform(	const array &thExc,
-						const array &thInh	);
+        void perform(   const array &prefFRs,
+                        const float lambda  );
 
 	private:
 
 		array excFlip;
-		array iinhFlip;
+		array inhFlip;
 		array sValExc;
 		array sValInh;
-		array thEx;
-		array thIn;
+        array meanTh;
+		array thExc;
+		array thInh;
 		array omega_c;
 
 		float omega_a;
@@ -74,7 +72,13 @@ class SynNormalizer : public SynActor
 
 		bool allExcFlipped = 0;
 		bool allInhFlipped = 0;
+        bool allFlipped = 0;
 
+		void calcSatVals(	const array &prefFRs,
+                            const array &_excSynScale,
+                            const array &_inhSynScale	);
+		void normalize(	const array &_excSynScale,
+                        const array &_inhSynScale	);
 
 	friend class DataRecorder;
 

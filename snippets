@@ -1,0 +1,108 @@
+//void SynGrowthManager::initLambda(float maxDist)
+//{
+//	lambda_sq = maxDist/std::sqrt(-std::log(MIN_BASE_CON_PROB/distMod));
+//}
+
+//double SynGrowthManager::connectProb(const Position &p1, const Position &p2)
+//{
+//	float dist = Position::euclidean(p1, p2);
+//	return distMod * std::exp(-((dist*dist)/lambda_sq));
+//}
+
+SynGrowthManager::SynGrowthManager(	const SynMatrices &_synHost,
+									const float _delThresh,
+									const float _minVal,
+                                    const float _minDense)
+									//const float _decFac	)
+	: synHost(_synHost), delThresh(_delThresh), minVal(_minVal)//, distMod(_distMod),
+//	decFac(_decFac)
+{
+//	initLambda(_synHost.MAX_DIST);
+	// unconnectMap(_synHost.tarHost.size);
+	// // Iterate over targets
+	// for (uint32_t i = 0; i < _synHost.tarHost.size; i++)
+	// {
+	// 	// Sort the src index values pertaining to each
+	// 	// synapse in the host.
+	// 	array srtInds = sort(_synHost.indices[i], 1, true);
+	// 	uint32_t k = 0;
+	// 	// Iterate over source neurons--because srtInds is
+	// 	// sorted this will catch all indices where a connection
+	// 	// exists
+	// 	for (uint32_t j = 0; j < _synHost.srcHost.size; j++)
+	// 	{
+	// 		if(k>=srtInds.dims[0]) { break; }
+	// 		if (srtInds(k) == j)
+	// 		{
+	// 			k++;
+	// 		} else {
+	// 			// no index j exists in srtInds--add to
+	// 			// the map of unconnected pairs
+	// 			unconnectMap[i].push_back(j);
+	// 		}
+	// 	}
+	// }
+	// maxNewCons = (uint32_t) (_synHost.maxCap * MAX_NCON_FRAC);
+}
+
+							//const float _lambda,
+							//const float _decFac	);
+
+	//	void initLambda(float maxDist);
+		//double connectProb(const Position &p1, const Position &p2);
+
+
+// Max number of connections that can be grown per invocation
+// shall be 0.1% of the maximum possible number of synapses
+//static const float MAX_NCON_FRAC = 0.001;
+
+//const float DEF_DIST_MOD = 0.4;
+//const float DEF_DECAY_FAC = 0.9;
+//const float MIN_BASE_CON_PROB = 0.01;
+
+
+		// Constant scalar factor in determining how likely
+		// a connection is to be made based on distance
+		//float distMod = DEF_DIST_MOD;
+
+		// The "mean distance" of established new connections
+		//float lambda_sq;
+
+		// Proportion of the number synapses lost in pruning
+		// to add to the synapse group
+		//float decFac = DEF_DECAY_FAC;
+
+		//uint32_t maxNewCons;
+
+		//std::vector<std::list<uint32_t>> unconnectMap; 
+
+
+// void IPComponent::performTypeI(const float dt, const array &flipped)
+// {
+
+// 	array thTerm = abs(mThresh - (neuHost.thresholds)) * hpHost->dThdt
+// 		* hpHost->lambda;
+
+// 	array chg = (tooFast || prefFR > watcher->nu_E)
+// 		&& !(tooFast || prefFR > watcher->nu_E);
+
+// 	tooFast = prefFR > watcher->nu_E;
+
+// 	prefFR_Buff = exp(-prefFR/(beta*lowFR)) * tooFast;
+
+// 	array wayTooSlow = (prefFR < lowFR) && !tooFast;
+
+// 	prefFR_Buff += (1 + ((log(1+alpha*(prefFR/lowFR - 1))) / alpha)) * !tooFast * !wayTooSlow;
+
+// 	prefFR_Buff +=  prefFR/lowFR * wayTooSlow;
+
+// 	zeta = zeta * !chg + ((randn(dim4(1, neuHost.size), f32) * noiseSD) + 1) * chg;
+
+// 	eta = flipped * eta_f + !flipped * eta_0;
+
+// 	prefFR_Buff = prefFR + (eta * dt * thTerm * zeta * prefFR_Buff);
+
+// 	mThresh = (*(host.thresholds) * dt/hpHost->lambda)
+// 		+ ((1 - dt/hpHost->lambda) * mThresh);
+
+// }

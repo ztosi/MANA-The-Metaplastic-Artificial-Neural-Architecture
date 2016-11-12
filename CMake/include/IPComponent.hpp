@@ -21,11 +21,11 @@ class IPComponent {
 
 	public:
 		
-		IPComponent(	const AIFNeuron &_neuHost,
-						const HPComponent* _hpHost	);
+		IPComponent(	AIFNeuron &_neuHost,
+						HPComponent* _hpHost	);
 
-		IPComponent(	const AIFNeuron &_neuHost,
-						const HPComponent* _hpHost,
+		IPComponent(	AIFNeuron &_neuHost,
+						HPComponent* _hpHost,
 						const float _eta_0,
 						const float _eta_f,
 						const float _eta_dec	);

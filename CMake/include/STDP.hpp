@@ -1,9 +1,10 @@
 #include <arrayfire.h>
 #include <cstdint>
 #include <math.h>
-#include "Network.hpp"
-#include "Neuron.hpp"
-#include "SynMatrices.hpp"
+#include "../include/Network.hpp"
+#include "../include/Neuron.hpp"
+#include "../include/SynMatrices.hpp"
+#include "../include/Utils.hpp"
 
 #ifndef STDP_H_
 #define STDP_H_
@@ -31,17 +32,17 @@ const float DEF_A = 30.0;
 const float DEF_INIT_ETA = 2.5E-7;
 
 
-class Network;
-class GenericNeuron;
-class DataRecorder;
+//class Network;
+//class GenericNeuron;
+//class DataRecorder;
 
 class STDP 
 {
 
 	public:
 		const Network &host;
-		const GenericNeuron::Polarity srcPol;
-		const GenericNeuron::Polarity tarPol;
+		const Polarity srcPol;
+		const Polarity tarPol;
 
 		//SynMatrices &host;
 		virtual void postTrigger(	af::array &neg_deltas	)=0;
@@ -60,24 +61,24 @@ class StandardSTDP : public STDP
 	public:
 
 		StandardSTDP(	const Network &_host,
-						const GenericNeuron::Polarity _srcPol,
-						const GenericNeuron::Polarity _tarPol,
+						const Polarity _srcPol,
+						const Polarity _tarPol,
 						const float _eta);
 
 		StandardSTDP(	const Network &_host,
-						const GenericNeuron::Polarity _srcPol,
-						const GenericNeuron::Polarity _tarPol,
+						const Polarity _srcPol,
+						const Polarity _tarPol,
 						const float _eta,
 						const bool _hebbian);
 
 		StandardSTDP(	const Network &_host,
-						const GenericNeuron::Polarity _srcPol,
-						const GenericNeuron::Polarity _tarPol,
+						const Polarity _srcPol,
+						const Polarity _tarPol,
 						const float _eta,
 						const bool _hebbian,
 						const float _w_p,
 						const float _w_m,
-						const float _tau_p
+						const float _tau_p,
 						const float _tau_m	);
 
 		//SynMatrices &host;
@@ -102,13 +103,13 @@ class MexicanHatSTDP : public STDP
 	public:
 
 		MexicanHatSTDP(	const Network &_host,
-						const GenericNeuron::Polarity _srcPol,
-		 				const GenericNeuron::Polarity _tarPol,
+						const Polarity _srcPol,
+		 				const Polarity _tarPol,
 		 				const float _eta 	);
 
 		MexicanHatSTDP(	const Network &_host,
-						const GenericNeuron::Polarity _srcPol,
-		 				const GenericNeuron::Polarity _tarPol,
+						const Polarity _srcPol,
+		 				const Polarity _tarPol,
 		 				const float _eta,
 		 				const float _a,
 		 				const float _sigma 	);
@@ -125,7 +126,7 @@ class MexicanHatSTDP : public STDP
 			nrmTerm = 2.0f/((float) sqrt(3.0f*_s) * pi4thRt);
 		}
 		float getSigma(){ return sigma; }
-		void setA(const float _a) { a = _a }
+		void setA(const float _a) { a = _a; }
 		float getA() { return a; }
 
 	private:
@@ -133,7 +134,7 @@ class MexicanHatSTDP : public STDP
 		float a;
 		float sigma;
 		float sigma_sq;
-		static const float pi4thRt = (float) pow(3.1415, 0.25);
+		static constexpr float pi4thRt = (float) std::pow(3.1415, 0.25);
 		float nrmTerm;
 
 	friend class DataRecorder;

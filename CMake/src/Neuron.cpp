@@ -10,32 +10,36 @@
 
 using namespace af;
 
-AIFNeuron::AIFNeuron(	const Network &_host,
-			const uint32_t _size,
-			const Polarity _pol,
-		 	const Position  minPos,
-		 	const Position  maxPos ) : host(_host),
-		 			online(constant(1, dim4(size, 1), b8)),
-					spks(constant(0, dim4(size, 1), b8)),
-					I_e(constant(0, dim4(size, 1), f32)),
-					I_i(constant(0, dim4(size, 1), f32)),
-					I_bg(constant(DEF_I_BG, dim4(size, 1), f32)),
-					Cm(_pol == Polarity::EXC ?
-						constant(DEF_CM_EXC, dim4(size, 1), f32) :
-						constant(DEF_CM_INH, dim4(size, 1), f32)),
-					V_mem(constant(DEF_V_rest, dim4(size, 1), f32)),
-					V_buff(constant(DEF_V_rest, dim4(size, 1), f32)),
-					w(constant(DEF_V_rest, dim4(size, 1), f32)),
-					w_buff(constant(DEF_V_rest, dim4(size, 1), f32)),
-					thresholds(constant(INIT_THRESH, dim4(size, 1), f32)),
-					lastSpkTime(constant(DEF_V_rest, dim4(size, 1), u32)),
-					lst_buff(constant(DEF_V_rest, dim4(size, 1), u32)),
-					refP(_pol == Polarity::EXC ?
-							(uint32_t)(DEF_E_REF/_host.dt) :
-							(uint32_t)(DEF_I_REF/_host.dt)),
-					adpt(_pol == Polarity::EXC ?
-							DEF_E_ADPT :DEF_I_ADPT)
 
+
+AIFNeuron::AIFNeuron(	const Network &_netHost,
+                        const uint32_t _size,
+                        const Polarity _pol,
+                        const Position  minPos,
+                        const Position  maxPos )
+                        
+    :   ThresholdedNeuron(_netHost, _size, _pol, INIT_THRESH),
+        V_mem(constant(DEF_V_rest, dim4(_size, 1), f32)),
+        V_buff(constant(DEF_V_rest, dim4(_size, 1), f32)),
+        w(constant(DEF_V_rest, dim4(_size, 1), f32)),
+        w_buff(constant(DEF_V_rest, dim4(_size, 1), f32)),
+        I_bg(constant(DEF_I_BG, dim4(_size, 1), f32)),
+        online(constant(1, dim4(_size, 1), b8)),
+        Cm(_pol == Polarity::EXC ? 
+                                constant(DEF_CM_EXC, dim4(_size, 1), f32) :
+                                constant(DEF_CM_INH, dim4(_size, 1), f32)),          
+        refP(_pol == Polarity::EXC ?
+                                (uint32_t)(DEF_E_REF/_netHost.dt) :
+                                (uint32_t)(DEF_I_REF/_netHost.dt)),
+        adpt(_pol == Polarity::EXC ? 
+                                DEF_E_ADPT :
+                                DEF_I_ADPT),
+        iDecay(DEF_I_DEC),
+        eDecay(DEF_E_DEC),
+        V_rest(DEF_V_rest),
+        V_reset(DEF_V_reset),
+        tauW(DEF_TAU_W),
+        noiseSD(DEF_NSD)
 {
 	exInDegs = new uint32_t[size];
 	inInDegs = new uint32_t[size];
@@ -45,39 +49,21 @@ AIFNeuron::AIFNeuron(	const Network &_host,
 	y = new float[size];
 	z = new float[size];
 
-	array X = ((maxPos.x-minPos.x)*randu(dim4(size, 1)))+minPos.x;
-	array Y = ((maxPos.y-minPos.y)*randu(dim4(size, 1)))+minPos.y;
-	array Z = ((maxPos.z-minPos.z)*randu(dim4(size, 1)))+minPos.z;
+	array X = ((maxPos.getX()-minPos.getX())*randu(dim4(size, 1)))+minPos.getX();
+	array Y = ((maxPos.getY()-minPos.getY())*randu(dim4(size, 1)))+minPos.getY();
+	array Z = ((maxPos.getZ()-minPos.getZ())*randu(dim4(size, 1)))+minPos.getZ();
 
 	X.host(x);
 	Y.host(y);
 	Z.host(z);
 
-	iDecay = DEF_I_DEC;
-	eDecay = DEF_E_DEC;
-	noiseSD = DEF_NSD;
-	V_rest = DEF_V_rest;
-	V_reset = DEF_V_reset;
-	tauW = DEF_TAU_W;
-
 }
-
-AIFNeuron::~AIFNeuron()
-{
-	delete[] exInDegs;
-	delete[] inInDegs;
-	delete[] outDegs;
-	delete[] x;
-	delete[] y;
-	delete[] z;	
-}
-
 
 void AIFNeuron::runForward()
 {
 
-	uint32_t t = (uint32_t)(host.getTime());
-	float dt = host.dt;
+	uint32_t t = (uint32_t)(netHost.getTime());
+	float dt = netHost.dt;
 
 	online = t > (lastSpkTime + refP); // disable refractory
 
@@ -124,3 +110,41 @@ Position GenericNeuron::getPosition(uint32_t index)
 	return Position(x[index], y[index], z[index]);
 }
 
+/*
+* Produces a defensive copy of the exictatory in-degrees.
+* 
+* deallocate using delete[]
+* 
+* */
+uint32_t* GenericNeuron::getExcInDegs()
+{
+    uint32_t* arr = new uint32_t[size];
+    std::memcpy(arr, exInDegs, sizeof(arr));
+    return arr;
+}
+
+/*
+* Produces a defensive copy of the Inhibitory in-degrees.
+* 
+* deallocate using delete[]
+* 
+* */
+uint32_t* GenericNeuron::getInhInDegs()
+{
+    uint32_t* arr = new uint32_t[size];
+    std::memcpy(arr, inInDegs, sizeof(arr));
+    return arr;
+}
+
+/*
+* Produces a defensive copy of the out-degrees.
+* 
+* deallocate using delete[]
+* 
+* */
+uint32_t* GenericNeuron::getOutDegs()
+{
+    uint32_t* arr = new uint32_t[size];
+    std::memcpy(arr, outDegs, sizeof(arr));
+    return arr;
+}

@@ -8,65 +8,29 @@
 #include "../include/Neuron.hpp"
 #include "../include/SynMatrices.hpp"
 #include "../include/Utils.hpp"
+#include "../include/SynGrowthManager.hpp"
+#include "../include/UDFPlasticity.hpp"
 
+using namespace af;
 
-SynGrowthManager::SynGrowthManager(	const SynMatrices &_synHost,
+SynGrowthManager::SynGrowthManager(	SynMatrices &_synHost,
 									const float _delThresh,
-									const float _distMod,
-									const float _decFac	)
-	: synHost(_synHost), delThresh(_delThresh), distMod(_distMod),
-	decFac(_decFac)
-{
-	initLambda(_synHost.MAX_DIST);
-	// unconnectMap(_synHost.tarHost.size);
-	// // Iterate over targets
-	// for (uint32_t i = 0; i < _synHost.tarHost.size; i++)
-	// {
-	// 	// Sort the src index values pertaining to each
-	// 	// synapse in the host.
-	// 	array srtInds = sort(_synHost.indices[i], 1, true);
-	// 	uint32_t k = 0;
-	// 	// Iterate over source neurons--because srtInds is
-	// 	// sorted this will catch all indices where a connection
-	// 	// exists
-	// 	for (uint32_t j = 0; j < _synHost.srcHost.size; j++)
-	// 	{
-	// 		if(k>=srtInds.dims[0]) { break; }
-	// 		if (srtInds(k) == j)
-	// 		{
-	// 			k++;
-	// 		} else {
-	// 			// no index j exists in srtInds--add to
-	// 			// the map of unconnected pairs
-	// 			unconnectMap[i].push_back(j);
-	// 		}
-	// 	}
-	// }
-	// maxNewCons = (uint32_t) (_synHost.maxCap * MAX_NCON_FRAC);
-}
-
-void SynGrowthManager::initLambda(float maxDist)
-{
-	lambda_sq = maxDist/std::sqrt(-std::log(MIN_BASE_CON_PROB/distMod));
-}
-
-double SynGrowthManager::connectProb(const Position &p1, const Position &p2)
-{
-	float dist = Position::euclidean(p1, p2);
-	return distMod * std::exp(-((dist*dist)/lambda_sq));
-}
+									const float _minVal,
+                                    const float _minDensity)
+									//const float _decFac	)
+	: synHost(_synHost), delThresh(_delThresh), minVal(_minVal), minDensity(_minDensity) {}
 
 void SynGrowthManager::invoke()
 {
 	uint32_t srcsz = synHost.srcHost.size;
 	uint32_t tarsz = synHost.tarHost.size;
-	uint32_t maxNoSyns = &(synHost.srcHost)==&(synHost.tarHost) ? srcsz*(srcsz-1) : srcsz * tarSz;
+	uint32_t maxNoSyns = &(synHost.srcHost)==&(synHost.tarHost) ? srcsz*(srcsz-1) : srcsz * tarsz;
 
 	// don't prune more synapses if we are below our minimum synaptic density
 	if (synHost.getSize() < minDensity*maxNoSyns) { return; } 
 
-	float mxWt = af::max((*(synHost.wt_And_dw)).col(0));
-	float cutoff = mxWt * _delThresh;
+	array mxWt = max((*(synHost.wt_And_dw)).col(0));
+	array cutoff = mxWt * delThresh;
 
 	// put zeros (flagging for deletion later) in places where synapses have a weaker strength
 	// than the minimum allowed value. 
@@ -84,9 +48,9 @@ void SynGrowthManager::invoke()
 
 	// find/expand only the relevant ones...
 	oDegs = oDegs(j_eligible);
-	oDegs /= synHost.tarHost.getSize(); // as a proportion of possible connections...
+	oDegs /= synHost.tarHost.size; // as a proportion of possible connections...
 	iDegs = iDegs(i_eligible);
-	iDegs /= synHost.srcHost.getSize(); // ditto
+	iDegs /= synHost.srcHost.size; // ditto
 
 	// Determine probabilities for removal based on degrees...
 	array toDelete = ((1.0 - minDelProb) * oDegs * oDegs * iDegs) + minDelProb;
@@ -105,7 +69,7 @@ void SynGrowthManager::invoke()
 	*(synHost.lastArr) = (*(synHost.lastArr))(survivors);
 	*(synHost.srcDlyInds) = (*(synHost.srcDlyInds))(survivors);
 	*(synHost.dlyArr) = (*(synHost.dlyArr))(survivors);
-	*(synHost.tarStartFin) = Utils::findStAndEnds(*(synHost.ijInds));
+	*(synHost.tarStartFin) = findStAndEnds(*(synHost.ijInds));
 	if (synHost.isUsingUDF()) {
 		(synHost.udf)->FUuRD = ((synHost.udf)->FUuRD)(survivors, span);
 	}
@@ -129,7 +93,9 @@ void SynGrowthManager::invoke()
 	 	else
 			--synHost.tarHost.inInDegs[jsDel[j]];		
 	}
-	synHost.size = *(synHost.ijInds).dims(0);
+	synHost.size = (*(synHost.ijInds)).dims(0);
+    delete isDel;
+    delete jsDel;
 }
 
 

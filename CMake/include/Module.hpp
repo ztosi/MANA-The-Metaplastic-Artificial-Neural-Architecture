@@ -1,23 +1,21 @@
 #include <arrayfire.h>
 #include <cstdint>
+#include "Neuron.hpp"
+#include "SynMatrices.hpp"
+#include "HPComponent.hpp"
+#include "IPComponent.hpp"
+#include "SynActors.hpp"
+#include "UDFPlasticity.hpp"
+#include "Utils.hpp"
 
 #ifndef MODULE_H_
 #define MODULE_H_
 
-const float DEF_INH_TRIGGER 1.4;
-const float DEF_EXC_TRIGGER 0.9;
-const float DEF_IE_RATIO 0.2;
+const float DEF_IE_RATIO = 0.2;
 
 using namespace af;
 
-class GenericNeuron;
-class AIFNeuron;
-class SynMatrices;
-class HPComponent;
-class IPComponent;
-class SynActors;
-class UDFPlasticity;
-class Network;
+class Network; // Forward declaration
 
 class Module
 {
@@ -95,8 +93,8 @@ class MANA_Module
 		IPComponent* ipExc;
 		IPComponent* ipInh;
 
-		SynNormalizer* sNrmExc;
-		SynNormalizer* sNrmInh;
+		MANA_SynNormalizer* sNrmExc;
+		MANA_SynNormalizer* sNrmInh;
 
 		UDFPlasticity* eeUDF;
 		UDFPlasticity* eiUDF;

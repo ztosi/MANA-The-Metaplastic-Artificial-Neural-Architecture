@@ -114,8 +114,8 @@ MANA_Module* MANA_Module::buildMANA_Module(	const Network &_host,
 	iiUDF = new UDFPlasticity(*iiSyns);
 
 	// Finally construct synaptic normalizers
-	sNrmExc = new SynNormalizer(excNeuGrp); // Default params...
-	sNrmInh = new SynNormalizer(inhNeuGrp);
+	sNrmExc = new MANA_SynNormalizer(excNeuGrp); // Default params...
+	sNrmInh = new MANA_SynNormalizer(inhNeuGrp);
 
 	// Start building neuron-plasticity components...
 

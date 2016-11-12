@@ -9,7 +9,7 @@ using namespace af;
 ////////////////////////////////////////////////////////////////////////////
 // Homeostatic platicity 
 ////////////////////////////////////////////////////////////////////////////
-HPComponent::HPComponent(const AIFNeuron &_neuHost)
+HPComponent::HPComponent(   AIFNeuron &_neuHost )
 
 	: neuHost(_neuHost), lambda_0(DEF_LAMBDA0), lambda_f(DEF_LAMBDAF),
 	normFac(DEF_NORM_FAC), lambda(DEF_LAMBDA0), lambda_dec(DEF_LAM_D)
@@ -17,7 +17,7 @@ HPComponent::HPComponent(const AIFNeuron &_neuHost)
 	dThdt = constant(0, dim4(_neuHost.size, 1), f32);
 }
 
-HPComponent::HPComponent(	const AIFNeuron &_neuHost,
+HPComponent::HPComponent(	AIFNeuron &_neuHost,
 							const float _lambda_0,
 							const float _lambda_f,
 							const float _lambda_dec,
@@ -31,9 +31,9 @@ HPComponent::HPComponent(	const AIFNeuron &_neuHost,
 
 void HPComponent::perform(const array &pfrs) 
 {
-	dThdt = neuHost.host.dt * 
+	dThdt = neuHost.netHost.dt * 
 		af::log((neuHost.nu_hat + normFac)/(pfrs + normFac))/lambda;
-	lambda -= neuHost.host.dt * (lambda - lambda_f) * lambda_dec;
+	lambda -= neuHost.netHost.dt * (lambda - lambda_f) * lambda_dec;
 }
 
 //void HPComponent::perform(const float dt, array tooFast)

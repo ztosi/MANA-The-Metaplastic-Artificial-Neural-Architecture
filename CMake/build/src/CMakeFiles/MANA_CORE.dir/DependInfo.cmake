@@ -7,6 +7,7 @@ set(CMAKE_DEPENDS_CHECK_CXX
   "/home/zach/MANA_Net/CMake/src/HPComponent.cpp" "/home/zach/MANA_Net/CMake/build/src/CMakeFiles/MANA_CORE.dir/HPComponent.cpp.o"
   "/home/zach/MANA_Net/CMake/src/IPComponent.cpp" "/home/zach/MANA_Net/CMake/build/src/CMakeFiles/MANA_CORE.dir/IPComponent.cpp.o"
   "/home/zach/MANA_Net/CMake/src/Module.cpp" "/home/zach/MANA_Net/CMake/build/src/CMakeFiles/MANA_CORE.dir/Module.cpp.o"
+  "/home/zach/MANA_Net/CMake/src/Network.cpp" "/home/zach/MANA_Net/CMake/build/src/CMakeFiles/MANA_CORE.dir/Network.cpp.o"
   "/home/zach/MANA_Net/CMake/src/Neuron.cpp" "/home/zach/MANA_Net/CMake/build/src/CMakeFiles/MANA_CORE.dir/Neuron.cpp.o"
   "/home/zach/MANA_Net/CMake/src/STDP.cpp" "/home/zach/MANA_Net/CMake/build/src/CMakeFiles/MANA_CORE.dir/STDP.cpp.o"
   "/home/zach/MANA_Net/CMake/src/SynActors.cpp" "/home/zach/MANA_Net/CMake/build/src/CMakeFiles/MANA_CORE.dir/SynActors.cpp.o"

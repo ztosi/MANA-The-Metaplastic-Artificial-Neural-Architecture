@@ -11,14 +11,16 @@ class Position {
 
 	public:
 
-		const float x;
-		const float y;
-		const float z;
+        Position() : x(0), y(0), z(0) {}
 
 		Position(	const float _x,
 					const float _y,
 					const float _z	)
 			: x(_x), y(_y), z(_z) {}
+
+        float getX() const {return x;}
+        float getY() const {return y;}
+        float getZ() const {return z;}
 
 		static float euclidean (	const Position &p1,
 							const Position &p2	)
@@ -44,28 +46,14 @@ class Position {
 		static double rand_float( double low, double high )
 		{
     		return ( ( double )rand() * ( high - low ) ) / ( double )RAND_MAX + low;
-		}		
+		}	
 
+    private:
+		float x;
+		float y;
+		float z;
 
 };
-
-		bool operator<(const Position &lhs, const Position &rhs)
-		{
-			if (lhs.x == rhs.x) {
-				if (lhs.y == rhs.y) {
-					if(lhs.z == rhs.z) {
-						return 0;
-					} else {
-						return lhs.z < rhs.z;
-					}
-				} else {
-					return lhs.y < rhs.y;
-				}
-			} else {
-				return lhs.x < rhs.x;
-			}
-		} 
-
 
 array srcInd2dlysrcInd(		const uint32_t srcSize,
 							const array &srcInds,
