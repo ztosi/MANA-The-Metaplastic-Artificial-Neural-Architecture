@@ -68,8 +68,10 @@ array UDFPlasticity::perform(	const array &ISIs,
 	return FUuRD.col(2) * FUuRD.col(3) * wts * scaleFactor;
 }
 
-float* UDFPlasticity::generateUDFVals(	const Polarity srcPol,
-										const Polarity tarPol	)
+float* UDFPlasticity::generateUDFVals(      const Polarity srcPol,
+                                            const Polarity tarPol,
+                                            std::default_random_engine gen,
+                                            std::normal_distribution<float> normDist    )
 {
 	float* udfs = new float[5];
 	float U_mean;

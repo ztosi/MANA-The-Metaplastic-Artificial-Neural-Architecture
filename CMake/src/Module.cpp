@@ -8,44 +8,47 @@
 #include "../include/UDFPlasticity.hpp"
 #include "../include/Network.hpp"
 #include "../include/Module.hpp"
+#include "../include/STDP.hpp"
 
-#define DEF_INTRA_DLY_MN 1.5 // ms
+#define DEF_INTRA_DLY_MN .5 // ms
 #define DEF_INTRA_DLY_MX 15 // ms
 
-MANA_Module::MANA_Module(	const Network &_host,
+Module::Module (    const Network &_netHost,
+                    const uint32_t _size,
+                    const Position _minPos,
+                    const Position _maxPos, 
+                    const float _ieRatio	)
+    : netHost(_netHost), size(_size), minPos(_minPos), maxPos(_maxPos),
+    numExc((uint32_t)(_size * (1-_ieRatio))),
+    numInh((uint32_t)(_size * _ieRatio))
+{}
+
+Module::Module( 	 const Network &_netHost,
+                    const uint32_t _size,
+                    const Position _minPos,
+                    const Position _maxPos	)
+    : Module(_netHost, _size, _minPos, _maxPos, DEF_IE_RATIO) 
+{}
+                        
+
+MANA_Module::MANA_Module(	const Network &_netHost,
 							const uint32_t _size,
 							const Position _minPos,
 							const Position _maxPos	)
-	: host(_host),
-	excNeuGrp(_host, (uint32_t)(size * (1-DEF_IE_RATIO)), (bool)1,
-		minPos, maxPos),
-	inhNeuGrp(_host, (uint32_t)(size * DEF_IE_RATIO), (bool)0,
-		minPos, maxPos),
-	size(_size), numExc((uint32_t) ((1-DEF_IE_RATIO) * _size),
-	numInh((uint32_t) (DEF_IE_RATIO * _size))
-{
-	watcher = NULL;
-	hpExc = NULL;
-	hpInh = NULL;
-	ipExc = NULL;
-	ipInh = NULL;
-	sNrmExc = NULL;
-	sNrmInh = NULL;
-}
+	: MANA_Module(_netHost, _size, _minPos, _maxPos, DEF_IE_RATIO)
+{}
 
-MANA_Module::MANA_Module(	const Network &_host,
+MANA_Module::MANA_Module(	const Network &_netHost,
 					const uint32_t _size,
 					const Position _minPos,
 					const Position _maxPos,
 					const float _ieRatio	)
-	: host(_host),
-	excNeuGrp(_host, (uint32_t)(size * (1-ieRatio)), (bool)1,
-		minPos, maxPos),
-	inhNeuGrp(_host, (uint32_t)(size * ieRatio), (bool)0,
-		minPos, maxPos),
-	size(_size)
+	: Module(_netHost, _size, _minPos, _maxPos, _ieRatio)
 {
-	watcher = NULL;
+    excNeuGrp = new AIFNeuron(_netHost, (uint32_t)(size * (1-_ieRatio)),
+        Polarity::EXC, minPos, maxPos);
+	inhNeuGrp = new AIFNeuron(_netHost, (uint32_t)(size * _ieRatio),
+        Polarity::INH, minPos, maxPos);
 	hpExc = NULL;
 	hpInh = NULL;
 	ipExc = NULL;
@@ -54,83 +57,80 @@ MANA_Module::MANA_Module(	const Network &_host,
 	sNrmInh = NULL;
 }
 
-MANA_Module* MANA_Module::buildMANA_Module(	const Network &_host,
+MANA_Module* MANA_Module::buildMANA_Module(	const Network &_netHost,
 											const uint32_t _size,
 											const Position _minPos,
-											const Position _maxPos,
-											const float _dt	)
+											const Position _maxPos )
 {
-	return MANA_Module::buildMANA_Module(_host, _size, _minPos, _maxPos,
-		DEF_IE_RATIO, _dt);
+	return MANA_Module::buildMANA_Module(_netHost, _size,
+        _minPos, _maxPos, DEF_IE_RATIO);
 }
 
-MANA_Module* MANA_Module::buildMANA_Module(	const Network &_host,
+MANA_Module* MANA_Module::buildMANA_Module(	const Network &_netHost,
 									const uint32_t _size,
-									const _Position minPos,
-									const _Position maxPos,
-									const float _ieRatio,
-									const float _dt )
+									const Position _minPos,
+									const Position _maxPos,
+									const float _ieRatio )
 {
 		// Construct module skeleton
-	MANA_Module* mod = MANA_Module::buildMANA_Module(_host, _size, _minPos,
+	MANA_Module* mod = MANA_Module::buildMANA_Module(_netHost, _size, _minPos,
 		_maxPos, _ieRatio);
+    float dt = _netHost.dt;
 
 	// Construct synaptic connections & STDP
-	bool exc = (bool)1;
-	bool inh = (bool)0;
-	bool heb = (bool)1;
+    Polarity exc = Polarity::EXC;
+    Polarity inh = Polarity::INH;
 	
 	// Magic Defaults; TODO: include constructor/factory function allowing
 	// users to set these
 	// Construct STDP first--minimal dependents...
-	StandardSTDP* eeSTDP = new StandardSTDP(exc, exc, heb);
-	StandardSTDP* eiSTDP = new StandardSTDP(exc, inh, heb);
-	MexicanHatSTDP* ieSTDP = new MexicanHatSTDP(inh, exc);
-	MexicanHatSTDP* iiSTDP = new MexicanHatSTDP(inh, inh);
+	STDP* eeSTDP = new StandardSTDP(exc, exc, DEF_ETA);
+	STDP* eiSTDP = new StandardSTDP(exc, inh, DEF_ETA);
+	STDP* ieSTDP = new MexicanHatSTDP(inh, exc, DEF_ETA);
+	STDP* iiSTDP = new MexicanHatSTDP(inh, inh, DEF_ETA);
 
 	// Specify max/min delays
-	uint32_t minDelay = (uint32_t) DEF_INTRA_DLY_MN/_dt; // ms -> iterations
-	uint32_t maxDelay = (uint32_t) DEF_INTRA_DLY_MX/_dt; // ms -> iterations
+	uint32_t minDelay = (uint32_t) DEF_INTRA_DLY_MN/dt; // ms -> iterations
+	uint32_t maxDelay = (uint32_t) DEF_INTRA_DLY_MX/dt; // ms -> iterations
 
 	// Construct actual synapse groups (one for each Exc/Inh
 	// combination), and store for later...
 	SynMatrices* eeSyns = SynMatrices::connectNeurons(
-		mod->excNeuGrp, mod->excNeuGrp, *eeSTDP, minDelay, maxDelay);
+		*(mod->excNeuGrp), *(mod->excNeuGrp), eeSTDP, minDelay, maxDelay, 1.0, true);
 	SynMatrices* eiSyns = SynMatrices::connectNeurons(
-		mod->excNeuGrp, mod->inhNeuGrp, *eiSTDP, minDelay, maxDelay);
+		*(mod->excNeuGrp), *(mod->inhNeuGrp), eiSTDP, minDelay, maxDelay, 1.0, true);
 	SynMatrices* ieSyns = SynMatrices::connectNeurons(
-		mod->inhNeuGrp, mod->excNeuGrp, *ieSTDP, minDelay, maxDelay);
+		*(mod->inhNeuGrp), *(mod->excNeuGrp), ieSTDP, minDelay, maxDelay, 1.0, true);
 	SynMatrices* iiSyns = SynMatrices::connectNeurons(
-		mod->inhNeuGrp, mod->inhNeuGrp, *iiSTDP, minDelay, maxDelay);
-	synGrps.push_back(eeSyns);
-	synGrps.push_back(eiSyns);
-	synGrps.push_back(ieSyns);
-	synGrps.push_back(iiSyns);
+		*(mod->inhNeuGrp), *(mod->inhNeuGrp), iiSTDP, minDelay, maxDelay, 1.0, true);
+	mod->synGrps.push_back(eeSyns);
+	mod->synGrps.push_back(eiSyns);
+	mod->synGrps.push_back(ieSyns);
+	mod->synGrps.push_back(iiSyns);
 
 	// Construct the short-term plasticity components which attach themselves...
-	eeUDF = new UDFPlasticity(*eeSyns);
-	eiUDF = new UDFPlasticity(*eiSyns);
-	ieUDF = new UDFPlasticity(*ieSyns);
-	iiUDF = new UDFPlasticity(*iiSyns);
+	mod->eeUDF = UDFPlasticity::instantiateUDF(*eeSyns);
+	mod->eiUDF = UDFPlasticity::instantiateUDF(*eiSyns);
+	mod->ieUDF = UDFPlasticity::instantiateUDF(*ieSyns);
+	mod->iiUDF = UDFPlasticity::instantiateUDF(*iiSyns);
+
+    AIFNeuron* excAIF = dynamic_cast<AIFNeuron*>(mod->excNeuGrp);
+    AIFNeuron* inhAIF = dynamic_cast<AIFNeuron*>(mod->inhNeuGrp);
 
 	// Finally construct synaptic normalizers
-	sNrmExc = new MANA_SynNormalizer(excNeuGrp); // Default params...
-	sNrmInh = new MANA_SynNormalizer(inhNeuGrp);
+	mod->sNrmExc = new MANA_SynNormalizer(*excAIF); // Default params...
+	mod->sNrmInh = new MANA_SynNormalizer(*inhAIF);
 
 	// Start building neuron-plasticity components...
 
-	// Firing rate estimation prerequisite for all neuronal plasticity
-	watcherExc = new FREstimator(excNeuGrp, 1.0f, DEF_STATIC_TAU);
-	watcherInh = new FREstimator(inhNeuGrp, 1.0f, DEF_STATIC_TAU);
-
 	// Homeostatic plasticity first, IP assumes there is an HP,
 	// HP makes no such assumptions
-	hpExc = new HPComponent(excNeuGrp, watcherExc);
-	hpInh = new HPComponent(inhNeuGrp, watcherInh);
+	mod->hpExc = new HPComponent(*excAIF);
+	mod->hpInh = new HPComponent(*inhAIF);
 
 	// Intrinsic plasticity
-	ipExc = new IPComponent(excNeuGrp, hpExc);
-	ipInh = new IPComponent(inhNeuGrp, hpInh);
+	mod->ipExc = new IPComponent(*excAIF, mod->hpExc);
+	mod->ipInh = new IPComponent(*inhAIF, mod->hpInh);
 
 	return mod;
 }
@@ -139,50 +139,48 @@ void MANA_Module::iterateOne()
 {
 
 	// Calculate the local estimate firing rates
-	ipExc.calcEstFRsForHost();
-	ipInh.calcEstFRsForHost();
+	ipExc->calcEstFRsForHost();
+	ipInh->calcEstFRsForHost();
 
 	// Excitatory sub-group
 	// TODO: Order of synapse actions needs to be re-written
-	for (uint32_t i = 0; i < excNeuGrp.incoExcSyns.getSize(); i++) {
-		excNeuGrp.incoExcSyns[i]->propagate_selective(host.simTime, host.dt,
-			eeUDF );
+	for (uint32_t i = 0; i < (excNeuGrp->incoExcSyns).size(); i++) {
+		excNeuGrp->incoExcSyns[i]->propagate();
 	}
-	for (uint32_t i = 0; i < excNeuGrp.incoInhSyns.getSize(); i++) {
-		excNeuGrp.incoInhSyns[i]->propagate_selective(host.simTime, host.dt,
-			ieUDF );
+	for (uint32_t i = 0; i < (excNeuGrp->incoInhSyns).size(); i++) {
+		excNeuGrp->incoInhSyns[i]->propagate();
 	}
-	sNrmExc.perform();
-	excNeuGrp.runForward();
-	hpExc.perform();
-	ipExc.perform();
+	sNrmExc->perform(*(ipExc->prefFR), lambda);
+	excNeuGrp->runForward();
+	hpExc->perform(*(ipExc->prefFR));
+	ipExc->perform();
 
 	// Data no longer needed this iteration--synchronize for next
 	// iteration while still somewhere closer by...
-	hpExc.pushBuffers();
-	ipExc.pushBuffers();
+	hpExc->pushBuffers();
+	ipExc->pushBuffers();
 
 	// Inhibitory sub-group
 	// TODO: Order of synapse actions needs to be re-written
-	for (uint32_t i = 0; i < inhNeuGrp.incoExcSyns.getSize(); i++) {
-		inhNeuGrp.incoExcSyns[i]->propagate_selective(host.simTime, host.dt,
-			eiUDF );
+	for (uint32_t i = 0; i < (inhNeuGrp->incoExcSyns).size(); i++) {
+		inhNeuGrp->incoExcSyns[i]->propagate();
 	}
-	for (uint32_t i = 0; i < inhNeuGrp.incoInhSyns.getSize(); i++) {
-		inhNeuGrp.incoInhSyns[i]->propagate_selective(host.simTime, host.dt,
-			iiUDF );
+	for (uint32_t i = 0; i < (inhNeuGrp->incoInhSyns).size(); i++) {
+		inhNeuGrp->incoInhSyns[i]->propagate();
 	}
-	sNrmInh.perform();
-	inhNeuGrp.runForward();
-	hpInh.perform();
-	ipInh.perform();
+	sNrmInh->perform(*(ipInh->prefFR), lambda);
+	inhNeuGrp->runForward();
+	hpInh->perform(*(ipInh->prefFR));
+	ipInh->perform();
 
-	hpInh.pushBuffers();
-	ipInh.pushBuffers();
+	hpInh->pushBuffers();
+	ipInh->pushBuffers();
 
 	// synchronize everyone for next iteration...
-	excNeuGrp.pushBuffers();
-	inhNeuGrp.pushBuffers();
+	excNeuGrp->pushBuffers();
+	inhNeuGrp->pushBuffers();
+    
+    lambda -= LAMB_DEC*(lambda-DEF_END_LAMB);
 
 }
 
@@ -191,6 +189,6 @@ void MANA_Module::runForward(const uint32_t numIters)
 	for(uint32_t i = 0; i < numIters; i++)
 	{
 		iterateOne();
-		host.requestClockForward();
+		//netHost.requestClockForward();
 	}
 }

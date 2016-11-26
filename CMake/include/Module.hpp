@@ -22,33 +22,36 @@ class Module
 
 	public:
 
-		Network &host;
+		const Network &netHost;
 		const uint32_t size;
 		const uint32_t numExc;
 		const uint32_t numInh;
+        Position minPos;
+        Position maxPos;
 
-		Module(	const Network &_host,
+    protected:
+    
+		Module(	const Network &_netHost,
 						const uint32_t _size,
 						const Position _minPos,
 						const Position _maxPos	);
 
-		Module (	const Network &_host,
+		Module (	const Network &_netHost,
 						const uint32_t _size,
 						const Position _minPos,
 						const Position _maxPos, 
 						const float _ieRatio	);
 
-	protected:
 		
-		AIFNeuron &excNeuGrp;
-		AIFNeuron &inhNeuGrp;
+		GenericNeuron *excNeuGrp = NULL;
+		GenericNeuron *inhNeuGrp = NULL;
 		std::vector<SynMatrices*> synGrps; 
 
 	friend class DataRecorder;	
 };
 
 
-class SORN_Module 
+class SORN_Module : public Module
 {
 	// TODO
 
@@ -57,15 +60,21 @@ class SORN_Module
 
 const float DEF_START_LAMB = 1E4;
 const float DEF_END_LAMB = 1E5;
+const float LAMB_DEC = 1E-5;
 
-class MANA_Module
+class MANA_Module : public Module
 {
 		// TODO: More constructors, specify STDP, etc.
 		static MANA_Module* buildMANA_Module(	const Network &_host,
 												const uint32_t _size,
 												const Position _minPos,
 												const Position _maxPos,
-												const float _dt		);
+												const float _ieRatio		);
+        
+        static MANA_Module* buildMANA_Module(	const Network &_host,
+												const uint32_t _size,
+												const Position _minPos,
+												const Position _maxPos	);
 
 		~MANA_Module();
 
@@ -101,10 +110,7 @@ class MANA_Module
 		UDFPlasticity* ieUDF;
 		UDFPlasticity* iiUDF;
 
-		array meanThresh;
-
 		float lambda;
-
 
 	friend class DataRecorder;
 

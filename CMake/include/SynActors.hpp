@@ -70,15 +70,16 @@ class MANA_SynNormalizer : public SynActor
 		float omega_b;
 		float rho;
 
-		bool allExcFlipped = 0;
-		bool allInhFlipped = 0;
-        bool allFlipped = 0;
+		bool allExcFlipped = false;
+		bool allInhFlipped = false;
+        bool allFlipped = false;
 
-		void calcSatVals(	const array &prefFRs,
+        void calcSatVals(   const array &prefFRs,
                             const array &_excSynScale,
-                            const array &_inhSynScale	);
-		void normalize(	const array &_excSynScale,
-                        const array &_inhSynScale	);
+                            const array &_inhSynScale	    );
+                            
+        void normalize(     const array &_excSynScale,
+                            const array &_inhSynScale	    );
 
 	friend class DataRecorder;
 

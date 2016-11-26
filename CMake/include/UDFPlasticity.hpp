@@ -52,8 +52,10 @@ class UDFPlasticity {
 		array perform(	const array &ISIs,
 						const array &wts	);
 
-		static float* generateUDFVals(	const Polarity srcPol,
-										const Polarity tarPol	);
+        static float* generateUDFVals(  const Polarity srcPol,
+                                        const Polarity tarPol,
+                                        std::default_random_engine gen,
+                                        std::normal_distribution<float> normDist 	);
 
 	private:
 		float U_mean;
@@ -62,8 +64,8 @@ class UDFPlasticity {
 		float D_std;
 		float F_mean;
 		float F_std;
-		static std::default_random_engine gen;
-		static std::normal_distribution<float> normDist;
+		//static std::default_random_engine gen;
+		//static std::normal_distribution<float> normDist;
 
 		UDFPlasticity(const SynMatrices &_synHost);
 

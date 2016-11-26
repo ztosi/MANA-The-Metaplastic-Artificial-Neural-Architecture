@@ -3,23 +3,20 @@
 #include "../include/SynMatrices.hpp"
 #include "../include/STDP.hpp"
 #include "../include/Network.hpp"
-
-#define POLAR GenericNeuron::Polarity
+#include "../include/Neuron.hpp"
 
 using namespace af;
 
-StandardSTDP::StandardSTDP(	const Network &_host,
-							const POLAR _srcPol,
-							const POLAR _tarPol,
-							const float _eta	)
-	: StandardSTDP(_host, _srcPol, _tarPol, _eta, _hebbian) {}
+StandardSTDP::StandardSTDP(     const Polarity _srcPol,
+                                const Polarity _tarPol,
+                                const float _eta	)
+	: StandardSTDP(_srcPol, _tarPol, _eta, true) {}
 
-StandardSTDP::StandardSTDP(	const Network &_host,
-							const POLAR _srcPol,
-							const POLAR _tarPol,
-							const float _eta,
-							const bool _hebbian	)
-	: host(_host), srcPol(_srcPol), tarPol(_tarPol), eta(_eta), heb(_hebbian)
+StandardSTDP::StandardSTDP(     const Polarity _srcPol,
+                                const Polarity _tarPol,
+                                const float _eta,
+                                const bool _hebbian	)
+	: STDP(_srcPol,_tarPol,_eta), hebbian(_hebbian)
 {
 	if (_srcPol && _tarPol) {
 		w_p = DEF_EE_W_PLUS;
@@ -44,17 +41,15 @@ StandardSTDP::StandardSTDP(	const Network &_host,
 	}
 }
 
-StandardSTDP(	const Network &_host,
-				const GenericNeuron::Polarity _srcPol,
-				const GenericNeuron::Polarity _tarPol,
-				const float _eta,
-				const bool _hebbian,
-				const float _w_p,
-				const float _w_m,
-				const float _tau_p
-				const float _tau_m	)
-	: host(_host), srcPol(_srcPol), tarPol(_tarPol), eta(_eta),
-	hebb(_hebbian)
+StandardSTDP::StandardSTDP(     const Polarity _srcPol,
+                                const Polarity _tarPol,
+                                const float _eta,
+                                const bool _hebbian,
+                                const float _w_p,
+                                const float _w_m,
+                                const float _tau_p,
+                                const float _tau_m	)
+	: STDP(_srcPol, _tarPol, _eta), hebbian(_hebbian)
 {
 	w_p = _w_p;
 	w_m = _w_m;
@@ -65,9 +60,9 @@ StandardSTDP(	const Network &_host,
 void StandardSTDP::postTrigger(	array &neg_deltas	)
 {
 	if (hebbian) {
-		deltas = eta * af::exp(neg_deltas/tau_p) * w_p;
+		neg_deltas = eta * af::exp(neg_deltas/tau_p) * w_p;
 	} else {
-		deltas = -eta * af::exp(neg_deltas/tau_m) * w_m;
+		neg_deltas = -eta * af::exp(neg_deltas/tau_m) * w_m;
 	}
 }
 
@@ -80,31 +75,29 @@ void StandardSTDP::preTrigger(	array &neg_deltas	)
 	}
 }
 
-MexicanHatSTDP::MexicanHatSTDP(	const Network &_host,
-								const POLAR _srcPol,
-								const POLAR _tarPol,
-								const float _eta	)
- : MexicanHatSTDP(_host, _srcPol, _tarPol, _eta, DEF_A, DEF_INIT_ETA) {}
+MexicanHatSTDP::MexicanHatSTDP(     const Polarity _srcPol,
+                                    const Polarity _tarPol,
+                                    const float _eta	)
+ : MexicanHatSTDP(_srcPol, _tarPol, _eta, DEF_A, DEF_INIT_ETA) {}
 
 
-MexicanHatSTDP::MexicanHatSTDP(	const Network &_host,
-								const POLAR _srcPol,
-								const POLAR _tarPol,
-								const float _eta,
-								const float _a, 
-								const float _sigma	)
-	: host(_hot), srcPol(_srcPol), tarPol(_tarPol), eta(_eta), a(_a)
+MexicanHatSTDP::MexicanHatSTDP(     const Polarity _srcPol,
+                                    const Polarity _tarPol,
+                                    const float _eta,
+                                    const float _a, 
+                                    const float _sigma	)
+	: STDP(_srcPol, _tarPol, _eta), a(_a)
 {
 	setSigma(_sigma);
 }
 
-array MexicanHatSTDP::postTrigger(	array &neg_deltas	)
+void MexicanHatSTDP::postTrigger(	array &neg_deltas	)
 {
 	neg_deltas *= neg_deltas;
-	neg_deltas = eta * a * nrmTerm * (1 - (neg_deltas/sigma_sq)) * exp(-t/(2*sigma_sq)); 
+	neg_deltas = eta * a * nrmTerm * (1 - (neg_deltas/sigma_sq)) * exp(-neg_deltas/(2*sigma_sq)); 
 }
 
-array MexicanHatSTDP::preTrigger(	array &neg_deltas	)
+void MexicanHatSTDP::preTrigger(	array &neg_deltas	)
 {
 	postTrigger(neg_deltas); // Mexican hat is symmetric...
 }

@@ -119,7 +119,7 @@ Position GenericNeuron::getPosition(uint32_t index)
 uint32_t* GenericNeuron::getExcInDegs()
 {
     uint32_t* arr = new uint32_t[size];
-    std::memcpy(arr, exInDegs, sizeof(arr));
+    std::memcpy(arr, exInDegs, sizeof(uint32_t)*size);
     return arr;
 }
 
@@ -132,7 +132,7 @@ uint32_t* GenericNeuron::getExcInDegs()
 uint32_t* GenericNeuron::getInhInDegs()
 {
     uint32_t* arr = new uint32_t[size];
-    std::memcpy(arr, inInDegs, sizeof(arr));
+    std::memcpy(arr, inInDegs, size*sizeof(uint32_t));
     return arr;
 }
 
@@ -145,6 +145,17 @@ uint32_t* GenericNeuron::getInhInDegs()
 uint32_t* GenericNeuron::getOutDegs()
 {
     uint32_t* arr = new uint32_t[size];
-    std::memcpy(arr, outDegs, sizeof(arr));
+    std::memcpy(arr, outDegs, size*sizeof(uint32_t));
     return arr;
+}
+
+void GenericNeuron::addIncExcSyn(SynMatrices& syn)
+{
+    incoExcSyns.push_back(&syn);
+
+}
+
+void GenericNeuron::addIncInhSyn(SynMatrices& syn)
+{
+    incoInhSyns.push_back(&syn);
 }

@@ -27,6 +27,7 @@ class HPComponent {
 		void perform(const array &pfrs);
 		//void perform(const float dt, array tooFast);
 		void pushBuffers(const array &hpOn);
+        void pushBuffers();
 
 	private:
 

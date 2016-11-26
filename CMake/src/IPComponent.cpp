@@ -44,12 +44,12 @@ void IPComponent::perform()
 {
 	const uint32_t noIncExcGrps = neuHost.incoExcSyns.size();
 	const uint32_t noIncInhGrps =  neuHost.incoInhSyns.size();
-	array f_plus = af::exp(-prefFR/(beta*lowFR));
+	array f_plus = af::exp(-*prefFR/(beta*lowFR));
 	array f_minus = constant(0, dim4(neuHost.size, 1), f32);
-	array above = where(prefFR > lowFR);
-	array below = where(prefFR <= lowFR);
-	f_minus(above) = 1 + (log(1-alpha*(prefFR(above)/lowFR - 1)))/alpha;
-	f_minus(below) = prefFR(below)/lowFR; 
+	array above = where(*prefFR > lowFR);
+	array below = where(*prefFR <= lowFR);
+	f_minus(above) = 1 + (log(1-alpha*((*prefFR)(above)/lowFR - 1)))/alpha;
+	f_minus(below) = (*prefFR)(below)/lowFR; 
 	
 	// Store the FR potentiating values and depressing values
 	array poten = constant(0, dim4(neuHost.size, 1), f32);
@@ -66,7 +66,7 @@ void IPComponent::perform()
 		array diffs = neuHost.incoExcSyns[j]->srcHost.nu_hat(i_indices);
 		diffs -= neuHost.nu_hat(j_indices);
 		array srcSlower = diffs<0;
-		diffs = exp(-abs(diffs)/prefFR(j_indices));
+		diffs = exp(-abs(diffs)/(*prefFR)(j_indices));
 
 		array diffsp = diffs * srcSlower;
 		diffs *= !srcSlower;
@@ -89,7 +89,7 @@ void IPComponent::perform()
 		array diffs = neuHost.incoInhSyns[j]->srcHost.nu_hat(i_indices);
 		diffs -= neuHost.nu_hat(j_indices);
 		array srcSlower = diffs<0;
-		diffs = exp(-abs(diffs)/prefFR(j_indices));
+		diffs = exp(-abs(diffs)/(*prefFR)(j_indices));
 
 		array diffsp = diffs * srcSlower;
 		diffs *= !srcSlower;
@@ -105,11 +105,16 @@ void IPComponent::perform()
 	
 	poten *= f_plus;
 	depre *= f_minus;
-	prefFR_Buff = prefFR + (neuHost.netHost.dt * eta * (poten - depre + af::randn(neuHost.size)*noiseSD));
+	*prefFR_Buff = *prefFR + (neuHost.netHost.dt * eta * (poten - depre + af::randn(neuHost.size)*noiseSD));
 	eta -= neuHost.netHost.dt*(eta-eta_f)*eta_dec;
 }
 
-void IPComponent::pushBuffers() {	prefFR = prefFR_Buff;	}
+void IPComponent::pushBuffers()
+{	
+    array* holder = prefFR;
+    prefFR = prefFR_Buff;	
+    prefFR_Buff = holder;
+}
 
-array IPComponent::getPrefFRs() {	return prefFR;	}
+array IPComponent::getPrefFRs() {	return prefFR->copy();	}
 

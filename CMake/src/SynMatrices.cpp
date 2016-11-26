@@ -178,9 +178,9 @@ SynMatrices::SynMatrices(	GenericNeuron &_src,
 	dlyArr = new array(_src.size * _tar.size, 1, dlys, afHost);
 	array mask = randu(_src.size * _tar.size, 1, f32) < _initDensity;
 	*dlyArr = (*dlyArr) * mask;
-	*ijInds = lin2IJ(where(*dlyArr), _src.size);
+	*ijInds = Utils::lin2IJ(where(*dlyArr), _src.size);
 	*dlyArr = (*dlyArr)(where(*dlyArr));
-	*srcDlyInds = srcInd2dlysrcInd(_src.size, (*ijInds)(span,0), *dlyArr);
+	*srcDlyInds = Utils::srcInd2dlysrcInd(_src.size, (*ijInds)(span,0), *dlyArr);
 	size = dlyArr->dims(0);
 	float* wanddw = new float[size*2];
 	uint32_t* lUp = new uint32_t[size];
@@ -192,7 +192,7 @@ SynMatrices::SynMatrices(	GenericNeuron &_src,
 	}
 	wt_And_dw = new array(size, 2, wanddw, afHost);
 	lastUp = new array(size, 1, lUp, afHost);
-	tarStartFin = new array(findStAndEnds(*ijInds));
+	tarStartFin = new array(Utils::findStAndEnds(*ijInds));
 
 	srcPol = _src.pol;
 	tarPol = _tar.pol;

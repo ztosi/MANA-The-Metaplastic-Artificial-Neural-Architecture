@@ -69,7 +69,7 @@ void SynGrowthManager::invoke()
 	*(synHost.lastArr) = (*(synHost.lastArr))(survivors);
 	*(synHost.srcDlyInds) = (*(synHost.srcDlyInds))(survivors);
 	*(synHost.dlyArr) = (*(synHost.dlyArr))(survivors);
-	*(synHost.tarStartFin) = findStAndEnds(*(synHost.ijInds));
+	*(synHost.tarStartFin) = Utils::findStAndEnds(*(synHost.ijInds));
 	if (synHost.isUsingUDF()) {
 		(synHost.udf)->FUuRD = ((synHost.udf)->FUuRD)(survivors, span);
 	}

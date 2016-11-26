@@ -3,6 +3,8 @@
 #include "../include/SynMatrices.hpp"
 #include "../include/SynActors.hpp"
 
+using namespace af;
+
 MANA_SynNormalizer::MANA_SynNormalizer(	ThresholdedNeuron &_neuHost	)
 	: MANA_SynNormalizer(_neuHost, DEF_OMEGA_A, DEF_OMEGA_B, DEF_OMEGA_C, DEF_RHO) {};
 
@@ -52,9 +54,9 @@ void MANA_SynNormalizer::perform(   const array &prefFRs,
 // should be flipped. Returns after doing noting if
 // all saturation values have been appropriately calculated
 // (everyone flipped).
-void MANA_SynNormalizer::calcSatVals(const array &prefFRs,
-								const array &_excSynScale,
-								const array &_inhSynScale	)
+void MANA_SynNormalizer::calcSatVals(   const array &prefFRs,
+                                        const array &_excSynScale,
+                                        const array &_inhSynScale	)
 {
     // TODO: AUDIT ME!!!
 	if (!allFlipped)
@@ -63,23 +65,21 @@ void MANA_SynNormalizer::calcSatVals(const array &prefFRs,
 		{
 			sValExc = (sValExc * excFlip)
 				+ (!excFlip * (_excSynScale*omega_a/(1+exp(-omega_b*prefFRs)) - omega_c) );
-			bool* aef = allTrue(excFlip).host<bool>();
-			allExcFlipped = *aef;	
+			allExcFlipped = allTrue<bool>(excFlip);
 		}
 		if (!allInhFlipped)
 		{
 			sValInh = (sValInh * inhFlip)
 				+ (!inhFlip *  (_inhSynScale*omega_a/(1+exp(-omega_b*prefFRs)) - omega_c));
-			bool* aif = allTrue(inhFlip).host<bool>();
-			allInhFlipped = *aif;	
+			allInhFlipped = allTrue<bool>(inhFlip);
 		}
 		allFlipped = allExcFlipped && allInhFlipped;
 	}
 }
 
 // TODO: Decide where to calculate exc & inh Syn Scales
-void MANA_SynNormalizer::normalize(	const array &_excSynScale,
-                                    const array &_inhSynScale	)
+void MANA_SynNormalizer::normalize(     const array &_excSynScale,
+                                        const array &_inhSynScale	)
 {
 	uint32_t numExc = neuHost.incoExcSyns.size();
 	uint32_t numInh = neuHost.incoInhSyns.size();

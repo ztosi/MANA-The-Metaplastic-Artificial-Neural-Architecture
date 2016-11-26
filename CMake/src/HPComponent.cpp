@@ -1,7 +1,6 @@
 #include <arrayfire.h>
 #include "../include/Neuron.hpp"
 #include "../include/HPComponent.hpp"
-#include "../include/IPComponent.hpp"
 
 using namespace af;
 
@@ -49,4 +48,9 @@ void HPComponent::perform(const array &pfrs)
 void HPComponent::pushBuffers(const array &hpOn)
 {
 	neuHost.thresholds += dThdt * hpOn;
+}
+
+void HPComponent::pushBuffers()
+{
+    neuHost.thresholds += dThdt;
 }

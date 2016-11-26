@@ -79,8 +79,8 @@ class GenericNeuron
             delete[] outDegs;
         }
 
-		void addIncExcSyn(const SynMatrices &syn);
-		void addIncInhSyn(const SynMatrices &syn);
+		void addIncExcSyn(SynMatrices &syn);
+		void addIncInhSyn(SynMatrices &syn);
         
     protected:
         

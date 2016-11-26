@@ -24,12 +24,20 @@ const float DEF_EE_TAU_P = 25.0;
 const float DEF_EE_TAU_M = 100.0;
 const float DEF_EI_TAU_P = 20.0;
 const float DEF_EI_TAU_M = 100.0;
+const float DEF_IE_TAU_P = 25.0;
+const float DEF_IE_TAU_M = 100.0;
+const float DEF_II_TAU_P = 20.0;
+const float DEF_II_TAU_M = 100.0;
 
 const float DEF_IE_SIG = 24.0;
 const float DEF_II_SIG = 12.0; 
 
 const float DEF_A = 30.0;
 const float DEF_INIT_ETA = 2.5E-7;
+
+const float DEF_ETA = 1E-6;
+
+static const float pi4thRt = (float) std::pow(3.1415, 0.25);
 
 
 //class Network;
@@ -40,13 +48,17 @@ class STDP
 {
 
 	public:
-		const Network &host;
 		const Polarity srcPol;
 		const Polarity tarPol;
 
-		//SynMatrices &host;
+        STDP(   const Polarity _srcPol,
+                const Polarity _tarPol,
+                const float _eta    )
+        : srcPol(_srcPol), tarPol(_tarPol), eta(_eta){}
+
 		virtual void postTrigger(	af::array &neg_deltas	)=0;
 		virtual void preTrigger(	af::array &neg_deltas	)=0;
+        
 	protected:
 
 		float eta;
@@ -60,19 +72,16 @@ class StandardSTDP : public STDP
 
 	public:
 
-		StandardSTDP(	const Network &_host,
-						const Polarity _srcPol,
+		StandardSTDP(	const Polarity _srcPol,
 						const Polarity _tarPol,
 						const float _eta);
 
-		StandardSTDP(	const Network &_host,
-						const Polarity _srcPol,
+		StandardSTDP(	const Polarity _srcPol,
 						const Polarity _tarPol,
 						const float _eta,
 						const bool _hebbian);
 
-		StandardSTDP(	const Network &_host,
-						const Polarity _srcPol,
+		StandardSTDP(	const Polarity _srcPol,
 						const Polarity _tarPol,
 						const float _eta,
 						const bool _hebbian,
@@ -81,7 +90,7 @@ class StandardSTDP : public STDP
 						const float _tau_p,
 						const float _tau_m	);
 
-		//SynMatrices &host;
+		//SynMatrices &netHost;
 		void postTrigger(	af::array &neg_deltas	);
 		void preTrigger(	af::array &neg_deltas	);
 
@@ -93,7 +102,6 @@ class StandardSTDP : public STDP
 		float tau_p;
 		float tau_m;
 
-
 	friend class DataRecorder;
 };
 
@@ -102,18 +110,15 @@ class MexicanHatSTDP : public STDP
 
 	public:
 
-		MexicanHatSTDP(	const Network &_host,
-						const Polarity _srcPol,
-		 				const Polarity _tarPol,
-		 				const float _eta 	);
+		MexicanHatSTDP(     const Polarity _srcPol,
+                            const Polarity _tarPol,
+                            const float _eta 	);
 
-		MexicanHatSTDP(	const Network &_host,
-						const Polarity _srcPol,
-		 				const Polarity _tarPol,
-		 				const float _eta,
-		 				const float _a,
-		 				const float _sigma 	);
-
+		MexicanHatSTDP(     const Polarity _srcPol,
+                            const Polarity _tarPol,
+                            const float _eta,
+                            const float _a,
+                            const float _sigma 	);
 
 		void postTrigger(	af::array &neg_deltas	);
 		void preTrigger(	af::array &neg_deltas	);
@@ -134,7 +139,7 @@ class MexicanHatSTDP : public STDP
 		float a;
 		float sigma;
 		float sigma_sq;
-		static constexpr float pi4thRt = (float) std::pow(3.1415, 0.25);
+
 		float nrmTerm;
 
 	friend class DataRecorder;

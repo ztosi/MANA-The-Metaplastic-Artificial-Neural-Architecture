@@ -46,8 +46,8 @@ class IPComponent {
 		//FREstimator* watcher; 
 
 		//array tooFast;
-		array prefFR;
-		array prefFR_Buff;
+		array* prefFR;
+		array* prefFR_Buff;
 		//array mThresh;
 		//array eta;
 		float eta;

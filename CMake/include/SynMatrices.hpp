@@ -47,24 +47,24 @@ class SynMatrices {
 		Polarity srcPol;
 		Polarity tarPol;
 
-		static SynMatrices* connectNeurons(	GenericNeuron &_src,
-											GenericNeuron &_tar,
-											STDP* _splas,
-											const uint32_t _minDly,
-											const uint32_t _maxDly,
-                                            const float initDensity,
-											const bool useUDF );
+        static SynMatrices* connectNeurons(     GenericNeuron &_src,
+                                                GenericNeuron &_tar,
+                                                STDP* _splas,
+                                                const uint32_t _minDly,
+                                                const uint32_t _maxDly,
+                                                const float initDensity,
+                                                const bool useUDF   );
 
-		static void calcDelayMat(	const GenericNeuron* src,
+        static void calcDelayMat(   const GenericNeuron* src,
                                     const GenericNeuron* tar,
                                     const uint32_t _maxDly,
                                     const uint32_t _minDly,
                                     uint32_t* dlys  );
 
-		static uint32_t calcDelay(	const Position &p1,
-									const Position &p2,
-									const uint32_t _maxDly,
-                                    const float MAX_DIST );
+        static uint32_t calcDelay(  const Position &p1,
+                                    const Position &p2,
+                                    const uint32_t _maxDly,
+                                    const float _maxDist    );
 
 		void propagate();
 
