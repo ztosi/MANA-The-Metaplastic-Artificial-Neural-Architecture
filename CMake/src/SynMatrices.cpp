@@ -88,6 +88,8 @@ uint32_t SynMatrices::calcDelay(	const Position &p1,
 
 void SynMatrices::propagate()
 {
+    updateComplete = false;
+    
 	float dt = netHost.dt;
 	uint32_t _time = netHost.getTime();
 	
@@ -147,6 +149,8 @@ void SynMatrices::propagate()
 	splas->postTrigger(pdws);
 
 	(*wt_And_dw)(postTriggered, 1) = pdws((*ijInds)(postTriggered, 0).copy());
+    
+    updateComplete=true;
 
 }
 

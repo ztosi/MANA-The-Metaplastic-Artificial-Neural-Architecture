@@ -135,9 +135,10 @@ MANA_Module* MANA_Module::buildMANA_Module(	const Network &_netHost,
 	return mod;
 }
 
-void MANA_Module::iterateOne()
+void MANA_Module::iterate_one()
 {
-
+    updateComplete = false;
+        
 	// Calculate the local estimate firing rates
 	ipExc->calcEstFRsForHost();
 	ipInh->calcEstFRsForHost();
@@ -173,22 +174,28 @@ void MANA_Module::iterateOne()
 	hpInh->perform(*(ipInh->prefFR));
 	ipInh->perform();
 
-	hpInh->pushBuffers();
+    lambda -= LAMB_DEC*(lambda-DEF_END_LAMB);
+    
+    updateComplete = true;
+
+}
+
+void MANA_Module::push_buffers()
+{
+    hpInh->pushBuffers();
 	ipInh->pushBuffers();
 
 	// synchronize everyone for next iteration...
 	excNeuGrp->pushBuffers();
 	inhNeuGrp->pushBuffers();
-    
-    lambda -= LAMB_DEC*(lambda-DEF_END_LAMB);
-
 }
 
 void MANA_Module::runForward(const uint32_t numIters)
 {
 	for(uint32_t i = 0; i < numIters; i++)
 	{
-		iterateOne();
+		iterate_one();
+        push_buffers();
 		//netHost.requestClockForward();
 	}
 }

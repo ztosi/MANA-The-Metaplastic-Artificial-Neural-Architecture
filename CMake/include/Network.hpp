@@ -35,11 +35,21 @@ class Network {
         void addNeurons(GenericNeuron &_neu2Add);
         void addSyns(SynMatrices &_syns2Add);
         
-        void create_MANA_Mod(uint32_t size); // using default parameters
-        void create_SORN_Mod(uint32_t size); // using default parameters
-        void create_LIF_SORN_Mod(uint32_t size); // using default paramters
+        void create_MANA_Mod(const uint32_t _size); // using default parameters
+        void create_SORN_Mod(const uint32_t _size);     // using default parameters
+        void create_LIF_SORN_Mod(const uint32_t _size); // using default paramters
+        void create_Neurons(const uint32_t _size);
+        SynMatrices* connect_Neurons(   GenericNeuron& _src,
+                                        GenericNeuron& _tar,
+                                        const float _density );
+        SynMatrices** connect_Modules(   Module &_srcMod,
+                                        Module &_tarMod, 
+                                        const float _density );
 
-	private:
+        void runForward(const uint32_t _iterations);
+        void runForward();
+
+        private:
 
 		uint32_t simTime;
 		std::list<Module*> modules;

@@ -28,6 +28,9 @@ class Module
 		const uint32_t numInh;
         Position minPos;
         Position maxPos;
+        bool isUpdateComplete() { return updateComplete; }
+        virtual void iterate_one()=0;
+        virtual void push_buffers() = 0;
 
     protected:
     
@@ -41,11 +44,11 @@ class Module
 						const Position _minPos,
 						const Position _maxPos, 
 						const float _ieRatio	);
-
 		
 		GenericNeuron *excNeuGrp = NULL;
 		GenericNeuron *inhNeuGrp = NULL;
 		std::vector<SynMatrices*> synGrps; 
+        bool updateComplete;
 
 	friend class DataRecorder;	
 };
@@ -64,56 +67,51 @@ const float LAMB_DEC = 1E-5;
 
 class MANA_Module : public Module
 {
-		// TODO: More constructors, specify STDP, etc.
-		static MANA_Module* buildMANA_Module(	const Network &_host,
-												const uint32_t _size,
-												const Position _minPos,
-												const Position _maxPos,
-												const float _ieRatio		);
-        
-        static MANA_Module* buildMANA_Module(	const Network &_host,
-												const uint32_t _size,
-												const Position _minPos,
-												const Position _maxPos	);
+public:
+    // TODO: More constructors, specify STDP, etc.
+    static MANA_Module* buildMANA_Module(const Network& _host,
+        const uint32_t _size,
+        const Position _minPos,
+        const Position _maxPos,
+        const float _ieRatio);
 
-		~MANA_Module();
+    static MANA_Module*
+    buildMANA_Module(const Network& _host, const uint32_t _size, const Position _minPos, const Position _maxPos);
 
-		void iterateOne();
-		void runForward(uint32_t numIters);
-		void setSynModFreq(uint32_t _iter_Interval);
-		void setSynModFreq(double _time_Interval);
+    ~MANA_Module();
 
-	private:
+    void iterate_one();
+    void runForward(uint32_t numIters);
+    void setSynModFreq(uint32_t _iter_Interval);
+    void setSynModFreq(double _time_Interval);
+    void push_buffers();
 
-		MANA_Module(	const Network &_host,
-						const uint32_t _size,
-						const Position _minPos,
-						const Position _maxPos	);
+private:
+    MANA_Module(const Network& _host, const uint32_t _size, const Position _minPos, const Position _maxPos);
 
-		MANA_Module (	const Network &_host,
-						const uint32_t _size,
-						const Position _minPos,
-						const Position _maxPos, 
-						const float _ieRatio	);
+    MANA_Module(const Network& _host,
+        const uint32_t _size,
+        const Position _minPos,
+        const Position _maxPos,
+        const float _ieRatio);
 
-		HPComponent* hpExc;
-		HPComponent* hpInh;
+    HPComponent* hpExc;
+    HPComponent* hpInh;
 
-		IPComponent* ipExc;
-		IPComponent* ipInh;
+    IPComponent* ipExc;
+    IPComponent* ipInh;
 
-		MANA_SynNormalizer* sNrmExc;
-		MANA_SynNormalizer* sNrmInh;
+    MANA_SynNormalizer* sNrmExc;
+    MANA_SynNormalizer* sNrmInh;
 
-		UDFPlasticity* eeUDF;
-		UDFPlasticity* eiUDF;
-		UDFPlasticity* ieUDF;
-		UDFPlasticity* iiUDF;
+    UDFPlasticity* eeUDF;
+    UDFPlasticity* eiUDF;
+    UDFPlasticity* ieUDF;
+    UDFPlasticity* iiUDF;
 
-		float lambda;
+    float lambda;
 
-	friend class DataRecorder;
-
+    friend class DataRecorder;
 };
 
 #endif // MODULE_H_

@@ -61,6 +61,7 @@ class GenericNeuron
 		virtual void runForward()=0;
 		virtual void pushBuffers()=0;
 		void updateEstFR(const array &targetFRs);
+        bool isUpdateComplete() { return updateComplete; }
 
 		Position* getPositions();
 		Position getPosition(uint32_t index);
@@ -108,6 +109,8 @@ class GenericNeuron
         float* x;
 		float* y;
 		float* z;
+        
+        bool updateComplete;
         
     friend class DataRecorder;
     friend class SynMatrices;

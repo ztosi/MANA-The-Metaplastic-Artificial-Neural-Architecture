@@ -79,6 +79,7 @@ class SynMatrices {
 		void setUsingUDF(const bool _usingUDF) { usingUDF = _usingUDF; }
 
 		uint32_t getSize() const { return size; }
+        bool isUpdateComplete() { return updateComplete; }
 
 	private:
 
@@ -93,6 +94,7 @@ class SynMatrices {
 		UDFPlasticity* udf;
 		bool usingUDF;
 		uint32_t size;
+        bool updateComplete;
 
 		friend class DataRecorder;
 		friend class SynGrowthManager;

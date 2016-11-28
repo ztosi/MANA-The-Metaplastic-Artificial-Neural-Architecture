@@ -61,6 +61,7 @@ AIFNeuron::AIFNeuron(	const Network &_netHost,
 
 void AIFNeuron::runForward()
 {
+    updateComplete = false;
 
 	uint32_t t = (uint32_t)(netHost.getTime());
 	float dt = netHost.dt;
@@ -84,6 +85,8 @@ void AIFNeuron::runForward()
 
 	I_e -= dt * I_e/eDecay;
 	I_i -= dt * I_i/iDecay;
+    
+    updateComplete = true;
 
 }
 
