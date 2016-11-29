@@ -180,6 +180,8 @@ InputNeuron::~InputNeuron()
 {
     delete [] trainSizes;
     delete [] indexPtrs;
+    delete [] spks_loc;
+    delete [] backIters;
     for(uint32_t i = 0; i < size; i++)
     {
         free(spkScript[i]);
@@ -199,6 +201,8 @@ InputNeuron::InputNeuron(const Network& _netHost,
     spkScript = _spkScript;
     trainSizes = _trainSizes;
     indexPtrs = new uint32_t[_size];
+    spks_loc = new uint8_t[_size];
+    backIters = new uint32_t[_size];
 }
 
 InputNeuron::InputNeuron(const Network& _netHost,
@@ -213,6 +217,8 @@ InputNeuron::InputNeuron(const Network& _netHost,
     spkScript = (uint32_t**)calloc(_size, sizeof(uint32_t*));
     trainSizes = new uint32_t[_size];
     indexPtrs = new uint32_t[_size];
+    spks_loc = new uint8_t[_size];
+    backIters = new uint32_t[_size];
     if(spkIn)
     {
         spkIn.seekg(0, spkIn.end);
@@ -237,4 +243,29 @@ InputNeuron::InputNeuron(const Network& _netHost,
         }
     }
     spkIn.close();
+}
+
+void InputNeuron::runForward()
+{
+    for(uint32_t i = 0; i < size; i++)
+    {
+        if(indexPtrs[i] >= trainSizes[i])
+        {
+            indexPtrs[i]=0;
+            backIters[i]=netHost.getTime();
+        }
+        if(spkScript[i][indexPtrs[i]]+backIters[i] <= netHost.getTime()) {
+            spks_loc[i]=1; 
+            indexPtrs[i]++;
+        } else {
+            spks_loc[i]=0;
+        }
+    }
+    spks = array(0, spks_loc);
+}
+
+void InputNeuron::pushBuffers()
+{
+    spkHistory = af::shift(spkHistory, size);
+    spkHistory(seq(size)) = spks;
 }

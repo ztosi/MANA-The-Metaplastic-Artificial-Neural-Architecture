@@ -203,10 +203,15 @@ public:
                 const Polarity _pol);
     ~InputNeuron();
 
+    void runForward();
+    void pushBuffers();
+
 private:
     uint32_t** spkScript;
     uint32_t* trainSizes;
     uint32_t* indexPtrs;
+    uint32_t* backIters;
+    uint8_t* spks_loc;
 
     friend class SynMatrices;
 };
