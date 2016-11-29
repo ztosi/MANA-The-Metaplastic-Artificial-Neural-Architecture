@@ -9,11 +9,6 @@ using namespace af;
 
 StandardSTDP::StandardSTDP(     const Polarity _srcPol,
                                 const Polarity _tarPol,
-                                const float _eta	)
-	: StandardSTDP(_srcPol, _tarPol, _eta, true) {}
-
-StandardSTDP::StandardSTDP(     const Polarity _srcPol,
-                                const Polarity _tarPol,
                                 const float _eta,
                                 const bool _hebbian	)
 	: STDP(_srcPol,_tarPol,_eta), hebbian(_hebbian)
@@ -74,12 +69,6 @@ void StandardSTDP::preTrigger(	array &neg_deltas	)
 		neg_deltas = eta * af::exp(neg_deltas/tau_p) * w_p;
 	}
 }
-
-MexicanHatSTDP::MexicanHatSTDP(     const Polarity _srcPol,
-                                    const Polarity _tarPol,
-                                    const float _eta	)
- : MexicanHatSTDP(_srcPol, _tarPol, _eta, DEF_A, DEF_INIT_ETA) {}
-
 
 MexicanHatSTDP::MexicanHatSTDP(     const Polarity _srcPol,
                                     const Polarity _tarPol,

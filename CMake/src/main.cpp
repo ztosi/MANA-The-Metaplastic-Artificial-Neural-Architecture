@@ -12,6 +12,7 @@
 
 int main () {
 
-
+    Network *net = new Network();
+    net->create_MANA_Mod(100, Position(0, 0, 0), Position(100, 100, 100));
 
 }
