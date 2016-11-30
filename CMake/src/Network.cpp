@@ -1,6 +1,7 @@
 #include <arrayfire.h>
 #include <cstdint>
 #include <list>
+#include <stdio.h>
 
 #include "../include/Network.hpp"
 #include "../include/Module.hpp"
@@ -32,6 +33,7 @@ void Network::addSyns(SynMatrices& _syns2Add)
 
 void Network::create_MANA_Mod(const uint32_t _size, const Position _minPos, const Position _maxPos)
 {
+    std::cout << "Begin Module Construction in Network" << '\n';
     MANA_Module* modl = MANA_Module::buildMANA_Module(*this, _size, _minPos, _maxPos);
     modules.push_back(modl);
 }

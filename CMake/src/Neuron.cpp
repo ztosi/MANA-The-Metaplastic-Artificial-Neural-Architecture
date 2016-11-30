@@ -261,7 +261,7 @@ void InputNeuron::runForward()
             spks_loc[i]=0;
         }
     }
-    spks = array(0, spks_loc);
+    spks = array(size, spks_loc);
 }
 
 void InputNeuron::pushBuffers()

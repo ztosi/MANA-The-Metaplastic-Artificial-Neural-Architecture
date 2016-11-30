@@ -1,6 +1,7 @@
 #include <arrayfire.h>
 #include <cstdint>
 #include <list>
+#include <stdio.h>
 #include "Utils.hpp"
 
 #ifndef NETWORK_H_
@@ -32,6 +33,7 @@ public:
         , maxDelay(DEF_MAX_DLY)
         , simTime(0)
     {
+        std::cout << "Network Constructed" << '\n';
     }
 
     Network(const float _dt, const float _maxDelay)

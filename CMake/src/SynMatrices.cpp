@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <cmath>
 #include <cstdint>
+#include <stdio.h>
 #include <vector>
 #include <algorithm>
 #include "../include/SynMatrices.hpp"
@@ -40,39 +41,86 @@ SynMatrices* SynMatrices::connectNeurons(	GenericNeuron &_src,
 	return syns;
 }
 
-void SynMatrices::calcDelayMat(	const GenericNeuron* _src,
-                                const GenericNeuron* _tar,
-                                const uint32_t maxDly,
-                                const uint32_t minDly,
-                                uint32_t* dlys) 
+SynMatrices::SynMatrices(	GenericNeuron &_src,
+							GenericNeuron &_tar,
+                            STDP* _splas,
+							const uint32_t _minDly,
+							const uint32_t _maxDly,
+							const float _initDensity	) 
+	: netHost(_src.netHost), srcHost(_src), tarHost(_tar), splas(_splas),
+	 minDly(_minDly), maxDly(_maxDly), usingUDF(true)
 {
-	float** dists = new float *[_src->size];
-	float MAX_DIST = 0;
-	for (int i = 0; i < _src->size; i++) {
-		dists[i] = new float[_tar->size];
-		for (int j = 0; j < _tar->size; j++) {
-			float xdist = _src->x[i] - _tar->x[j];
-			float ydist = _src->y[i] - _tar->y[j];
-			float zdist = _src->z[i] - _tar->z[j];
-			float dist = std::sqrt(xdist*xdist + ydist*ydist + zdist*zdist);
-			dists[i][j] = dist;
-			if (dist > MAX_DIST) {
-				MAX_DIST = dist;
-			}
-		}
-	}
 
-	//uint32_t* dlys = new uint32_t [_src->size * _tar->size];
-	for (int j = 0; j < _tar->size; j++) {
-		for (int i = 0; i < _src->size; i++) {
-			if (_src == _tar && i==j) continue; // No self-connections
-			dlys[j*_src->size + i] = (uint32_t) ((maxDly-minDly)*dists[i][j]/MAX_DIST+minDly);
-		}
+	// TODO: Perform error checking such that the specified max delay does not exceed
+	// that supported by the source neurons' spike history array
+    //std::cout<< _src.size << " " << _tar.size << '\t'<< _src.size * _tar.size<< '\n';
+	uint32_t* dlys = new uint32_t[_src.size * _tar.size];
+    calcDelayMat(&_src, &_tar, _maxDly, _minDly, dlys);
+	dlyArr = new array(_src.size * _tar.size, 1, dlys);
+	array mask = randu(_src.size * _tar.size, 1, f32) < _initDensity;
+    //af_print(where(*dlyArr));
+	*dlyArr = (*dlyArr) * mask;
+    //af_print(where(*dlyArr));
+	ijInds = new array(Utils::lin2IJ(where(*dlyArr), _src.size));
+    //array dummy = *ijInds;
+  //  af_print(dummy);
+	*dlyArr = (*dlyArr)(where(*dlyArr));
+	srcDlyInds = new array(Utils::srcInd2dlysrcInd(_src.size, (*ijInds)(span,0), *dlyArr));
+	size = dlyArr->dims(0);
+	float* wanddw = new float[size*2];
+	uint32_t* lUp = new uint32_t[size];
+	for (uint32_t i=0; i < size; i++) 
+	{
+		wanddw[i]=START_WT;
+		wanddw[size+i]=START_WT;
+		lUp[i]=0;
 	}
-    for (uint32_t i=0; i < _src->size; i++)
-    {
-       	delete [] dists[i]; 
+	wt_And_dw = new array(size, 2, wanddw, afHost);
+	lastUp = new array(size, 1, lUp, afHost);
+	tarStartFin = new array(Utils::findStAndEnds(*ijInds));
+
+	srcPol = _src.pol;
+	tarPol = _tar.pol;
+
+	delete[] wanddw;
+	delete[] lUp;
+	delete[] dlys;
+
+}
+
+void SynMatrices::calcDelayMat(const GenericNeuron* _src,
+                               const GenericNeuron* _tar,
+                               const uint32_t maxDly,
+                               const uint32_t minDly,
+                               uint32_t* dlys)
+{
+    float** dists = new float* [_src->size];
+    float MAX_DIST = 0;
+    for(int i = 0; i < _src->size; i++) {
+        dists[i] = new float[_tar->size];
+        for(int j = 0; j < _tar->size; j++) {
+            float xdist = _src->x[i] - _tar->x[j];
+            float ydist = _src->y[i] - _tar->y[j];
+            float zdist = _src->z[i] - _tar->z[j];
+            float dist = std::sqrt(xdist * xdist + ydist * ydist + zdist * zdist);
+            dists[i][j] = dist;
+            if(dist > MAX_DIST) {
+                MAX_DIST = dist;
+            }
+        }
     }
+    
+    for(int j = 0; j < _tar->size; j++) {
+        for(int i = 0; i < _src->size; i++) {
+            if(_src == _tar && i == j)
+                continue; // No self-connections
+            dlys[j * (_src->size) + i] = (uint32_t)((maxDly - minDly) * dists[i][j] / MAX_DIST + minDly);
+        }
+    } 
+    for(uint32_t i = 0; i < _src->size; i++) {
+        delete[] dists[i];
+    }
+    delete [] dists;
 }
 
 uint32_t SynMatrices::calcDelay(	const Position &p1,
@@ -96,18 +144,22 @@ void SynMatrices::propagate()
 	// Find indices of the spk history relevant for these synaptic delays
 	// 1s represent arrivals of synapses at the current time
 	array arrivals  = srcHost.spkHistory(*srcDlyInds);
+    
+    std::cout<< "found arrivals" << '\n';    
 	
 	// Get an array that is 1 for posy synaptic spikes and expand to the 
 	// size of the synapse array
     //array inds = (*ijInds).col(1);
 	array postTriggered = tarHost.spks((*ijInds).col(1).copy());
 
+    std::cout<< "found post spks" << '\n';
+
 	// Determine indices of neurons requiring updates w = w + dw*time since last update
 	array w2up = where(arrivals || postTriggered);
 
 	// Update weights of synapses where pre or post is active...
 	(*wt_And_dw)(w2up, 0) += dampen(_time - (*lastUp)(w2up), (*wt_And_dw)(w2up, 0), (*wt_And_dw)(w2up, 1));
-
+    std::cout<< "updated wts" << '\n';
 	// All those that were updated have their last update time changed to now
 	(*lastUp)(w2up) = _time;
 	
@@ -124,6 +176,7 @@ void SynMatrices::propagate()
 	} else {
 		results = (*wt_And_dw)(arrivals, 0);
 	}
+    std::cout<< "calc'd UDF" << '\n';
 
 	array inds = (*ijInds)(arrivals, 1); // j, target neurons of arrivals
 
@@ -163,49 +216,3 @@ array SynMatrices::dInteg(const array &val)
 {
 	return P1/4 * (val*val*val*val) + P2/3 * (val*val*val) + P3/2 * (val*val) + P4 * val;
 }
-
-
-SynMatrices::SynMatrices(	GenericNeuron &_src,
-							GenericNeuron &_tar,
-                            STDP* _splas,
-							const uint32_t _minDly,
-							const uint32_t _maxDly,
-							const float _initDensity	) 
-	: netHost(_src.netHost), srcHost(_src), tarHost(_tar), splas(_splas),
-	 minDly(_minDly), maxDly(_maxDly), usingUDF(true)
-{
-
-	// TODO: Perform error checking such that the specified max delay does not exceed
-	// that supported by the source neurons' spike history array
-	uint32_t* dlys = new uint32_t[_src.size * _tar.size];
-    calcDelayMat(&_src, &_tar, _maxDly, _minDly, dlys);
-	dlyArr = new array(_src.size * _tar.size, 1, dlys, afHost);
-	array mask = randu(_src.size * _tar.size, 1, f32) < _initDensity;
-	*dlyArr = (*dlyArr) * mask;
-	*ijInds = Utils::lin2IJ(where(*dlyArr), _src.size);
-	*dlyArr = (*dlyArr)(where(*dlyArr));
-	*srcDlyInds = Utils::srcInd2dlysrcInd(_src.size, (*ijInds)(span,0), *dlyArr);
-	size = dlyArr->dims(0);
-	float* wanddw = new float[size*2];
-	uint32_t* lUp = new uint32_t[size];
-	for (uint32_t i=0; i < size; i++) 
-	{
-		wanddw[i]=START_WT;
-		wanddw[size+i]=START_WT;
-		lUp[i]=0;
-	}
-	wt_And_dw = new array(size, 2, wanddw, afHost);
-	lastUp = new array(size, 1, lUp, afHost);
-	tarStartFin = new array(Utils::findStAndEnds(*ijInds));
-
-	srcPol = _src.pol;
-	tarPol = _tar.pol;
-
-	delete[] wanddw;
-	delete[] lUp;
-	delete[] dlys;
-
-}
-
-
-

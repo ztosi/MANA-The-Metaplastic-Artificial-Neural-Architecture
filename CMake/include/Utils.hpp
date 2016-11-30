@@ -1,6 +1,7 @@
 #include <cstdint>
 #include <math.h>
 #include <arrayfire.h>
+#include <stdio.h>
 
 #ifndef UTILS_H_
 #define UTILS_H_
@@ -73,7 +74,7 @@ public:
     static array lin2IJ(const array& linInds, const uint32_t _srcSz)
     {
         array ijInds = constant(0, linInds.dims(0), 2, u32);
-        ijInds(span, 1) = floor(linInds / _srcSz);
+        ijInds(span, 1) = floor(linInds / (float)_srcSz);
         ijInds(span, 0) = linInds % _srcSz;
         return ijInds;
     }

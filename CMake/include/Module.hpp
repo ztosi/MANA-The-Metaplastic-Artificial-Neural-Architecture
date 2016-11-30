@@ -70,12 +70,6 @@ class MANA_Module : public Module
 public:
     static constexpr float DEF_INIT_DENSE = 0.5;
     // TODO: More constructors, specify STDP, etc.
-    static MANA_Module* buildMANA_Module(const Network& _host,
-        const uint32_t _size,
-        const Position _minPos,
-        const Position _maxPos,
-        const float _ieRatio);
-
     /*
      *  Builds a MANA_Module consisting of an inhibitory group of neurons, an excitatory group of neurons
      *  and 4 SynMatrices connecting each to each. All plasticity mechanisms are created with default
@@ -83,8 +77,11 @@ public:
      *  specified positions. TL;DR:  A pointer to a fully functional MANA_MODULE with all default values.
      * 
      * */
-    static MANA_Module*
-    buildMANA_Module(const Network& _host, const uint32_t _size, const Position _minPos, const Position _maxPos);
+    static MANA_Module* buildMANA_Module(const Network& _host,
+        const uint32_t _size,
+        const Position _minPos,
+        const Position _maxPos,
+        const float _ieRatio = DEF_IE_RATIO);
 
     ~MANA_Module();
 
