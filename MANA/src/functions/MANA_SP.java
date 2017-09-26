@@ -32,7 +32,7 @@ public class MANA_SP {
 						continue;
 					}
 					if(node.weights[ii][jj] < thresh) {
-						double 
+						
 					}
 				}
 			}

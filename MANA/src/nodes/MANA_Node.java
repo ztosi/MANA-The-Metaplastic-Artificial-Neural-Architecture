@@ -3,11 +3,15 @@ package nodes;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.PriorityQueue;
+import java.util.Set;
 
 import data_holders.InputData;
 import data_holders.MANANeurons;
 import data_holders.Spiker;
+import data_holders.SrcTarPair;
 import data_holders.SynapseData;
 import data_holders.SynapseData.SynType;
 import functions.NeuronFunctions;
@@ -158,6 +162,44 @@ public class MANA_Node {
 		}
 		
 	}
+	
+//	public void reform(final Map<Integer, Set<Integer>> toRemove, final Map<Integer, Set<Integer>> toAdd) {
+//		for(int ii=0; ii<width; ++ii) {
+//			int newSize;
+//			int [] newSrc
+//			if(toRemove.containsKey(ii)) {
+//				if(toAdd.containsKey(ii)) {
+//					toRemove.get(ii).removeAll(toAdd.get(ii));
+//					newSize = weights[ii].length + toAdd.get(ii).size() - toRemove.get(ii).size();
+//				} else {
+//					newSize = weights[ii].length - toRemove.get(ii).size();
+//				}
+//			} else {
+//				if(toAdd.containsKey(ii)) {
+//					newSize = weights[ii].length + toAdd.get(ii).size();
+//					
+//				} else {
+//					continue; // Nothing to add Or Remove
+//				}
+//			}
+//			
+//		}
+//		
+//}
+//	
+//	public void reform(List<SrcTarPair> toRemove, List<SrcTarPair> toAdd) {
+//			toRemove.removeAll(toAdd); // Lucky day for some synapses
+//			toRemove.sort(SrcTarPair.getComparator());
+//			toAdd.sort(SrcTarPair.getComparator());
+//			int q_st=0, q_ed=0, p_st=0, p_ed = 0;
+//			for(int ii=0; ii<width; ++ii) {
+//				
+//				while(toRemove.get(q_ed).tar==ii) {
+//					q_ed++;
+//				}
+//			}
+//			
+//	}
 	
 	/**
 	 * Perform all node level updates, including processing arriving action
