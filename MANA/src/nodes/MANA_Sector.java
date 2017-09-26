@@ -135,11 +135,11 @@ public class MANA_Sector implements Syncable {
 				int[] evtInds = childNodes[ii].evtInds;
 				double[] evtCurrs = childNodes[ii].evtCurrents;
 				if (childNodes[ii].type.isExcitatory()) {
-					for (int jj = 0, m=childNodes[ii].getEvtPtr(); jj < m; ++jj) {
+					for (int jj = 0; jj<ptr ; ++jj) {
 						target.i_e[evtInds[jj]] += evtCurrs[jj];
 					}
 				} else {
-					for (int jj = 0; jj < width; ++jj) {
+					for (int jj = 0; jj < ptr; ++jj) {
 						target.i_i[evtInds[jj]] += evtCurrs[jj];			
 					}
 				}

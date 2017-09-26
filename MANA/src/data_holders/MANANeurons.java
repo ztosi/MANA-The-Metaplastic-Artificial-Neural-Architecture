@@ -44,7 +44,6 @@ public class MANANeurons implements Spiker {
 	public double [] i_i;
 	public double [] lastSpkTime;
 	public boolean [] spks;
-	public double positions[][];
 	
 	// Can be the same or different for all neurons
 	public DataWrapper r_m;
@@ -93,7 +92,7 @@ public class MANANeurons implements Spiker {
 	 * @param _N size of group
 	 * @param _exc polarity (excitatory: true, inhibitory: false)
 	 */
-	public MANANeurons(int _N, boolean _exc) {
+	public MANANeurons(int _N, boolean _exc, double[][] _xyzCoors) {
 		
 		this.N = _N;
 		this.exc = _exc;
@@ -108,7 +107,6 @@ public class MANANeurons implements Spiker {
 		inh_sf = new double[N];
 		lastSpkTime = new double[N];
 		spks = new boolean[N];
-		//normPool = new double[N];
 		
 		r_m = new DataWrapper(N, true, default_r_m);
 		v_l = new DataWrapper(N, true, default_v_l);
@@ -124,6 +122,7 @@ public class MANANeurons implements Spiker {
 			ref_p = new DataWrapper(N, true, default_inh_ref_p);
 			tau_m = new DataWrapper(N, true, default_inh_tau_m);
 		}
+		this.xyzCoors = xyzCoors;
 	}
 	
 	

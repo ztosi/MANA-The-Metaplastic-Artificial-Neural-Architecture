@@ -19,6 +19,13 @@ import data_holders.Spiker;
  */
 public class MANA_Unit {
 	
+	public static final double DEFAULT_BOUND_START = 50; 
+	public static final double DEFAULT_BOUND_END = 150;
+	
+	public double x0=DEFAULT_BOUND_START, xf=DEFAULT_BOUND_END,
+			y0=DEFAULT_BOUND_START, yf=DEFAULT_BOUND_END,
+			z0=DEFAULT_BOUND_START, zf=2*DEFAULT_BOUND_END;
+	
 	public List<MANA_Sector> sectors = new ArrayList<MANA_Sector>();
 
 	public List<Spiker> inputs = new ArrayList<Spiker>();
@@ -61,6 +68,10 @@ public class MANA_Unit {
 	
 	public int getNumExcSrc() {
 		return 0;
+	}
+	
+	public double getMaxDist() {
+		return Math.sqrt(Math.pow(xf-x0, 2)+Math.pow(yf-y0, 2)+Math.pow(zf-z0, 2));
 	}
 	
 }

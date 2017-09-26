@@ -49,6 +49,7 @@ public final class SynapseData {
 	
 	
 	public static final double MAX_WEIGHT= 20;
+	public static final double DEF_NEW_WEIGHT = 0.01;
 	
 	
 	public enum SynType {
@@ -198,19 +199,17 @@ public final class SynapseData {
 		public abstract double getDefaultWMinus();
 	}
 	
-	
-	//public double[] normPool;
 	public double[] w;
 	public double[] dw;
-	//public double[] lastUp;
 	public double[] lastArr;
+	/** Where weight, dw, and lastArr, data are actually stored in the parent arrays in the node*/
 	public int index;
 	private final double[] data = new double[5];
 	public final SynType type;
 
 	public SynapseData(final SynType _type, final double[] _w,
-			final double[] _dw, final double[] _lastUp,
-			final double[] _lastArr, final int _index) {
+			final double[] _dw, final double[] _lastArr,
+			final int _index) {
 		this.type = _type;
 		this.index = _index;
 		this.w =_w; // Aliasing...
@@ -225,6 +224,16 @@ public final class SynapseData {
 		data[4] = Math.abs(data[4] + (ThreadLocalRandom.current().nextGaussian()*data[4]/2.0));
 	}
 
+	public SynapseData(final SynapseData _orig, final int newIndex,
+			final double[] _lastArr, final double[] _w, final double[] _dw) {
+		this.type = _orig.type;
+		this.index = newIndex;
+		this.w = _w;
+		this.dw = _dw;
+		this.lastArr = _lastArr;
+		System.arraycopy(_orig.data, 0, this.data, 0, this.data.length);
+	}
+	
 	public double getdW() {
 		return dw[index];
 	}
