@@ -1,6 +1,7 @@
 package nodes;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -70,6 +71,8 @@ public class MANA_Node {
 	 */
 	public final int height;
 
+	private int widthAdj, heightAdj;
+	
 	/**
 	 *  The "type" of node this is in terms of its synapses,
 	 *   does it connect excitatory neurons to excitatory 
@@ -117,6 +120,35 @@ public class MANA_Node {
 	public int[] localOutDegrees;
 
 
+	public MANA_Node(final Spiker src, final MANANeurons targ, SynType _type,
+			final int[][] _tarSrcMap, final double[][] _tarDlyMap, double[][] _weights) {
+		width = _tarSrcMap.length;
+		type = _type;
+		height = src.getSize();
+		inputIsExternal = src instanceof InputData;
+		targData = targ;
+		srcData = src;
+		isTransUnit=false;
+		this.weights = _weights;
+		this.tarDlyMap = _tarDlyMap;
+		this.tarSrcMap = _tarSrcMap;
+		initBasic(); // Initialize all the values that aren't dependent upon the context of this constructor
+		dws = new double[width][];
+		lastArrs = new double[width][];
+		synapses = new SynapseData[width][];
+		for(int ii=0; ii<width; ++ii) {
+			int inD = weights[ii].length
+			dws[ii] = new double[]
+			for(int jj=0; jj<weights[ii].length; ++jj) {
+				
+			}
+		}
+		
+		
+		
+		resetSrcTarMap();
+	}
+	
 	/**
 	 * 
 	 * @param src
@@ -137,49 +169,55 @@ public class MANA_Node {
 
 		width = targ.getSize();
 		height = src.getSize();
-		int heightAdj;
-		if(src == targ) {
-			heightAdj = src.getSize()-1;
-		} else {
-			heightAdj = src.getSize();
-		}
+		initBasic();
 
+		tarDlyMap = tarDlys;
+		// Default is initialized to all to all
+		synapses = new SynapseData[width][heightAdj];
+		weights = new double[width][heightAdj];
+		dws = new double[width][heightAdj];
+		lastArrs = new double[width][heightAdj];
+		tarSrcMap = new int[width][heightAdj];
+		for(int ii=0; ii < width; ++ii) {
+			eventQ.add(new PriorityQueue<Event>(Event.evtComp));
+			Arrays.fill(weights[ii], SynapseData.DEF_NEW_WEIGHT);
+			int off = 0;
+			for(int jj=0; jj<heightAdj; ++jj) {
+				if(src==targ && jj==ii) {
+					off=1;
+				}
+				tarSrcMap[ii][jj] = jj+off;
+				synapses[ii][jj] = new SynapseData(type, weights[ii], dws[ii], lastArrs[ii], jj);
+			}
+			
+		}
+		resetSrcTarMap();
+	}
+
+	/**
+	 * Initializes all the basic values that don't really change depending on the constructor.
+	 */
+	private void initBasic() {
+		localOutDegrees = new int[height];
+		localInDegrees = new int[width];
+		if(srcData == targData) {
+			heightAdj = srcData.getSize()-1;
+			widthAdj = targData.getSize()-1;
+		} else {
+			heightAdj = srcData.getSize();
+			widthAdj = targData.getSize();
+		}
+		Arrays.fill(localOutDegrees, widthAdj);
+		Arrays.fill(localInDegrees, heightAdj);
+		
 		// Initializing all the 1-D arrays (representing source or target data...)
 		localSums = new double[width];
 		localPFRPot = new double[width];
 		localPFRDep = new double[width];
 		evtCurrents = new double[width];
 		evtInds = new int[width];
-
 		eventQ = new ArrayList<PriorityQueue<Event>>();
-		tarDlyMap = tarDlys;
-		// Default is initialized to all to all
-		synapses = new SynapseData[width][height];
-		weights = new double[width][height];
-		dws = new double[width][height];
-		lastArrs = new double[width][height];
-		tarSrcMap = new int[width][height];
-		for(int ii=0; ii < width; ++ii) {
-			eventQ.add(new PriorityQueue<Event>(Event.evtComp));
-			dws[ii] = new double[height];
-			lastArrs[ii] = new double[height];
-			weights[ii] = new double[height];
-			tarSrcMap[ii] = new int[height];
-			int off = 0;
-			for(int jj=0; jj<heightAdj; ++jj) {
-				if(src==targ && jj==ii) {
-					off=1;
-				}
-				weights[ii][jj] = SynapseData.DEF_NEW_WEIGHT;
-				tarSrcMap[ii][jj] = jj+off;
-				synapses[ii][jj] = new SynapseData(type, weights[ii], dws[ii], lastArrs[ii], jj);
-			}
-			
-		}
-
-		resetSrcTarMap();
 	}
-
 
 	/**
 	 * Given a list of synapses to remove, new synapses to add (both based on target/source pairings) and delays

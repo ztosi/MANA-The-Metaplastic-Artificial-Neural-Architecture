@@ -4,6 +4,9 @@ import nodes.Syncable;
 
 public class InputData implements Spiker, Syncable {
 	
+	public static double def_con_prob = 0.25;
+	public static double def_mean = 3;
+	public static double def_std = 1;
 	
 	private String filename;
 	
@@ -14,6 +17,10 @@ public class InputData implements Spiker, Syncable {
 	public boolean[] spks;
 	public int[] outDegree;
 	double[][] xyzCoors;
+	
+	public InputData(final String _filename) {
+		// TODO:
+	}
 	
 	public void update(double dt, double time, boolean[] spkBuffer, double[] lastSpkTimeBuffer) {
 		double edge2 = time+dt;

@@ -92,7 +92,7 @@ public class MANANeurons implements Spiker {
 	 * @param _N size of group
 	 * @param _exc polarity (excitatory: true, inhibitory: false)
 	 */
-	public MANANeurons(int _N, boolean _exc, double[][] _xyzCoors) {
+	public MANANeurons(int _N, boolean _exc, double[] xCoor, double[] yCoor, double[] zCoor) {
 		
 		this.N = _N;
 		this.exc = _exc;
@@ -122,7 +122,10 @@ public class MANANeurons implements Spiker {
 			ref_p = new DataWrapper(N, true, default_inh_ref_p);
 			tau_m = new DataWrapper(N, true, default_inh_tau_m);
 		}
-		this.xyzCoors = xyzCoors;
+		xyzCoors=new double[3][_N];
+		xyzCoors[0] = xCoor;
+		xyzCoors[1] = yCoor;
+		xyzCoors[2] = zCoor;
 	}
 	
 	
