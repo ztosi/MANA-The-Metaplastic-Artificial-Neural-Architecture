@@ -1,12 +1,14 @@
 package data_holders;
 
+import functions.UtilFunctions.ProbDistType;
 import nodes.Syncable;
 
 public class InputData implements Spiker, Syncable {
 	
-	public static double def_con_prob = 0.25;
-	public static double def_mean = 3;
-	public static double def_std = 1;
+	public static final double def_con_prob = 0.25;
+	public static final double def_mean = 3;
+	public static final double def_std = 1;
+	public static final ProbDistType def_pd = ProbDistType.NORMAL;
 	
 	private String filename;
 	
@@ -16,7 +18,7 @@ public class InputData implements Spiker, Syncable {
 	public double[] lastSpkTime; // vanilla MANA does not use this for inputs, but someone might....
 	public boolean[] spks;
 	public int[] outDegree;
-	double[][] xyzCoors;
+	public double[][] xyzCoors;
 	
 	public InputData(final String _filename) {
 		// TODO:

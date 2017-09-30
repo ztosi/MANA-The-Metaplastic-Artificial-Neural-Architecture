@@ -50,6 +50,7 @@ public final class SynapseData {
 	
 	public static final double MAX_WEIGHT= 20;
 	public static final double DEF_NEW_WEIGHT = 0.01;
+	public static final double MAX_DELAY= 15; //ms
 	
 	
 	public enum SynType {
@@ -197,6 +198,21 @@ public final class SynapseData {
 		public abstract double getDefaultShapeP2();
 		public abstract double getDefaultWPlus();
 		public abstract double getDefaultWMinus();
+		public static SynType getSynType(boolean srcExc, boolean tarExc) {
+			if(srcExc) {
+				if(tarExc){
+					return SynType.EE;
+				} else {
+					return SynType.EI;
+				}
+			} else {
+				if(tarExc) {
+					return SynType.IE;
+				} else {
+					return SynType.II;
+				}
+			}
+		}
 	}
 	
 	public double[] w;

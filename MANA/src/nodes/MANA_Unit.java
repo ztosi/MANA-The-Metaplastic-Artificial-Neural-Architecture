@@ -2,10 +2,14 @@ package nodes;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 import data_holders.InputData;
 import data_holders.MANANeurons;
 import data_holders.Spiker;
+import data_holders.SynapseData;
+import data_holders.SynapseData.SynType;
+import functions.UtilFunctions;
 
 /**
  * 
@@ -42,8 +46,22 @@ public class MANA_Unit {
 	
 	public List<MANA_Node> nodes = new ArrayList<MANA_Node>();
 	
+	public InputData externalInp;
+	
+	/**
+	 * Creates an independent "MANA Unit" comprised of an experimenter-driven,
+	 * dynamic-less input layer attached to a recurrent reservoir. The properties
+	 * of the input are defined in a file and the size of the reservoir is specified.
+	 * Otherwise this constructor uses ALL DEFAULT VALUES to create a MANA reservoir
+	 * as described in Tosi, 2017. 
+	 * TODO: Create a constructor where NOT everything is automatically default
+	 * @param _inpFileName
+	 * @param _N
+	 */
 	public MANA_Unit(final String _inpFileName, int _N) {
 		InputData inp = new InputData(_inpFileName);
+		inputs.add(inp);
+		externalInp = inp;
 		if(_N%200 != 0 || _N < 1000) {
 			System.out.println("The number you entered is... "
 					+ "annoying... and I'm too lazy to deal with it. "
@@ -61,8 +79,11 @@ public class MANA_Unit {
 		numExc = (int)(0.8*size);
 		numInh = (int)(0.2*size);
 		
-		noSecs = _N/200;
+		int nodD = numInh/200;
+		noSecs = nodD*5;
+		int secSize = _N/noSecs;
 		nodesPerSec = noSecs+1; // input
+		
 		
 		// Generate locations...
 		xyzCoors = new double[3][fullSize];
@@ -72,16 +93,82 @@ public class MANA_Unit {
 			xyzCoors[0][ii] = (ii/x_inp) * delta;
 			xyzCoors[1][ii] = (ii%x_inp) * delta;
 		}
+		
+		
 		for(int ii=0; ii<size; ++ii) {
 			xyzCoors[0][ii+noInp] = x0 + Math.random()*(xf-x0);
 			xyzCoors[1][ii+noInp] = y0 + Math.random()*(yf-y0);
 			xyzCoors[2][ii+noInp] = z0 + Math.random()*(zf-z0);
 		}
 		
+		int[] swappy = new int[noInp];
+		for(int ii=0; ii<noInp; ++ii) {
+			swappy[ii] = ii;
+		}
+		
 		for(int ii=0; ii<noSecs; ++ii) {
-			MANA_Node[] secNodes = new MANA_Node[noSecs];
+			// Holds the xyz coordinate copies from the "big array" of all xyz across all neurons in all nodes in the unit
+			double[] x = new double[secSize];
+			double[] y = new double[secSize];
+			double[] z = new double[secSize];
+			System.arraycopy(xyzCoors[0], (ii*secSize+noInp), x, 0, secSize);
+			System.arraycopy(xyzCoors[1], (ii*secSize+noInp), y, 0, secSize);
+			System.arraycopy(xyzCoors[2], (ii*secSize+noInp), z, 0, secSize);
+			// Our target neurons
+			MANANeurons neus = new MANANeurons(secSize, ii>=noSecs/5, x, y, z);
+			targets.add(neus);
+			inputs.add(neus);
 			
+		}
+		for(int ii=0; ii<noSecs; ++ii) {
+			MANANeurons neus = targets.get(ii);
+			SynType itype = SynType.getSynType(true, ii>=noSecs/5);
+			// Neus is the current target
+			int[][] conMap = new int[neus.getSize()][];
+			double[][] dlys = null;
+			double[][] weights = new double[neus.getSize()][];
+			for(int jj=0, n=neus.getSize(); jj<n; ++jj) {
+				int inD = 0;
+				for(int kk=0, p=inputs.get(0).getSize(); kk<p; ++kk) {
+					if(ThreadLocalRandom.current().nextDouble() < InputData.def_con_prob) {
+						int holder = swappy[inD];
+						int swap = ThreadLocalRandom.current().nextInt(swappy.length);
+						swappy[inD] = swappy[swap];
+						swappy[swap] = holder;
+						inD++;
+					}
+				}
+				weights[jj] = UtilFunctions.getRandomArray(InputData.def_pd,
+						InputData.def_mean, InputData.def_std, inD);
+				conMap[jj] = new int[inD];
+				for(int kk=0; kk<inD; ++kk) {
+					conMap[jj][kk] = swappy[kk];
+				}
+			}
+			dlys = UtilFunctions.getDelays(inp.xyzCoors,
+					neus.xyzCoors, getMaxDist(), SynapseData.MAX_DELAY, conMap);
+			MANA_Node inpNode = new MANA_Node(inp, neus, itype, conMap, dlys, weights);
+			nodes.add(inpNode);
+			MANA_Node[] nPSec = new MANA_Node[nodesPerSec];
+			nPSec[0] = inpNode;
 			
+			for(int jj=1; jj<inputs.size(); ++jj) {
+				SynType rtype = SynType.getSynType(
+						inputs.get(jj).isExcitatory(),
+						targets.get(ii).isExcitatory());
+				MANA_Node recN = new MANA_Node(inputs.get(jj), targets.get(ii),
+						rtype, 
+						UtilFunctions.getDelays(
+								inputs.get(jj).getCoordinates(),
+								targets.get(ii).getCoordinates(),
+								targets.get(ii)==inputs.get(jj),
+								getMaxDist(), SynapseData.MAX_DELAY),
+						false);
+				nPSec[jj] = recN;
+				nodes.add(recN);
+			}
+			MANA_Sector sec = MANA_Sector.sector_builder(nPSec, targets.get(ii));
+			sectors.add(sec);
 		}
 		
 	}

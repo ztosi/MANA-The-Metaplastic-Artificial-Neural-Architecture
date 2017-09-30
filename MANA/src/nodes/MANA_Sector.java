@@ -1,5 +1,6 @@
 package nodes;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -34,6 +35,8 @@ public class MANA_Sector implements Syncable {
 	public boolean allExcSNon = false;
 	public boolean allInhSNon = false;
 	
+	public ArrayList<ArrayList<Double>> spikeTimes;
+	
 	/**
 	 * 
 	 * @param children
@@ -60,6 +63,10 @@ public class MANA_Sector implements Syncable {
 		countDown = new AtomicInteger(numNodes);
 		childNodes = children;
 		width = children[0].width;
+		spikeTimes = new ArrayList<ArrayList<Double>>();
+		for(int ii=0; ii<_target.getSize(); ++ii) {
+			spikeTimes.add(new ArrayList<Double>());
+		}
 		
 	}
 	
@@ -70,13 +77,19 @@ public class MANA_Sector implements Syncable {
 	 * of neurons from the previous time-step. Must be called before
 	 * the next iteration, but after all sectors have finished updating.
 	 */
-	public void synchronize() {
+	public void synchronize(final double time) {
 		boolean[] holder = target.spks;
 		// shallow copy over 
 		target.spks = spkBuffer;
 		// switch the addresses of the arrays, so a new one
 		// does not have to be instantiated.
 		spkBuffer = holder;
+		
+		for(int ii=0; ii<width; ++ii) {
+			if(target.spks[ii]) {
+				spikeTimes.get(ii).add(time);
+			}
+		}
 		
 		// ditto
 		double[] doubleHolder = target.estFR;

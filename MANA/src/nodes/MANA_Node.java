@@ -120,6 +120,16 @@ public class MANA_Node {
 	public int[] localOutDegrees;
 
 
+	/**
+	 * Constructor intended for use where the srcData is an input unit, but can be used in any
+	 * situation where the weights and connectivty are prespecified.
+	 * @param src
+	 * @param targ
+	 * @param _type
+	 * @param _tarSrcMap
+	 * @param _tarDlyMap
+	 * @param _weights
+	 */
 	public MANA_Node(final Spiker src, final MANANeurons targ, SynType _type,
 			final int[][] _tarSrcMap, final double[][] _tarDlyMap, double[][] _weights) {
 		width = _tarSrcMap.length;
@@ -132,20 +142,25 @@ public class MANA_Node {
 		this.weights = _weights;
 		this.tarDlyMap = _tarDlyMap;
 		this.tarSrcMap = _tarSrcMap;
+		
 		initBasic(); // Initialize all the values that aren't dependent upon the context of this constructor
+		
 		dws = new double[width][];
 		lastArrs = new double[width][];
 		synapses = new SynapseData[width][];
 		for(int ii=0; ii<width; ++ii) {
-			int inD = weights[ii].length
-			dws[ii] = new double[]
-			for(int jj=0; jj<weights[ii].length; ++jj) {
-				
+			int inD = weights[ii].length;
+			dws[ii] = new double[inD];
+			Arrays.fill(weights, SynapseData.DEF_NEW_WEIGHT);
+			lastArrs[ii] = new double[inD];
+			synapses[ii] = new SynapseData[inD];
+			for(int jj=0; jj<inD; ++jj) {
+				synapses[ii][jj] = new SynapseData(type, weights[ii], dws[ii], lastArrs[ii], jj);
 			}
 		}
 		
 		
-		
+		// Calculate the src->target map
 		resetSrcTarMap();
 	}
 	

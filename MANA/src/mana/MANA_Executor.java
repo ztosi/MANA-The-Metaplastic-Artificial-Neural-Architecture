@@ -9,6 +9,7 @@ import java.util.concurrent.Executors;
 import data_holders.InputData;
 import nodes.MANA_Node;
 import nodes.MANA_Sector;
+import nodes.MANA_Unit;
 import nodes.Syncable;
 
 public class MANA_Executor {
@@ -19,12 +20,24 @@ public class MANA_Executor {
 
 	private final ExecutorService pool;
 	
+	
+	
 	List<UpdateTask> updateTasks = new ArrayList<UpdateTask>();
-	List<SyncTask<Syncable>> syncTasks = new ArrayList<SyncTask<Syncable>>();
+	List<Callable<Syncable>> syncTasks = new ArrayList<Callable<Syncable>>();
 	
 	
 	public MANA_Executor() {
 		pool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+	}
+	
+	public void addUnit(MANA_Unit unit) {
+		syncTasks.add(new InputSyncTask(unit.externalInp));
+		for(MANA_Sector s : unit.sectors) {
+			syncTasks.add(new SectorSyncTask(s));
+		}
+		for(MANA_Node n : unit.nodes) {
+			updateTasks.add(new UpdateTask(n));
+		}
 	}
 	
 	/**
@@ -40,10 +53,7 @@ public class MANA_Executor {
 		time += dt;
 	}
 	
-	public static interface SyncTask<T> extends Callable<T> {
-	}
-
-	public class SectorSyncTask implements Callable<Syncable> {
+	public class SectorSyncTask implements Callable<Syncable>{
 
 		public final MANA_Sector sector;
 		
@@ -53,13 +63,13 @@ public class MANA_Executor {
 
 		@Override
 		public MANA_Sector call() throws Exception {
-			sector.synchronize();
+			sector.synchronize(time);
 			return sector;
 		}
 		
 	}
 	
-	public class InputSyncTask implements Callable<Syncable> {
+	public class InputSyncTask implements Callable<Syncable>{
 
 		public final InputData inp;
 		
