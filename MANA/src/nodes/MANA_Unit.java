@@ -4,12 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
-import data_holders.InputData;
-import data_holders.MANANeurons;
-import data_holders.Spiker;
-import data_holders.SynapseData;
-import data_holders.SynapseData.SynType;
-import functions.UtilFunctions;
+import base_components.InputNeurons;
+import base_components.MANANeurons;
+import base_components.Neuron;
+import base_components.SynapseData;
+import base_components.SynapseData.SynType;
+import utils.Utils;
 
 /**
  * 
@@ -40,13 +40,13 @@ public class MANA_Unit {
 	
 	public List<MANA_Sector> sectors = new ArrayList<MANA_Sector>();
 
-	public List<Spiker> inputs = new ArrayList<Spiker>();
+	public List<Neuron> inputs = new ArrayList<Neuron>();
 	
 	public List<MANANeurons> targets = new ArrayList<MANANeurons>();
 	
 	public List<MANA_Node> nodes = new ArrayList<MANA_Node>();
 	
-	public InputData externalInp;
+	public InputNeurons externalInp;
 	
 	/**
 	 * Creates an independent "MANA Unit" comprised of an experimenter-driven,
@@ -59,7 +59,7 @@ public class MANA_Unit {
 	 * @param _N
 	 */
 	public MANA_Unit(final String _inpFileName, int _N) {
-		InputData inp = new InputData(_inpFileName);
+		InputNeurons inp = new InputNeurons(_inpFileName);
 		inputs.add(inp);
 		externalInp = inp;
 		if(_N%200 != 0 || _N < 1000) {
@@ -130,7 +130,7 @@ public class MANA_Unit {
 			for(int jj=0, n=neus.getSize(); jj<n; ++jj) {
 				int inD = 0;
 				for(int kk=0, p=inputs.get(0).getSize(); kk<p; ++kk) {
-					if(ThreadLocalRandom.current().nextDouble() < InputData.def_con_prob) {
+					if(ThreadLocalRandom.current().nextDouble() < InputNeurons.def_con_prob) {
 						int holder = swappy[inD];
 						int swap = ThreadLocalRandom.current().nextInt(swappy.length);
 						swappy[inD] = swappy[swap];
@@ -138,14 +138,14 @@ public class MANA_Unit {
 						inD++;
 					}
 				}
-				weights[jj] = UtilFunctions.getRandomArray(InputData.def_pd,
-						InputData.def_mean, InputData.def_std, inD);
+				weights[jj] = Utils.getRandomArray(InputNeurons.def_pd,
+						InputNeurons.def_mean, InputNeurons.def_std, inD);
 				conMap[jj] = new int[inD];
 				for(int kk=0; kk<inD; ++kk) {
 					conMap[jj][kk] = swappy[kk];
 				}
 			}
-			dlys = UtilFunctions.getDelays(inp.xyzCoors,
+			dlys = Utils.getDelays(inp.xyzCoors,
 					neus.xyzCoors, getMaxDist(), SynapseData.MAX_DELAY, conMap);
 			MANA_Node inpNode = new MANA_Node(inp, neus, itype, conMap, dlys, weights);
 			nodes.add(inpNode);
@@ -158,7 +158,7 @@ public class MANA_Unit {
 						targets.get(ii).isExcitatory());
 				MANA_Node recN = new MANA_Node(inputs.get(jj), targets.get(ii),
 						rtype, 
-						UtilFunctions.getDelays(
+						Utils.getDelays(
 								inputs.get(jj).getCoordinates(),
 								targets.get(ii).getCoordinates(),
 								targets.get(ii)==inputs.get(jj),

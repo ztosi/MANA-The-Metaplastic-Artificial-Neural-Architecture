@@ -1,9 +1,10 @@
 package functions;
 
-import data_holders.SynapseData;
-import data_holders.SynapseData.SynType;
+import base_components.SynapseData;
+import base_components.SynapseData.SynType;
+import utils.Utils;
 
-public class SynapseFunctions {
+public class STDPFunctions {
 	
 	public static enum STDPWindow {
 		StandardHebb  {
@@ -131,9 +132,9 @@ public class SynapseFunctions {
 		double isi = dat.getLastArr() - time;
 		
 		dat.setdLittleU(dat.getBigU() + (dat.getLittleU() 
-				* (1 - dat.getBigU()) * UtilFunctions.expLT0Approx(isi / dat.getF())));
+				* (1 - dat.getBigU()) * Utils.expLT0Approx(isi / dat.getF())));
 		dat.setR( 1 + ((dat.getR() - (dat.getLittleU() * dat.getR()) - 1)
-				* UtilFunctions.expLT0Approx(isi / dat.getD())));
+				* Utils.expLT0Approx(isi / dat.getD())));
 		dat.setLastArr(time);
 		
 		return dat.getR() * dat.getW() * dat.getLittleU() * 10; // do something about magic number...
@@ -143,9 +144,9 @@ public class SynapseFunctions {
 			double wminus, double delta_t, double lrate) {
 		double dw;
 		if(delta_t >= 0) { // Pre fired before post
-			dw=wplus * UtilFunctions.expLT0Approx(-delta_t/tauplus);
+			dw=wplus * Utils.expLT0Approx(-delta_t/tauplus);
 		} else {
-			dw=-wminus * UtilFunctions.expLT0Approx(delta_t/tauminus);
+			dw=-wminus * Utils.expLT0Approx(delta_t/tauminus);
 		}
 		return dw*lrate;
 	}
@@ -163,7 +164,7 @@ public class SynapseFunctions {
 	
 	public static double mexicanHatFunction(double x, double sigmaSq, double normTerm) {
 		double x_nrm_sq = (x*x)/sigmaSq;
-		return normTerm * (1 - x_nrm_sq)*UtilFunctions.expLT0Approx(-0.5*x_nrm_sq);
+		return normTerm * (1 - x_nrm_sq)*Utils.expLT0Approx(-0.5*x_nrm_sq);
 	}
 	
 	public static void newNormScaleFactors(double[] scaleFacs,

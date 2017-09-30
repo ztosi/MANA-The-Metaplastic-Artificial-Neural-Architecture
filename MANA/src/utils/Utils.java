@@ -1,10 +1,10 @@
-package functions;
+package utils;
 
 import java.util.concurrent.ThreadLocalRandom;
 
-import data_holders.SynapseData;
+import base_components.SynapseData;
 
-public class UtilFunctions {
+public class Utils {
 
 	public static enum ProbDistType {
 		NORMAL {

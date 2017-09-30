@@ -1,9 +1,9 @@
-package data_holders;
+package base_components;
 
-import functions.UtilFunctions.ProbDistType;
-import nodes.Syncable;
+import utils.Syncable;
+import utils.Utils.ProbDistType;
 
-public class InputData implements Spiker, Syncable {
+public class InputNeurons implements Neuron, Syncable {
 	
 	public static final double def_con_prob = 0.25;
 	public static final double def_mean = 3;
@@ -20,7 +20,7 @@ public class InputData implements Spiker, Syncable {
 	public int[] outDegree;
 	public double[][] xyzCoors;
 	
-	public InputData(final String _filename) {
+	public InputNeurons(final String _filename) {
 		// TODO:
 	}
 	

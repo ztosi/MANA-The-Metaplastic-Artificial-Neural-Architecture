@@ -1,8 +1,9 @@
-package data_holders;
+package base_components;
 
-import functions.UtilFunctions;
+import utils.DataWrapper;
+import utils.Utils;
 
-public class MANANeurons implements Spiker {
+public class MANANeurons implements Neuron {
 	
 	
 	// TODO: Make separately settable, i.e. not static and not final
@@ -225,7 +226,7 @@ public class MANANeurons implements Spiker {
 	 * index should have based on its preferred firing rate.
 	 */
 	public double newNormVal(int index) {
-		return sat_a/(1+UtilFunctions.expLT0Approx(-sat_b*prefFR[index]))
+		return sat_a/(1+Utils.expLT0Approx(-sat_b*prefFR[index]))
 				+ sat_c[index];
 	}
 	

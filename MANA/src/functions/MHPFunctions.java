@@ -2,9 +2,10 @@ package functions;
 
 import java.util.concurrent.ThreadLocalRandom;
 
-import data_holders.MANANeurons;
+import base_components.MANANeurons;
+import utils.Utils;
 
-public class NeuronFunctions {
+public class MHPFunctions {
 	
 	/**
 	 * Executed in Nodes by worker threads
@@ -26,9 +27,9 @@ public class NeuronFunctions {
 			for(int ii=0, n = indices.length; ii<n; ++ii) {
 				int srcInd = indices[ii];
 				if(efrSrc[srcInd] <= efrTar) {
-					pfrLTPBuffLocal[tarInd] += UtilFunctions.expLT0Approx((efrSrc[srcInd]-efrTar)/pfrTar);
+					pfrLTPBuffLocal[tarInd] += Utils.expLT0Approx((efrSrc[srcInd]-efrTar)/pfrTar);
 				} else {
-					pfrLTDBuffLocal[tarInd] += UtilFunctions.expLT0Approx((efrTar-efrSrc[srcInd])/pfrTar);
+					pfrLTDBuffLocal[tarInd] += Utils.expLT0Approx((efrTar-efrSrc[srcInd])/pfrTar);
 				}
 			}
 	}
@@ -102,7 +103,7 @@ public class NeuronFunctions {
 	
 	public static void newNormValsFromPfr(double [] normVals, double[] pfrs, MANANeurons neurons) {
 		for(int ii=0, n=normVals.length; ii<n; ++ii) {
-			normVals[ii] = neurons.sat_a/(1+UtilFunctions.expLT0Approx(-neurons.sat_b*pfrs[ii]))
+			normVals[ii] = neurons.sat_a/(1+Utils.expLT0Approx(-neurons.sat_b*pfrs[ii]))
 					+ neurons.sat_c[ii];
 		}
 	}

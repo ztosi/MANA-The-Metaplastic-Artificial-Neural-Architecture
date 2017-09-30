@@ -1,6 +1,6 @@
 package mana;
 
-public class MANA {
+public class RunMANA {
 
 	
 	

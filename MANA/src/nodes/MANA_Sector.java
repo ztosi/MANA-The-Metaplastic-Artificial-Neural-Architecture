@@ -4,9 +4,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import data_holders.MANANeurons;
-import functions.NeuronFunctions;
-import functions.SynapseFunctions;
+import base_components.MANANeurons;
+import functions.MHPFunctions;
+import functions.STDPFunctions;
+import utils.Syncable;
 
 /**
  * 
@@ -99,8 +100,8 @@ public class MANA_Sector implements Syncable {
 		// deep copy required, since the values here are not updated *every* iteration.
 		System.arraycopy(lastSpkTimeBuffer, 0, target.lastSpkTime, 0, width);
 		
-		SynapseFunctions.newNormScaleFactors(target.exc_sf, target.thresh, target.threshRA, 5, true);
-		SynapseFunctions.newNormScaleFactors(target.inh_sf, target.thresh, target.threshRA, 5, true);
+		STDPFunctions.newNormScaleFactors(target.exc_sf, target.thresh, target.threshRA, 5, true);
+		STDPFunctions.newNormScaleFactors(target.inh_sf, target.thresh, target.threshRA, 5, true);
 
 	}
 	
@@ -198,7 +199,7 @@ public class MANA_Sector implements Syncable {
 		// between pre- and post- synaptic estimated firing rates as calculated
 		// in each node and accumulated by the sector
 		// MUST CALL gatherChildData(...) first!!!
-		NeuronFunctions.metaHPStage2(pfrLTDAccum, pfrLTPAccum,
+		MHPFunctions.metaHPStage2(pfrLTDAccum, pfrLTPAccum,
 				target, target.eta, dt);
 		
 		// Homeostatic plasticity...

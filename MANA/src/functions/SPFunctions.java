@@ -6,7 +6,7 @@ import java.util.List;
 import nodes.MANA_Node;
 import nodes.MANA_Unit;
 
-public class MANA_SP {
+public class SPFunctions {
 
 	
 	public static void prune(

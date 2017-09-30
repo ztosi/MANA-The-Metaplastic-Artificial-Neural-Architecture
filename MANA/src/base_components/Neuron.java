@@ -1,6 +1,6 @@
-package data_holders;
+package base_components;
 
-public interface Spiker {
+public interface Neuron {
 
 	boolean[] getSpikes();
 	

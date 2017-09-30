@@ -1,4 +1,4 @@
-package data_holders;
+package base_components;
 
 import java.util.concurrent.ThreadLocalRandom;
 

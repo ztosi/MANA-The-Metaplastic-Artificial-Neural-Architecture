@@ -11,13 +11,13 @@ import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
 
-import data_holders.InputData;
-import data_holders.MANANeurons;
-import data_holders.Spiker;
-import data_holders.SynapseData;
-import data_holders.SynapseData.SynType;
-import functions.NeuronFunctions;
-import functions.SynapseFunctions;
+import base_components.InputNeurons;
+import base_components.MANANeurons;
+import base_components.Neuron;
+import base_components.SynapseData;
+import base_components.SynapseData.SynType;
+import functions.MHPFunctions;
+import functions.STDPFunctions;
 
 public class MANA_Node {
 
@@ -31,7 +31,7 @@ public class MANA_Node {
 	 * Event (AP) source and the neurons (targets of APs/Synapses)
 	 *  whose afferent synapses we opperate on
 	 */
-	public final Spiker srcData;
+	public final Neuron srcData;
 
 	/** The neurons whose inputs from the specific srcData this node handles,
 	 * most opperations are done on a by-target-node basis making them the primary
@@ -130,12 +130,12 @@ public class MANA_Node {
 	 * @param _tarDlyMap
 	 * @param _weights
 	 */
-	public MANA_Node(final Spiker src, final MANANeurons targ, SynType _type,
+	public MANA_Node(final Neuron src, final MANANeurons targ, SynType _type,
 			final int[][] _tarSrcMap, final double[][] _tarDlyMap, double[][] _weights) {
 		width = _tarSrcMap.length;
 		type = _type;
 		height = src.getSize();
-		inputIsExternal = src instanceof InputData;
+		inputIsExternal = src instanceof InputNeurons;
 		targData = targ;
 		srcData = src;
 		isTransUnit=false;
@@ -171,7 +171,7 @@ public class MANA_Node {
 	 * @param _type
 	 * @param tarDlys
 	 */
-	public MANA_Node(final Spiker src, final MANANeurons targ,
+	public MANA_Node(final Neuron src, final MANANeurons targ,
 			final SynType _type,
 			final double [][] tarDlys,
 			final boolean _transUnit) 
@@ -179,7 +179,7 @@ public class MANA_Node {
 		this.srcData = src;
 		this.targData = targ;
 		this.type = _type;
-		inputIsExternal = src instanceof InputData;
+		inputIsExternal = src instanceof InputNeurons;
 		this.isTransUnit = _transUnit;
 
 		width = targ.getSize();
@@ -422,7 +422,7 @@ public class MANA_Node {
 		// determining contributions from pre-synaptic neurons
 		if(targData.mhpOn && !inputIsExternal && useMHP) {
 			for(int ii=0; ii<width; ++ii) {
-				NeuronFunctions.metaHPStage1(ii, targData.estFR[ii],
+				MHPFunctions.metaHPStage1(ii, targData.estFR[ii],
 						targData.prefFR[ii],
 						((MANANeurons) srcData).estFR,
 						localPFRDep, localPFRPot, tarSrcMap[ii]);
@@ -459,7 +459,8 @@ public class MANA_Node {
 	}
 
 	/**
-	 * 
+	 * Synaptic normalization where whether or not SN is turned on is
+	 * checked for each node.
 	 */
 	public void normalizeCheck() {
 		double[] sums, scaleFs;
@@ -483,6 +484,11 @@ public class MANA_Node {
 		}
 	}
 
+	/**
+	 * Synaptic Normalization where whether or not SN is turned on it is
+	 * executed for each node. Intended to be called after all neurons have
+	 * had their SN turned on.
+	 */
 	public void normalizeNoCheck() {
 		double[] sums, scaleFs;
 		if(type.isExcitatory()) {
@@ -537,8 +543,8 @@ public class MANA_Node {
 				init=false;
 				int index = eventQ.get(ii).peek().synDat.index;
 				Event evt_loc = eventQ.get(ii).poll();
-				dws[ii][index]=SynapseFunctions.STDP(type, time, targData.lastSpkTime[ii], type.getLRate()); // new dw/dt
-				evtCurrents[ptr] += SynapseFunctions.getPSR_UDF(evt_loc.synDat, time);
+				dws[ii][index]=STDPFunctions.STDP(type, time, targData.lastSpkTime[ii], type.getLRate()); // new dw/dt
+				evtCurrents[ptr] += STDPFunctions.getPSR_UDF(evt_loc.synDat, time);
 				lastArrs[ii][index] = time;
 			}
 			if(!init) {
@@ -556,7 +562,7 @@ public class MANA_Node {
 	public void handlePostSpikes(final double time, final double dt) {
 		for(int ii=0; ii<width; ++ii) {
 			if(targData.spks[ii]) {
-				SynapseFunctions.STDP(type, lastArrs[ii], dws[ii], time, type.getLRate());
+				STDPFunctions.STDP(type, lastArrs[ii], dws[ii], time, type.getLRate());
 			}
 		}
 	}
