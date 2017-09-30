@@ -204,7 +204,6 @@ public class MANANeurons implements Neuron {
 			}
 			estFRBuffer[ii] = estFR[ii] + (dt *(1000*ef[ii] - estFR[ii]));
 		}
-		
 	}
 	
 	/**

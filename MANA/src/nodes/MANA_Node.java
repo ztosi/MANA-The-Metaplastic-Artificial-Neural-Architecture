@@ -581,6 +581,18 @@ public class MANA_Node {
 		ptr=0;
 	}
 
+	/**
+	 * @return whether or not this node contains excitatory synapses (the source is excitatory)
+	 */
+	public boolean isExcitatory() {
+		return type.isExcitatory();
+	}
+	
+	/**
+	 * TODO: Pull this out into its own separate class and put other utilities for handling events there too...
+	 * @author z
+	 *
+	 */
 	public static final class Event {
 		public final double arrTime;
 		/** Index of the source neuron in the source neuron group.*/

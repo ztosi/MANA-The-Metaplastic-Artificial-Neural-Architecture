@@ -72,6 +72,23 @@ public class MANA_Sector implements Syncable {
 	}
 	
 	/**
+	 * 
+	 */
+	public void updateInDegrees() {
+		Arrays.fill(target.excInDegree, 0);
+		Arrays.fill(target.inhInDegree, 0);
+		for(MANA_Node node : childNodes) {
+			int[] inDegs = node.type.isExcitatory() ? target.excInDegree : target.inhInDegree;
+			for(int ii=0; ii<width; ++ii) {
+				inDegs[ii] += node.localInDegrees[ii];
+			}
+		}
+		for(int ii=0; ii<width; ++ii) {
+			target.inDegree[ii] = target.excInDegree[ii] + target.inhInDegree[ii];
+		}
+	}
+	
+	/**
 	 * Before the next iteration the target neurons this sector is responsible
 	 * for must update these values, however during update they must remain
 	 * in buffers since other MANA nodes require the data for this group

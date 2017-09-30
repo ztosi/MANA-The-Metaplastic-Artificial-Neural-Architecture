@@ -1,7 +1,6 @@
 # IGNORE ME!
 *.class
-./bin
-./bin/*
+MANA/bin/
 .classpath
 .project
 .settings

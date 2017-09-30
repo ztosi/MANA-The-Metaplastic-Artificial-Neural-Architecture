@@ -34,7 +34,7 @@ public class MANA_Unit {
 			y0=DEFAULT_BOUND_START, yf=DEFAULT_BOUND_END,
 			z0=DEFAULT_BOUND_START, zf=2*DEFAULT_BOUND_END;
 	
-	public final int fullSize, size, numExc, numInh, noSecs, nodesPerSec, noInp;
+	public final int fullSize, size, numExc, numAllExc, numInh, noSecs, nodesPerSec, noInp;
 	
 	public double [][] xyzCoors;
 	
@@ -77,6 +77,7 @@ public class MANA_Unit {
 		size=_N;
 		fullSize = _N + noInp;
 		numExc = (int)(0.8*size);
+		numAllExc = numExc + noInp;
 		numInh = (int)(0.2*size);
 		
 		int nodD = numInh/200;
@@ -211,10 +212,6 @@ public class MANA_Unit {
 			}
 		}
 		return max;
-	}
-	
-	public int getNumExcSrc() {
-		return 0;
 	}
 	
 	public double getMaxDist() {
