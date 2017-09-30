@@ -1,4 +1,7 @@
-
+# IGNORE ME!
 *.class
 ./bin
 ./bin/*
+.classpath
+.project
+.settings
