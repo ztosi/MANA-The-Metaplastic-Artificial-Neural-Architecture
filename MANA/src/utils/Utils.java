@@ -90,11 +90,19 @@ public class Utils {
 		}
 	}
 	
-	public static double euclidean(double x1, double x2, double y1, double y2, double z1, double z2) {
+	public static double euclidean(double x1, double x2, double y1, double y2,
+			double z1, double z2) {
 		double xDiff = x2-x1;
 		double yDiff = y2-y1;
 		double zDiff = z2-z1;
 		return Math.sqrt(xDiff*xDiff + yDiff*yDiff + zDiff*zDiff);
+	}
+	
+	public static double euclidean(double[][] srcXYZ, double[][] tarXYZ,
+			final int srcInd, final int tarInd) {
+		return euclidean(srcXYZ[0][srcInd], tarXYZ[0][tarInd],
+				srcXYZ[1][srcInd], tarXYZ[1][tarInd],
+				srcXYZ[2][srcInd], tarXYZ[2][tarInd]);
 	}
 	
 	public static double[][] getDelays(final double[][] xyz1, final double[][] xyz2,
