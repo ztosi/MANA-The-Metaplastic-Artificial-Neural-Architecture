@@ -59,7 +59,12 @@ public class SPFunctions {
 	}
 	
 	public static Map<MANA_Node, Map<Integer, List<Integer>>> grow(
-			MANA_Unit unit, int totalRemoved, int maxAdd, double lambda, double con_const){
+			MANA_Unit unit, int totalRemovedExc, int totalRemovedInh, int maxAdd, double lambda, double con_const){
+		Map<MANA_Node, Map<Integer, List<Integer>>> growM = new HashMap<MANA_Node, Map<Integer, List<Integer>>>();
+		for(MANA_Node node : unit.nodes) {
+			
+		}
+		
 		return null;
 	}
 	

@@ -375,6 +375,33 @@ public class MANA_Node {
 	}
 	
 	/**
+	 * Returns a 2D int array where each row is a target neuron index. The
+	 * 1D array that index points to contains the indices of the source
+	 * neurons which DO NOT possess connections that target neuron.
+	 * @return
+	 */
+	public int[][] getDisconnected() {
+		int[][] discArr = new int[width][];
+		boolean [] conBin = new boolean[heightAdj];
+		for(int ii=0; ii<width; ++ii) {
+			int noDiscon = heightAdj - tarSrcMap[ii].length;
+			int [] discon = new int[noDiscon];
+			Arrays.fill(conBin, false);
+			for(int jj=0, m=tarSrcMap[ii].length; jj<m; ++jj) {
+				conBin[tarSrcMap[ii][jj]]=true;
+			}
+			int kk=0;
+			for(int jj=0; jj<heightAdj; ++jj) {
+				if(!conBin[jj]) {
+					discon[kk++] = jj;
+				}
+			}
+			discArr[ii] = discon;
+		}
+		return discArr;
+	}
+	
+	/**
 	 * Gives the source neurons that DO NOT connect to the target neuron with
 	 * the given (tarNo) index. Not particularly optimized... don't call often.
 	 * @param tarNo
