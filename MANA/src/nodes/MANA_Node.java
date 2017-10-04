@@ -6,7 +6,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
@@ -239,10 +238,10 @@ public class MANA_Node {
 	 * adds/removes the synapses to/from this group... given the rigid performance-minded data-structures,
 	 * requires a lot of new allocations and removals of old data. THIS IS VERY EXPENSIVE DO NOT CALL OFTEN. 
 	 * @param toRemove
-	 * @param toAdd
+	 * @param toAdd 
 	 * @param toAddDlys
 	 */
-	public void reform(final Map<Integer, Set<Integer>> toRemove, final Map<Integer, List<Integer>> toAdd,
+	public void reform(final Map<Integer, Set<Integer>> toRemove, final Map<Integer, Set<Integer>> toAdd,
 			final double[][] toAddDlys) {
 		for(int ii=0; ii<width; ++ii) {
 			int newSize;
@@ -331,7 +330,7 @@ public class MANA_Node {
 					newTarSrcMap[kk] = newSrc;
 					newWeights[kk] = SynapseData.DEF_NEW_WEIGHT;
 					newSynDat[kk] = new SynapseData(type, newWeights, newDws, newLastArrs, kk);
-					newTarDlys[kk] = toAddDlys[ii][kk-ll]; // only contains new data so must subtract ll to index
+					newTarDlys[kk] = toAddDlys[ii][kk-ll]; // only contains new data so must subtract ll from index
 					localOutDegrees[newSrc]++;
 					localInDegrees[ii]++;
 					kk++;
