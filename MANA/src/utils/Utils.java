@@ -1,5 +1,7 @@
 package utils;
 
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.concurrent.ThreadLocalRandom;
 
 import base_components.SynapseData;
@@ -142,6 +144,16 @@ public class Utils {
 			}
 		}
 		return dlys;
+	}
+	
+	public static double[] getDoubleArr(Collection<Double> doubleCol) {
+		double[] out = new double[doubleCol.size()];
+		Iterator<Double> dcIter = doubleCol.iterator();
+		int ii=0;
+		while(dcIter.hasNext()) {
+			out[ii++] = dcIter.next();
+		}
+		return out;
 	}
 	
 }
