@@ -71,7 +71,7 @@ public class MANA_Node {
 	public final int height;
 
 	private int widthAdj, heightAdj;
-	
+
 	/**
 	 *  The "type" of node this is in terms of its synapses,
 	 *   does it connect excitatory neurons to excitatory 
@@ -141,9 +141,9 @@ public class MANA_Node {
 		this.weights = _weights;
 		this.tarDlyMap = _tarDlyMap;
 		this.tarSrcMap = _tarSrcMap;
-		
+
 		initBasic(); // Initialize all the values that aren't dependent upon the context of this constructor
-		
+
 		dws = new double[width][];
 		lastArrs = new double[width][];
 		synapses = new SynapseData[width][];
@@ -157,12 +157,12 @@ public class MANA_Node {
 				synapses[ii][jj] = new SynapseData(type, weights[ii], dws[ii], lastArrs[ii], jj);
 			}
 		}
-		
-		
+
+
 		// Calculate the src->target map
 		resetSrcTarMap();
 	}
-	
+
 	/**
 	 * 
 	 * @param src
@@ -203,7 +203,7 @@ public class MANA_Node {
 				tarSrcMap[ii][jj] = jj+off;
 				synapses[ii][jj] = new SynapseData(type, weights[ii], dws[ii], lastArrs[ii], jj);
 			}
-			
+
 		}
 		resetSrcTarMap();
 	}
@@ -223,7 +223,7 @@ public class MANA_Node {
 		}
 		Arrays.fill(localOutDegrees, widthAdj);
 		Arrays.fill(localInDegrees, heightAdj);
-		
+
 		// Initializing all the 1-D arrays (representing source or target data...)
 		localSums = new double[width];
 		localPFRPot = new double[width];
@@ -350,7 +350,7 @@ public class MANA_Node {
 		// data in tar-src ordering and do the equivalent of histogramming)
 		resetSrcTarMap();
 	}
-	
+
 	/**
 	 * 
 	 */
@@ -372,7 +372,7 @@ public class MANA_Node {
 		}
 		srcTarMap = newSrcTarMap;
 	}
-	
+
 	/**
 	 * Returns a 2D int array where each row is a target neuron index. The
 	 * 1D array that index points to contains the indices of the source
@@ -399,7 +399,7 @@ public class MANA_Node {
 		}
 		return discArr;
 	}
-	
+
 	/**
 	 * Gives the source neurons that DO NOT connect to the target neuron with
 	 * the given (tarNo) index. Not particularly optimized... don't call often.
@@ -428,11 +428,13 @@ public class MANA_Node {
 	 */
 	public void update(final double time, final double dt) {
 
-		if((parent_sector.allExcSNon && type.isExcitatory())
-				|| (parent_sector.allInhSNon && !type.isExcitatory()))
-			normalizeNoCheck();
-		else
-			normalizeCheck();
+		if (parent_sector.parent.hpOn || parent_sector.parent.synPlasticOn) {
+			if((parent_sector.allExcSNon && type.isExcitatory())
+					|| (parent_sector.allInhSNon && !type.isExcitatory()))
+				normalizeNoCheck();
+			else
+				normalizeCheck();
+		}
 
 		// Check for spikes from the source and place them for processing based on the synaptic delay
 		scheduleNewEvents(time);
@@ -446,7 +448,7 @@ public class MANA_Node {
 		// If the source for this layer is not an exogenous input and mhp is
 		// on for the target group, perform the first stage of MHP involving
 		// determining contributions from pre-synaptic neurons
-		if(targData.mhpOn && !inputIsExternal && useMHP) {
+		if(targData.mhpOn && !inputIsExternal && parent_sector.parent.mhpOn) {
 			for(int ii=0; ii<width; ++ii) {
 				MHPFunctions.metaHPStage1(ii, targData.estFR[ii],
 						targData.prefFR[ii],
@@ -467,19 +469,21 @@ public class MANA_Node {
 	 * 
 	 */
 	public void updateWeightsAndSums() {
-		// Add up the new sum of incoming weights for the weights in this node
-		// to the neurons in this node and update weight values
-		for(int ii=0; ii < width; ++ii) {
-			localSums[ii] = 0;
-			for(int jj=0, m = weights[ii].length; jj<m; ++jj) {
-				weights[ii][jj] += dws[ii][jj];
-			}
-			for(int jj=0, m = weights[ii].length; jj<m; ++jj) {
-				if(weights[ii][jj]<0) 
-					weights[ii][jj]=0;
-			}
-			for(int jj=0, m = weights[ii].length; jj<m; ++jj) {
-				localSums[ii] += weights[ii][jj];
+		if(parent_sector.parent.synPlasticOn) {
+			// Add up the new sum of incoming weights for the weights in this node
+			// to the neurons in this node and update weight values
+			for(int ii=0; ii < width; ++ii) {
+				localSums[ii] = 0;
+				for(int jj=0, m = weights[ii].length; jj<m; ++jj) {
+					weights[ii][jj] += dws[ii][jj];
+				}
+				for(int jj=0, m = weights[ii].length; jj<m; ++jj) {
+					if(weights[ii][jj]<0) 
+						weights[ii][jj]=0;
+				}
+				for(int jj=0, m = weights[ii].length; jj<m; ++jj) {
+					localSums[ii] += weights[ii][jj];
+				}
 			}
 		}
 	}
@@ -489,20 +493,22 @@ public class MANA_Node {
 	 * checked for each node.
 	 */
 	public void normalizeCheck() {
-		double[] sums, scaleFs;
+		double[] sums, scaleFs, normVals;
 		boolean[] snOn;
 		if(type.isExcitatory()) {
 			sums = parent_sector.secExcSums;
 			scaleFs = targData.exc_sf;
 			snOn = targData.excSNon;
+			normVals = targData.normValsExc;
 		} else {
 			sums = parent_sector.secInhSums;
 			scaleFs = targData.inh_sf;
 			snOn = targData.inhSNon;
+			normVals = targData.normValsInh;
 		}
 		for(int ii=0; ii<width; ++ii) {
 			if(snOn[ii]) {
-				double scNVal=targData.normVals[ii]*scaleFs[ii]/sums[ii];
+				double scNVal=normVals[ii]*scaleFs[ii]/sums[ii];
 				for(int jj=0, m=weights[ii].length; jj<m; ++jj) {
 					weights[ii][jj] *= scNVal;
 				}
@@ -516,16 +522,18 @@ public class MANA_Node {
 	 * had their SN turned on.
 	 */
 	public void normalizeNoCheck() {
-		double[] sums, scaleFs;
+		double[] sums, scaleFs, normVals;
 		if(type.isExcitatory()) {
 			sums = parent_sector.secExcSums;
 			scaleFs = targData.exc_sf;
+			normVals = targData.normValsExc;
 		} else {
 			sums = parent_sector.secInhSums;
 			scaleFs = targData.inh_sf;
+			normVals = targData.normValsInh;
 		}
 		for(int ii=0; ii<width; ++ii) {
-			double scNVal=targData.normVals[ii]*scaleFs[ii]/sums[ii];
+			double scNVal=normVals[ii]*scaleFs[ii]/sums[ii];
 			for(int jj=0, m=weights[ii].length; jj<m; ++jj) {
 				weights[ii][jj] *= scNVal;
 			}
@@ -569,8 +577,10 @@ public class MANA_Node {
 				init=false;
 				int index = eventQ.get(ii).peek().synDat.index;
 				Event evt_loc = eventQ.get(ii).poll();
-				dws[ii][index]=STDPFunctions.STDP(type, time, targData.lastSpkTime[ii], type.getLRate()); // new dw/dt
-				evtCurrents[ptr] += STDPFunctions.getPSR_UDF(evt_loc.synDat, time);
+				if(parent_sector.parent.synPlasticOn)
+					dws[ii][index]=STDPFunctions.STDP(type, time,
+							targData.lastSpkTime[ii], type.getLRate()); // new dw/dt
+				evtCurrents[ptr] += 10*STDPFunctions.getPSR_UDF(evt_loc.synDat, time); // TODO: do something about magic number..
 				lastArrs[ii][index] = time;
 			}
 			if(!init) {
@@ -586,9 +596,11 @@ public class MANA_Node {
 	 * @param dt
 	 */
 	public void handlePostSpikes(final double time, final double dt) {
-		for(int ii=0; ii<width; ++ii) {
-			if(targData.spks[ii]) {
-				STDPFunctions.STDP(type, lastArrs[ii], dws[ii], time, type.getLRate());
+		if(parent_sector.parent.synPlasticOn) {
+			for(int ii=0; ii<width; ++ii) {
+				if(targData.spks[ii]) {
+					STDPFunctions.STDP(type, lastArrs[ii], dws[ii], time, type.getLRate());
+				}
 			}
 		}
 	}
@@ -613,7 +625,7 @@ public class MANA_Node {
 	public boolean isExcitatory() {
 		return type.isExcitatory();
 	}
-	
+
 	/**
 	 * TODO: Pull this out into its own separate class and put other utilities for handling events there too...
 	 * @author z

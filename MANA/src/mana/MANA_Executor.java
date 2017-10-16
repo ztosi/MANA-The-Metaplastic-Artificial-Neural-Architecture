@@ -14,9 +14,10 @@ import utils.Syncable;
 
 public class MANA_Executor {
 	
-	private double time;
+	public static final double DEF_DT = 0.1; //ms
 	
-	private double dt;
+	private double time = 0;
+	private double dt = DEF_DT;
 
 	private final ExecutorService pool;
 	
@@ -25,6 +26,11 @@ public class MANA_Executor {
 	
 	public MANA_Executor() {
 		pool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+	}
+	
+	public MANA_Executor(final double _dt) {
+		pool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+		this.dt = _dt;
 	}
 	
 	public void addUnit(MANA_Unit unit) {
@@ -95,7 +101,10 @@ public class MANA_Executor {
 			node.update(time, dt);
 			return node;
 		}
-		
+	}
+	
+	public double getTime() {
+		return time;
 	}
 	
 }

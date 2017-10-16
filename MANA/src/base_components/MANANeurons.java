@@ -71,7 +71,9 @@ public class MANANeurons implements Neuron {
 	// Afferent Synapse properties
 	public boolean [] excSNon;
 	public boolean [] inhSNon;
-	public double [] normVals;
+	//public double [] normVals;
+	public double [] normValsExc;
+	public double [] normValsInh;
 	public double [] exc_sf;
 	public double [] inh_sf;
 	public double [] sat_c;
@@ -108,6 +110,8 @@ public class MANANeurons implements Neuron {
 		inh_sf = new double[N];
 		lastSpkTime = new double[N];
 		spks = new boolean[N];
+		normValsExc = new double[N];
+		normValsInh = new double[N];
 		
 		r_m = new DataWrapper(N, true, default_r_m);
 		v_l = new DataWrapper(N, true, default_v_l);

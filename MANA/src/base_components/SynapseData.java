@@ -49,6 +49,7 @@ public final class SynapseData {
 	
 	
 	public static final double MAX_WEIGHT= 20;
+	public static final double MIN_WEIGHT = 0.01;
 	public static final double DEF_NEW_WEIGHT = 0.01;
 	public static final double MAX_DELAY= 15; //ms
 	

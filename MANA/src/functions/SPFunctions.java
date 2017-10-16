@@ -15,7 +15,13 @@ import utils.Utils;
 
 public class SPFunctions {
 
-	
+	public static final double DEF_EXC_THRESH = 0.05;
+	public static final double DEF_INH_THRESH = 0.05;
+	public static final double DEF_CON_CONST = 0.4;
+    public static final double P_ADD_MIN = 0.01;
+    public static final double RT_LOG_PA_MIN = Math.sqrt(-Math.log(P_ADD_MIN));	
+    public static final double DEF_PG_INTERVAL = 5000; // ms
+    
 	/**
 	 * Performs the growth and pruning operations on the given MANA unit
 	 * @param unit
@@ -60,8 +66,8 @@ public class SPFunctions {
 		double maxInh = unit.findGlobalMaxInh();
 		double excTestCut = maxExc * excThresh;
 		double inhTestCut = maxInh * inhThresh;
-		int noExc = unit.numAllExc;
-		int noInh = unit.numInh;
+		int noExc = unit.getNumAllExc();
+		int noInh = unit.getNumInh();
 		for(MANA_Sector sec : unit.sectors) {
 			sec.updateInDegrees();
 		}

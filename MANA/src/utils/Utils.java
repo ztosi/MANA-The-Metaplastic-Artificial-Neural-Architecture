@@ -156,4 +156,12 @@ public class Utils {
 		return out;
 	}
 	
+	public static double sum(double [] arr) {
+		double su = 0;
+		for(int ii=0, n=arr.length; ii<n; ++ii) {
+			su += arr[ii];
+		}
+		return su;
+	}
+	
 }
