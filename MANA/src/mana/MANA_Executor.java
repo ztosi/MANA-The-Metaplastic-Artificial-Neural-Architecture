@@ -25,7 +25,7 @@ public class MANA_Executor {
 	List<Callable<Syncable>> syncTasks = new ArrayList<Callable<Syncable>>();
 	
 	public MANA_Executor() {
-		pool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+		pool = Executors.newFixedThreadPool(1); //Runtime.getRuntime().availableProcessors());
 	}
 	
 	public MANA_Executor(final double _dt) {

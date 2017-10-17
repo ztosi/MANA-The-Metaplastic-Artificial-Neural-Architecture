@@ -38,6 +38,7 @@ public class SPFunctions {
 		Map<MANA_Node, Map<Integer, Set<Integer>>> pruneMap = prune(unit, excThresh, inhThresh, absMin);
 		int[] eiPop = new int[2];
 		mapPop(pruneMap, eiPop);
+		System.out.println("Exc: " + eiPop[0] + " Inh: " + eiPop[1]);
 		Map<MANA_Node, Map<Integer, Set<Integer>>> growthMap = 
 				grow(unit, eiPop[0], eiPop[1], maxAdd, lambda, con_const);
 		Map<MANA_Node, double[][]> nodeDlys = getDelays(growthMap, SynapseData.MAX_DELAY, unit.getMaxDist());

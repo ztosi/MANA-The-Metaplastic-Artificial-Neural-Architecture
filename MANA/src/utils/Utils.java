@@ -111,14 +111,14 @@ public class Utils {
 			boolean rec, double maxDist, double maxDly) {
 		double[][] dlys;
 		if(rec) {
-			dlys = new double[xyz2.length][xyz1.length-1];
+			dlys = new double[xyz2[0].length][xyz1[0].length-1];
 		} else {
-			dlys = new double[xyz2.length][xyz1.length];
+			dlys = new double[xyz2[0].length][xyz1[0].length];
 		}
 		int kk;
-		for(int ii=0, n=xyz2.length; ii<n; ++ii) {
+		for(int ii=0, n=xyz2[0].length; ii<n; ++ii) {
 			kk=0;
-			for(int jj=0, m=xyz1.length; jj<m; ++jj) {
+			for(int jj=0, m=xyz1[0].length; jj<m; ++jj) {
 				if(rec&&ii==jj) {
 					continue;
 				}
@@ -128,6 +128,7 @@ public class Utils {
 				++kk;
 			}
 		}
+		if()
 		return dlys;
 	}
 	

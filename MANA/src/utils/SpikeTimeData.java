@@ -7,7 +7,6 @@ import java.util.List;
 import com.jmatio.io.MatFileWriter;
 import com.jmatio.types.MLCell;
 import com.jmatio.types.MLDouble;
-import com.jmatio.types.MLInt32;
 
 public class SpikeTimeData {
 
@@ -66,7 +65,7 @@ public class SpikeTimeData {
 			totalSize += spktd.get(ii).size;
 		}
 		MLCell asdf = new MLCell(name, new int[]{totalSize+2, 1});
-		asdf.set(new MLInt32("", new int[]{totalSize}), totalSize+1); // meta-data 1: # of neurons
+		asdf.set(new MLDouble("", new double[]{(double)totalSize},1), totalSize+1); // meta-data 1: # of neurons
 		asdf.set(new MLDouble("", new double[]{time, dt}, 1), totalSize+2); // meta-data 2: time and time-bin
 		int ind = 0;
 		for(int ii=0; ii<spktd.size(); ++ii) {

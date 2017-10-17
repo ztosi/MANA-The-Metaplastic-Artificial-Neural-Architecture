@@ -112,6 +112,17 @@ public class MANANeurons implements Neuron {
 		spks = new boolean[N];
 		normValsExc = new double[N];
 		normValsInh = new double[N];
+		sat_c = new double[N];
+		inDegree = new int[N];
+		excInDegree = new int[N];
+		inhInDegree = new int[N];
+		outDegree = new int[N];
+		inhSNon = new boolean[N];
+		excSNon = new boolean[N];
+		i_e = new double[N];
+		i_i = new double[N];
+		ef = new double[N];
+		adapt = new double[N];
 		
 		r_m = new DataWrapper(N, true, default_r_m);
 		v_l = new DataWrapper(N, true, default_v_l);
@@ -119,6 +130,8 @@ public class MANANeurons implements Neuron {
 		alpha = new DataWrapper(N, true, default_alpha);
 		beta = new DataWrapper(N, true, default_beta);
 		lowFRBound = new DataWrapper(N, true, default_lowFR);
+		v_reset = new DataWrapper(N, true, init_v_m);
+		tau_w = new DataWrapper(N, true, 144);
 		
 		if(exc) {
 			ref_p = new DataWrapper(N, true, default_exc_ref_p);

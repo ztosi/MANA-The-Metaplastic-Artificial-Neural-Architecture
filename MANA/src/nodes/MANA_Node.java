@@ -148,9 +148,10 @@ public class MANA_Node {
 		lastArrs = new double[width][];
 		synapses = new SynapseData[width][];
 		for(int ii=0; ii<width; ++ii) {
+			eventQ.add(new PriorityQueue<Event>(Event.evtComp));
 			int inD = weights[ii].length;
 			dws[ii] = new double[inD];
-			Arrays.fill(weights, SynapseData.DEF_NEW_WEIGHT);
+			Arrays.fill(weights[ii], SynapseData.DEF_NEW_WEIGHT);
 			lastArrs[ii] = new double[inD];
 			synapses[ii] = new SynapseData[inD];
 			for(int jj=0; jj<inD; ++jj) {
@@ -162,7 +163,7 @@ public class MANA_Node {
 		// Calculate the src->target map
 		resetSrcTarMap();
 	}
-
+ //TODO: tarDlyMap not the right size!!!
 	/**
 	 * 
 	 * @param src
@@ -427,41 +428,49 @@ public class MANA_Node {
 	 * @param dt
 	 */
 	public void update(final double time, final double dt) {
-
-		if (parent_sector.parent.hpOn || parent_sector.parent.synPlasticOn) {
-			if((parent_sector.allExcSNon && type.isExcitatory())
-					|| (parent_sector.allInhSNon && !type.isExcitatory()))
-				normalizeNoCheck();
-			else
-				normalizeCheck();
-		}
-
-		// Check for spikes from the source and place them for processing based on the synaptic delay
-		scheduleNewEvents(time);
-
-		processEvents(time, dt); // Figure out what APs arrived and add their current
-
-		handlePostSpikes(time, dt); // Handle STDP for target neurons that spike...
-
-		updateWeightsAndSums();
-
-		// If the source for this layer is not an exogenous input and mhp is
-		// on for the target group, perform the first stage of MHP involving
-		// determining contributions from pre-synaptic neurons
-		if(targData.mhpOn && !inputIsExternal && parent_sector.parent.mhpOn) {
-			for(int ii=0; ii<width; ++ii) {
-				MHPFunctions.metaHPStage1(ii, targData.estFR[ii],
-						targData.prefFR[ii],
-						((MANANeurons) srcData).estFR,
-						localPFRDep, localPFRPot, tarSrcMap[ii]);
+		try{
+			
+			if (parent_sector.parent.hpOn || parent_sector.parent.synPlasticOn) {
+				if((parent_sector.allExcSNon && type.isExcitatory())
+						|| (parent_sector.allInhSNon && !type.isExcitatory()))
+					normalizeNoCheck();
+				else
+					normalizeCheck();
 			}
-		}
+			if(!inputIsExternal)
+			System.out.println("Got here 1");
+
+			// Check for spikes from the source and place them for processing based on the synaptic delay
+			scheduleNewEvents(time);
+			System.out.println("Got here 2");
+			processEvents(time, dt); // Figure out what APs arrived and add their current
+			System.out.println("Got here 3");
+			handlePostSpikes(time, dt); // Handle STDP for target neurons that spike...
+			System.out.println("Got here 4");
+			updateWeightsAndSums();
+			System.out.println("Got here 5");
+			// If the source for this layer is not an exogenous input and mhp is
+			// on for the target group, perform the first stage of MHP involving
+			// determining contributions from pre-synaptic neurons
+			if(targData.mhpOn && !inputIsExternal && parent_sector.parent.mhpOn) {
+				System.out.println("I happen");
+				for(int ii=0; ii<width; ++ii) {
+					MHPFunctions.metaHPStage1(ii, targData.estFR[ii],
+							targData.prefFR[ii],
+							((MANANeurons) srcData).estFR,
+							localPFRDep, localPFRPot, tarSrcMap[ii]);
+				}
+			}
+			System.out.println("Got here 6");
 
 
-		// Thread executing last node in the sector responsible for
-		// updating sector-variables
-		if(parent_sector.countDown.decrementAndGet() == 0) {
-			parent_sector.updateNoSync(time, dt);
+			// Thread executing last node in the sector responsible for
+			// updating sector-variables
+			if(parent_sector.countDown.decrementAndGet() == 0) {
+				parent_sector.updateNoSync(time, dt);
+			}
+		} catch (Exception e) {
+			System.err.println("wtf");
 		}
 	}
 
@@ -486,6 +495,7 @@ public class MANA_Node {
 				}
 			}
 		}
+
 	}
 
 	/**
@@ -569,6 +579,7 @@ public class MANA_Node {
 	public void processEvents(final double time, final double dt) {
 		for(int ii=0; ii<width; ++ii) {
 			boolean init=true;
+			if(eventQ.get(ii).isEmpty()) continue;
 			while(eventQ.get(ii).peek().arrTime <= time) {
 				if(init) {
 					evtInds[ptr] = ii;
@@ -601,6 +612,15 @@ public class MANA_Node {
 				if(targData.spks[ii]) {
 					STDPFunctions.STDP(type, lastArrs[ii], dws[ii], time, type.getLRate());
 				}
+			}
+		}
+	}
+
+	public void calcLocalOutDegs() {
+		Arrays.fill(localOutDegrees, 0);
+		for(int ii= 0; ii<width; ++ii) {
+			for(int jj=0, m=tarSrcMap[ii].length; jj<m; ++jj) {
+				localOutDegrees[tarSrcMap[ii][jj]]++;
 			}
 		}
 	}

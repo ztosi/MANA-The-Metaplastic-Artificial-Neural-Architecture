@@ -19,7 +19,7 @@ public class RunMANA {
 		String filename = null;
 		String odir = DEF_ODIR;
 		String prefix = DEF_PREFIX;
-		double printInterval = DEF_PRINT_INTERVAL;
+		double printInterval = 1000;
 		for(int ii=0; ii<args.length; ++ii) {
 			switch(args[ii]) {
 			case "-n" :
@@ -65,28 +65,37 @@ public class RunMANA {
 				System.exit(1);
 			}
 		}
-
+		long iters = 0;
 		try {
 			while(time < time_f) {
+				
 				if(time >= p_shutOff_f && !tripped) {
+					System.out.println("Turning off plasticity");
 					tripped = true;
 					unit.mhpOn = false;
 					unit.synPlasticOn = false;
 				}
 				// If the prune interval is reached, prune/grow...
-				if(time != 0 && time%SPFunctions.DEF_PG_INTERVAL == 0) {
-					SPFunctions.pruneGrow(unit, SPFunctions.DEF_EXC_THRESH,
-							SPFunctions.DEF_INH_THRESH, SynapseData.MIN_WEIGHT,
-							lambda, SPFunctions.DEF_CON_CONST, maxAdd);
+				if(time != 0 && iters%(10*SPFunctions.DEF_PG_INTERVAL) == 0) {
+//					SPFunctions.pruneGrow(unit, SPFunctions.DEF_EXC_THRESH,
+//							SPFunctions.DEF_INH_THRESH, SynapseData.MIN_WEIGHT,
+//							lambda, SPFunctions.DEF_CON_CONST, maxAdd);
+					unit.printData(mainOut.toString(), prefix, time);
 				}
 
 				if(time !=0 && time % printInterval == 0) {
 					unit.printData(mainOut.toString(), prefix, time);
 				}
-
+				
+				if(iters%10000 == 0) {
+					System.out.println((int)iters/10000);
+					unit.printData(mainOut.toString(), prefix, time);
+				}
+				
 				exec.invoke();
 
 				time = exec.getTime(); // get time from the executor
+				iters++;
 			}
 		} catch (InterruptedException ie) {
 			ie.printStackTrace();

@@ -53,6 +53,15 @@ public class MANA_Sector implements Syncable {
 		for(int ii=0; ii<children.length; ++ii) {
 			children[ii].parent_sector = sector;
 			children[ii].sector_index = ii;
+			for(int jj=0; jj<sector.width; ++jj) {
+				if(children[ii].isExcitatory()) {
+					sector.target.excInDegree[jj] += children[ii].weights[jj].length;
+				} else {
+					sector.target.inhInDegree[jj] += children[ii].weights[jj].length;
+				}
+				children[ii].calcLocalOutDegs();
+				children[ii].accumLocalOutDegs(children[ii].srcData.getOutDegree());
+			}
 		}
 		return sector;
 	}
@@ -70,6 +79,17 @@ public class MANA_Sector implements Syncable {
 		width = children[0].width;
 		spkDat = new SpikeTimeData(_target.getSize());
 		parent = _parent;
+		pfrLTDAccum = new double[width];
+		pfrLTPAccum = new double[width];
+		secExcSums = new double[width];
+		secInhSums = new double[width];
+		snInhOn = new boolean[width];
+		spkBuffer = new boolean[width];
+		snExcOn = new boolean[width];
+		estFRBuffer = new double[width];
+		lastSpkTimeBuffer = new double[width];
+		
+		
 	}
 
 	/**
@@ -129,9 +149,13 @@ public class MANA_Sector implements Syncable {
 	 * @param dt
 	 */
 	public void updateNoSync(final double time, final double dt) {
+		try {
 		gatherChildData(time, dt);
 		updateTargetNeurons(dt, time);
 		countDown.set(numNodes);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	/**
