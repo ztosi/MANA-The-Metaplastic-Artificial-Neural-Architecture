@@ -78,8 +78,7 @@ public class STDPFunctions {
 	/**
 	 * 
 	 * @param type
-	 * @param lastArrs
-	 * @param dws
+	 * @param lastArr
 	 * @param post_time
 	 * @param lrate
 	 */
@@ -131,7 +130,7 @@ public class STDPFunctions {
 	public static double getPSR_UDF(SynapseData dat, double time) {
 		double isi = dat.getLastArr() - time;
 		
-		dat.setdLittleU(dat.getBigU() + (dat.getLittleU() 
+		dat.setdLittleU(dat.getBigU() + (dat.getLittleU()
 				* (1 - dat.getBigU()) * Utils.expLT0Approx(isi / dat.getF())));
 		dat.setR( 1 + ((dat.getR() - (dat.getLittleU() * dat.getR()) - 1)
 				* Utils.expLT0Approx(isi / dat.getD())));

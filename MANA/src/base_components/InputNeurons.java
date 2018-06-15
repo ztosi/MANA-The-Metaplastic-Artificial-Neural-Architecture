@@ -29,7 +29,7 @@ public class InputNeurons implements Neuron, Syncable {
 	private double[] offsets;
 	public double[] lastSpkTime; // vanilla MANA does not use this for inputs, but someone might....
 	public boolean[] spks;
-	public int[] outDegree;
+	private int[] outDegree;
 	public double[][] xyzCoors;
 
 	public InputNeurons(final String _filename) {
@@ -46,7 +46,11 @@ public class InputNeurons implements Neuron, Syncable {
 				noNeu = mlSpkT.size()-2;
 				spk_times = new double[noNeu][];
 				for(int ii=0; ii<noNeu; ++ii) {
-					spk_times[ii] = ((MLDouble)mlSpkT.get(ii)).getArray()[0];
+					spk_times[ii] = new double[((MLDouble) mlSpkT.get(ii)).getSize()];
+					double[][] temp = ((MLDouble) mlSpkT.get(ii)).getArray();
+					for (int jj = 0; jj < spk_times[ii].length; ++jj){
+						spk_times[ii][jj] = temp[jj][0];
+					}
 				}
 			} else {
 				sc = new Scanner(new FileReader(_filename));

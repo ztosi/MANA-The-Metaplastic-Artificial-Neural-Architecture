@@ -1,5 +1,7 @@
 package base_components;
 
+import java.util.Arrays;
+
 import utils.DataWrapper;
 import utils.Utils;
 
@@ -65,6 +67,7 @@ public class MANANeurons implements Neuron {
 	// TODO: Move these and related functions to a separate class... generic IF neuron and MANA stuff separate
 	public double [] estFR;
 	public double [] ef;
+	public double [] dummy; // here to test if my math is right....
 	public double [] prefFR;
 	public double [] threshRA;
 	
@@ -99,12 +102,14 @@ public class MANANeurons implements Neuron {
 		
 		this.N = _N;
 		this.exc = _exc;
-		
+		dummy = new double[N];
 		v_m = new double[N];
 		dv_m = new double[N];
 		thresh = new double[N];
 		estFR = new double[N];
 		prefFR = new double[N];
+		Arrays.fill(estFR, 1);
+		Arrays.fill(prefFR, 1.0);
 		threshRA = new double[N];
 		exc_sf = new double[N];
 		inh_sf = new double[N];
@@ -159,7 +164,7 @@ public class MANANeurons implements Neuron {
 	@Override
 	public void update(double dt, double time, boolean[] spkBuffer, double[] lastSpkTimeBuffer) {
 		for(int ii=0; ii<N; ++ii) {
-			dv_m[ii] = i_e[ii];
+			dv_m[ii] += i_e[ii];
 			i_e[ii] -= dt*i_e[ii]/SynapseData.ExcTau;
 			
 		}
@@ -187,6 +192,10 @@ public class MANANeurons implements Neuron {
 		for(int ii=0; ii<N; ++ii) {
 			if(time > (ref_p.get(ii) + lastSpkTime[ii])) {
 				v_m[ii] += dv_m[ii];
+				if (Double.isNaN(v_m[ii])) {
+					System.out.println(" NaN v");
+					break;
+				}
 			}
 		}
 		for(int ii=0; ii<N; ++ii) {
@@ -219,7 +228,11 @@ public class MANANeurons implements Neuron {
 			if(spks[ii]) {
 				ef[ii] +=1;
 			}
-			estFRBuffer[ii] = estFR[ii] + (dt *(1000*ef[ii] - estFR[ii]));
+			if (Double.isNaN(ef[ii])) {
+				System.out.println("nan");
+			}
+			dummy[ii] += dt * (ef[ii]/tauA - dummy[ii]);
+			estFRBuffer[ii] = dummy[ii] * 1000;//estFR[ii] + (dt *(1000*ef[ii] - estFR[ii]));
 		}
 	}
 	
@@ -230,8 +243,12 @@ public class MANANeurons implements Neuron {
 	 */
 	public void updateThreshold(double dt) {
 		for(int ii=0; ii<N; ++ii) {
-			thresh[ii] += dt*Math.log((estFR[ii]+0.0001)/(prefFR[ii]+0.0001));
-			threshRA[ii] += thresh[ii]*lambda + threshRA[ii]*(1-lambda);
+			thresh[ii] += dt * lambda * Math.log((estFR[ii]+0.0001)/(prefFR[ii]+0.0001));
+			if (Double.isNaN(thresh[ii])) {
+				System.out.println("NaN th");
+				break;
+			}
+			threshRA[ii] += thresh[ii] * lambda + threshRA[ii]*(1-lambda);
 		}
 	}
 	

@@ -13,6 +13,7 @@ public class RunMANA {
 	public static final double DEF_PRINT_INTERVAL = 6E5;
 
 	public static void main(String[] args) { // TODO: enable more complicated command line args...
+		System.out.println(System.getProperty("user.dir"));
 		int numNeu = 2000;
 		double time_f0 = 7.2E6; // two hours...
 		double plastShutOff0 = time_f0/2;
@@ -48,6 +49,12 @@ public class RunMANA {
 		}
 		MANA_Unit unit = MANA_Unit.MANABuilder(filename, numNeu);
 		MANA_Executor exec = new MANA_Executor(); // initialize threads
+		for(int ii=0, n=unit.nodes.size(); ii<n; ++ii) {
+			if (ii % 11 == 0) {
+				System.out.println();
+			}
+			System.out.print(unit.nodes.get(ii).type.isExcitatory() + " ");
+		}
 		exec.addUnit(unit); // tell them what unit they'll be working on
 
 		double maxDist = unit.getMaxDist();
@@ -76,19 +83,19 @@ public class RunMANA {
 					unit.synPlasticOn = false;
 				}
 				// If the prune interval is reached, prune/grow...
-				if(time != 0 && iters%(10*SPFunctions.DEF_PG_INTERVAL) == 0) {
-//					SPFunctions.pruneGrow(unit, SPFunctions.DEF_EXC_THRESH,
-//							SPFunctions.DEF_INH_THRESH, SynapseData.MIN_WEIGHT,
-//							lambda, SPFunctions.DEF_CON_CONST, maxAdd);
+				if(time != 0 && iters% (int)((1/exec.getDt()) * SPFunctions.DEF_PG_INTERVAL) == 0) {
+					SPFunctions.pruneGrow(unit, SPFunctions.DEF_EXC_THRESH,
+							SPFunctions.DEF_INH_THRESH, SynapseData.MIN_WEIGHT,
+							lambda, SPFunctions.DEF_CON_CONST, maxAdd);
 					unit.printData(mainOut.toString(), prefix, time);
 				}
 
 				if(time !=0 && time % printInterval == 0) {
 					unit.printData(mainOut.toString(), prefix, time);
 				}
-				
-				if(iters%10000 == 0) {
-					System.out.println((int)iters/10000);
+				System.out.println(iters);
+				if(iters%1000 == 0) {
+					System.out.println("------------- " + (int)iters/1000 + "------------- " );
 					unit.printData(mainOut.toString(), prefix, time);
 				}
 				

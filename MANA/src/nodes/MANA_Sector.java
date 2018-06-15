@@ -60,8 +60,8 @@ public class MANA_Sector implements Syncable {
 					sector.target.inhInDegree[jj] += children[ii].weights[jj].length;
 				}
 				children[ii].calcLocalOutDegs();
-				children[ii].accumLocalOutDegs(children[ii].srcData.getOutDegree());
 			}
+			children[ii].accumLocalOutDegs(children[ii].srcData.getOutDegree());
 		}
 		return sector;
 	}
@@ -266,12 +266,13 @@ public class MANA_Sector implements Syncable {
 		// norm values for this first time, and turn on synaptic normalization for
 		// each neuron for which that is true
 		if(!allExcSNon) {
-			allExcSNon = true;
-			for(int ii=0; ii<width; ++ii) {
+			allExcSNon = target.excSNon[0];
+			for(int ii=1; ii<width; ++ii) {
 				allExcSNon &= target.excSNon[ii];
 				if(!target.excSNon[ii]) {
 					target.normValsExc[ii] = target.sat_a
-							/(1+Utils.expLT0Approx(-target.sat_b*target.prefFR[ii]))
+							/(1+Math.exp(-target.sat_b*target.prefFR[ii]))
+							///(1+Utils.expLT0Approx(-target.sat_b*target.prefFR[ii]))
 							+ target.sat_c[ii];
 					if(secExcSums[ii] >= target.normValsExc[ii]*target.exc_sf[ii]) {
 						target.excSNon[ii] = true;
@@ -281,12 +282,13 @@ public class MANA_Sector implements Syncable {
 			}
 		}
 		if(!allInhSNon) {
-			allInhSNon = true;
-			for(int ii=0; ii<width; ++ii) {
+			allInhSNon = target.inhSNon[0];
+			for(int ii=1; ii<width; ++ii) {
 				allInhSNon &= target.inhSNon[ii];
 				if(!target.inhSNon[ii]) {
 					target.normValsInh[ii] = target.sat_a
-							/(1+Utils.expLT0Approx(-target.sat_b*target.prefFR[ii]))
+							/(1+Math.exp(-target.sat_b*target.prefFR[ii]))
+							///(1+Utils.expLT0Approx(-target.sat_b*target.prefFR[ii]))
 							+ target.sat_c[ii];
 					if(secInhSums[ii] >= target.normValsInh[ii]*target.inh_sf[ii]) {
 						target.inhSNon[ii] = true;

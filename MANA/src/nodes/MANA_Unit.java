@@ -33,6 +33,7 @@ import utils.Utils;
  */
 public class MANA_Unit {
 
+	public static final double START_TIME = 20000;
 	public static final int DEFAULT_NODE_DIM = 200;
 	public static final double DEFAULT_BOUND_START = 50; 
 	public static final double DEFAULT_BOUND_END = 150;
@@ -165,6 +166,7 @@ public class MANA_Unit {
 					conMap[jj][kk] = swappy[kk];
 				}
 			}
+
 			dlys = Utils.getDelays(inp.xyzCoors,
 					neus.xyzCoors, unit.getMaxDist(), SynapseData.MAX_DELAY, conMap);
 			MANA_Node inpNode = new MANA_Node(inp, neus, itype, conMap, dlys, weights);
@@ -331,7 +333,7 @@ public class MANA_Unit {
 		}
 		mlData.add(new MLDouble("wtMat", getMatrix()));
 		try {
-			new MatFileWriter(outDir + File.separator + (int)time/1000 + "_" + outPrefix, mlData);
+			new MatFileWriter(outDir + File.separator + (int)time/1000 + "_" + outPrefix + ".mat", mlData);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

@@ -38,13 +38,14 @@ public class Utils {
 	}
 	
 	public static double expLT0Approx(final double x) {
-		if (x<-5) {
-			return 0;
-		}
-		if(x==0) {
-			return 1;
-		}
-		return (0.3877*x+1.959)/(x*x - 1.332 * x + 1.981);
+//		if (x<-5) {
+//			return 0;
+//		}
+//		if(x==0) {
+//			return 1;
+//		}
+//		return (0.3877*x+1.959)/(x*x - 1.332 * x + 1.981);
+		return Math.exp(x);
 	}
 	
 	
@@ -128,7 +129,6 @@ public class Utils {
 				++kk;
 			}
 		}
-		if()
 		return dlys;
 	}
 	

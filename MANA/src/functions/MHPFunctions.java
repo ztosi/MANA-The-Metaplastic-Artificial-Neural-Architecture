@@ -67,7 +67,7 @@ public class MHPFunctions {
 		if(neurons.getSize() != pfrLTPBuffer.length) {
 			throw new IllegalArgumentException("PrefFR/Buffer Dimension Mismatch");
 		}
-		System.out.println("I happen");
+		//System.out.println("I happen");
 		
 		for(int ii=0, n=pfrLTPBuffer.length; ii<n; ++ii) {
 			double ltpTerm = Math.exp(neurons.prefFR[ii]/(neurons.beta.get(ii)

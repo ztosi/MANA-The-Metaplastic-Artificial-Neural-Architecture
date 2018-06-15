@@ -20,7 +20,7 @@ public class SPFunctions {
 	public static final double DEF_CON_CONST = 0.4;
     public static final double P_ADD_MIN = 0.01;
     public static final double RT_LOG_PA_MIN = Math.sqrt(-Math.log(P_ADD_MIN));	
-    public static final double DEF_PG_INTERVAL = 5000; // ms
+    public static final double DEF_PG_INTERVAL = 2500; // ms
     
 	/**
 	 * Performs the growth and pruning operations on the given MANA unit
@@ -48,7 +48,7 @@ public class SPFunctions {
 	}
 	
 	/**
-	 * Based on the sandard pruning function from Tosi 2017, selects synapses for removal. This funcion
+	 * Based on the standard pruning function from Tosi 2017, selects synapses for removal. This funcion
 	 * returns a map which gives the information necessary to find the synapses which should be pruned.
 	 * IT DOES NOT PRUNE THEM ITSELF.
 	 * @param unit The MANA Unit (recurrent reservoir and external inputs) whose synapses will be pruned
@@ -84,19 +84,25 @@ public class SPFunctions {
 			for(int ii=0; ii<node.width; ++ii) {
 				toRemove.put(ii, new HashSet<Integer>());
 				for(int jj=0; jj<node.weights[ii].length; ++jj) {
+					int kk = node.tarSrcMap[ii][jj];
 					if(node.weights[ii][jj] < absMin) {
-						toRemove.get(ii).add(jj);
+						toRemove.get(ii).add(kk);
 						continue;
 					}
 					if(node.weights[ii][jj] < thresh) {
-						double oDcont = (double)outDs[ii]/(noExc+noInh);
-						double p_rm = (double)inDs[ii]/inDMax * oDcont * oDcont;
-						if(ThreadLocalRandom.current().nextDouble() < p_rm) {
-							toRemove.get(ii).add(jj);
+						try{ 
+							double oDcont = (double)outDs[kk]/(noExc+noInh);
+							double p_rm = (double)inDs[ii]/inDMax * oDcont * oDcont;
+							if(ThreadLocalRandom.current().nextDouble() < p_rm) {
+								toRemove.get(ii).add(jj);
+							}
+						} catch (ArrayIndexOutOfBoundsException aiobe) {
+							aiobe.printStackTrace();
 						}
 					}
 				}
 			}
+			System.out.println(node.type.toString());
 			remove.put(node, toRemove);
 		}
 		return remove;
@@ -129,6 +135,8 @@ public class SPFunctions {
 				for(int ii=0; ii<node.width; ++ii) {
 					if(cycle1)
 						growM.get(node).put(ii, new LinkedHashSet<Integer>());
+					if (disConMap[ii].length == 0) 
+						continue;
 					for(int jj=0, m=disConMap[ii].length; jj<m; ++jj) {
 						int srcInd = disConMap[ii][jj];
 						double dist = Utils.euclidean(srcXYZ, tarXYZ, srcInd, ii);
@@ -207,6 +215,7 @@ public class SPFunctions {
 			ei[1]=0;
 			return;
 		}
+		System.out.println();
 		for(MANA_Node t : growM.keySet()) {
 			for(V v : growM.get(t).keySet()) {
 				if(t.isExcitatory()) {

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import base_components.InputNeurons;
 import nodes.MANA_Node;
@@ -14,7 +15,7 @@ import utils.Syncable;
 
 public class MANA_Executor {
 	
-	public static final double DEF_DT = 0.1; //ms
+	public static final double DEF_DT = 0.5; //ms
 	
 	private double time = 0;
 	private double dt = DEF_DT;
@@ -25,7 +26,7 @@ public class MANA_Executor {
 	List<Callable<Syncable>> syncTasks = new ArrayList<Callable<Syncable>>();
 	
 	public MANA_Executor() {
-		pool = Executors.newFixedThreadPool(1); //Runtime.getRuntime().availableProcessors());
+		pool = Executors.newFixedThreadPool(8); //Runtime.getRuntime().availableProcessors());
 	}
 	
 	public MANA_Executor(final double _dt) {
@@ -42,7 +43,8 @@ public class MANA_Executor {
 			updateTasks.add(new UpdateTask(n));
 		}
 	}
-	
+
+	AtomicInteger ct = new AtomicInteger(0);
 	/**
 	 * Updates all nodes given to it to update and synchonizes all inputs and
 	 * reservoir neurons associated with those nodes. Currently does ONLY this,
@@ -54,6 +56,7 @@ public class MANA_Executor {
 		pool.invokeAll(updateTasks);
 		pool.invokeAll(syncTasks);
 		time += dt;
+		ct.set(0);
 	}
 	
 	public class SectorSyncTask implements Callable<Syncable>{
@@ -67,6 +70,7 @@ public class MANA_Executor {
 		@Override
 		public MANA_Sector call() throws Exception {
 			sector.synchronize(time);
+			System.out.println(time + " " +  ct.incrementAndGet());
 			return sector;
 		}
 		
@@ -105,6 +109,10 @@ public class MANA_Executor {
 	
 	public double getTime() {
 		return time;
+	}
+	
+	public double getDt() {
+		return dt;
 	}
 	
 }

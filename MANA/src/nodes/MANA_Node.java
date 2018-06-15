@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.PriorityQueue;
+import java.util.Scanner;
 import java.util.Set;
 
 import base_components.InputNeurons;
@@ -143,7 +144,7 @@ public class MANA_Node {
 		this.tarSrcMap = _tarSrcMap;
 
 		initBasic(); // Initialize all the values that aren't dependent upon the context of this constructor
-
+		
 		dws = new double[width][];
 		lastArrs = new double[width][];
 		synapses = new SynapseData[width][];
@@ -151,15 +152,17 @@ public class MANA_Node {
 			eventQ.add(new PriorityQueue<Event>(Event.evtComp));
 			int inD = weights[ii].length;
 			dws[ii] = new double[inD];
-			Arrays.fill(weights[ii], SynapseData.DEF_NEW_WEIGHT);
 			lastArrs[ii] = new double[inD];
 			synapses[ii] = new SynapseData[inD];
+			localInDegrees[ii] = weights[ii].length;
 			for(int jj=0; jj<inD; ++jj) {
 				synapses[ii][jj] = new SynapseData(type, weights[ii], dws[ii], lastArrs[ii], jj);
 			}
 		}
+		calcLocalOutDegs();
 
-
+		updateWeightsAndSums();
+		
 		// Calculate the src->target map
 		resetSrcTarMap();
 	}
@@ -203,9 +206,11 @@ public class MANA_Node {
 				}
 				tarSrcMap[ii][jj] = jj+off;
 				synapses[ii][jj] = new SynapseData(type, weights[ii], dws[ii], lastArrs[ii], jj);
+				localInDegrees[ii] = weights[ii].length;
 			}
 
 		}
+		calcLocalOutDegs();
 		resetSrcTarMap();
 	}
 
@@ -222,9 +227,6 @@ public class MANA_Node {
 			heightAdj = srcData.getSize();
 			widthAdj = targData.getSize();
 		}
-		Arrays.fill(localOutDegrees, widthAdj);
-		Arrays.fill(localInDegrees, heightAdj);
-
 		// Initializing all the 1-D arrays (representing source or target data...)
 		localSums = new double[width];
 		localPFRPot = new double[width];
@@ -313,9 +315,9 @@ public class MANA_Node {
 				kk=weights[ii].length;
 				System.arraycopy(weights[ii], 0, newWeights, 0, kk);
 				System.arraycopy(dws[ii], 0, newDws, 0, kk);
-				System.arraycopy(lastArrs[ii], 0, newLastArrs[ii], 0, kk);
-				System.arraycopy(tarSrcMap[ii], 0, newTarSrcMap[ii], 0, kk);
-				System.arraycopy(tarDlyMap[ii], 0, newTarDlys[ii], 0, kk);
+				System.arraycopy(lastArrs[ii], 0, newLastArrs, 0, kk);
+				System.arraycopy(tarSrcMap[ii], 0, newTarSrcMap, 0, kk);
+				System.arraycopy(tarDlyMap[ii], 0, newTarDlys, 0, kk);
 				for(int jj=0; jj<kk; ++jj) {
 					synapses[ii][jj].lastArr = newLastArrs;
 					synapses[ii][jj].dw = newDws;
@@ -362,12 +364,13 @@ public class MANA_Node {
 			newSrcTarMap.put(jj, new int[2][localOutDegrees[jj]]);
 		}
 		for(int ii=0; ii<width; ++ii) {
-			for(int kk=0; kk<weights[ii].length; ++kk) {
+		    int [] srcInds = tarSrcMap[ii];
+			for(int kk=0; kk<srcInds.length; ++kk) {
 				int srcInd = tarSrcMap[ii][kk];
 				int[][] mp = newSrcTarMap.get(srcInd);
 				int ind = counters[srcInd];
 				mp[0][ind] = ii;
-				mp[1][ind] = kk;
+				mp[1][ind] = srcInd;
 				counters[srcInd]++;
 			}
 		}
@@ -382,21 +385,33 @@ public class MANA_Node {
 	 */
 	public int[][] getDisconnected() {
 		int[][] discArr = new int[width][];
-		boolean [] conBin = new boolean[heightAdj];
+		boolean [] conBin = new boolean[height];
+		try {
+		
 		for(int ii=0; ii<width; ++ii) {
 			int noDiscon = heightAdj - tarSrcMap[ii].length;
 			int [] discon = new int[noDiscon];
-			Arrays.fill(conBin, false);
-			for(int jj=0, m=tarSrcMap[ii].length; jj<m; ++jj) {
-				conBin[tarSrcMap[ii][jj]]=true;
-			}
-			int kk=0;
-			for(int jj=0; jj<heightAdj; ++jj) {
-				if(!conBin[jj]) {
-					discon[kk++] = jj;
+			if (noDiscon != 0) {
+				Arrays.fill(conBin, false);
+				for(int jj=0, m=tarSrcMap[ii].length; jj<m; ++jj) {
+					conBin[tarSrcMap[ii][jj]]=true;
+				}
+				int kk=0;
+				for(int jj=0; jj<heightAdj; ++jj) {
+					if(!conBin[jj] & (ii!=jj)) {
+						discon[kk++] = jj;
+					}
 				}
 			}
 			discArr[ii] = discon;
+		}
+		} catch (ArrayIndexOutOfBoundsException aiobe) {
+			aiobe.printStackTrace();
+			System.exit(0);
+//			Scanner insc = new Scanner(System.in);
+//			String bob = insc.nextLine();
+//			if (bob.contentEquals("y")
+			
 		}
 		return discArr;
 	}
@@ -428,32 +443,48 @@ public class MANA_Node {
 	 * @param dt
 	 */
 	public void update(final double time, final double dt) {
-		try{
+		//try{
 			
-			if (parent_sector.parent.hpOn || parent_sector.parent.synPlasticOn) {
-				if((parent_sector.allExcSNon && type.isExcitatory())
-						|| (parent_sector.allInhSNon && !type.isExcitatory()))
+			if ((parent_sector.parent.hpOn || parent_sector.parent.synPlasticOn) && time >= MANA_Unit.START_TIME) {
+				if ((parent_sector.allExcSNon && type.isExcitatory())
+						|| (parent_sector.allInhSNon && !type.isExcitatory())) {
 					normalizeNoCheck();
-				else
+			//		System.err.println("hapening too soon!" );
+				} else {
 					normalizeCheck();
+				}
 			}
-			if(!inputIsExternal)
-			System.out.println("Got here 1");
+//			if(inputIsExternal) {
+//				System.out.println("External inp" );
+//			}
+			//System.out.println("Got here 1");
+
+			if (ptr > 0) {
+				System.err.println("Ptr is not getting reset.");
+			}
 
 			// Check for spikes from the source and place them for processing based on the synaptic delay
 			scheduleNewEvents(time);
-			System.out.println("Got here 2");
+			//System.out.println("Got here 2");
 			processEvents(time, dt); // Figure out what APs arrived and add their current
-			System.out.println("Got here 3");
+			//System.out.println("Got here 3");
 			handlePostSpikes(time, dt); // Handle STDP for target neurons that spike...
-			System.out.println("Got here 4");
-			updateWeightsAndSums();
-			System.out.println("Got here 5");
+//			if (time >= 2 && time < 3) {
+//				System.out.println();
+//			}
+			if (time > 1000) {
+				System.out.println();
+			}
+			//System.out.println("Got here 4");
+			if(parent_sector.parent.synPlasticOn) {
+				updateWeightsAndSums();
+			}
+			//System.out.println("Got here 5");
 			// If the source for this layer is not an exogenous input and mhp is
 			// on for the target group, perform the first stage of MHP involving
 			// determining contributions from pre-synaptic neurons
-			if(targData.mhpOn && !inputIsExternal && parent_sector.parent.mhpOn) {
-				System.out.println("I happen");
+			if(targData.mhpOn && !inputIsExternal && parent_sector.parent.mhpOn && time >= MANA_Unit.START_TIME) {
+				//System.out.println("I happen");
 				for(int ii=0; ii<width; ++ii) {
 					MHPFunctions.metaHPStage1(ii, targData.estFR[ii],
 							targData.prefFR[ii],
@@ -461,7 +492,7 @@ public class MANA_Node {
 							localPFRDep, localPFRPot, tarSrcMap[ii]);
 				}
 			}
-			System.out.println("Got here 6");
+			//System.out.println("Got here 6");
 
 
 			// Thread executing last node in the sector responsible for
@@ -469,33 +500,29 @@ public class MANA_Node {
 			if(parent_sector.countDown.decrementAndGet() == 0) {
 				parent_sector.updateNoSync(time, dt);
 			}
-		} catch (Exception e) {
-			System.err.println("wtf");
-		}
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//			System.err.println("wtf");
+//		}
 	}
 
 	/**
 	 * 
 	 */
 	public void updateWeightsAndSums() {
-		if(parent_sector.parent.synPlasticOn) {
-			// Add up the new sum of incoming weights for the weights in this node
-			// to the neurons in this node and update weight values
-			for(int ii=0; ii < width; ++ii) {
-				localSums[ii] = 0;
-				for(int jj=0, m = weights[ii].length; jj<m; ++jj) {
-					weights[ii][jj] += dws[ii][jj];
-				}
-				for(int jj=0, m = weights[ii].length; jj<m; ++jj) {
-					if(weights[ii][jj]<0) 
-						weights[ii][jj]=0;
-				}
-				for(int jj=0, m = weights[ii].length; jj<m; ++jj) {
-					localSums[ii] += weights[ii][jj];
-				}
+		for(int ii=0; ii < width; ++ii) {
+			localSums[ii] = 0;
+			for(int jj=0, m = weights[ii].length; jj<m; ++jj) {
+				weights[ii][jj] += dws[ii][jj];
+			}
+			for(int jj=0, m = weights[ii].length; jj<m; ++jj) {
+				if(weights[ii][jj]<0) 
+					weights[ii][jj]=0;
+			}
+			for(int jj=0, m = weights[ii].length; jj<m; ++jj) {
+				localSums[ii] += weights[ii][jj];
 			}
 		}
-
 	}
 
 	/**
@@ -572,7 +599,7 @@ public class MANA_Node {
 	/**
 	 * Processes spikes that happened in the source neuron which arrive in this time-step.
 	 * Stores the indices of each target neuron where at least one spike arrived and the total current
-	 * imbued at each targed by all APs that arrive on this time-step. Actual summing of these values into
+	 * imbued at each target by all APs that arrive on this time-step. Actual summing of these values into
 	 * the incoming current arrays of the target neuron IS DONE AT THE SECTOR LEVEL.
 	 * @param time
 	 */
@@ -584,8 +611,9 @@ public class MANA_Node {
 				if(init) {
 					evtInds[ptr] = ii;
 					evtCurrents[ptr] = 0;
+					++ptr;
+					init = false;
 				}
-				init=false;
 				int index = eventQ.get(ii).peek().synDat.index;
 				Event evt_loc = eventQ.get(ii).poll();
 				if(parent_sector.parent.synPlasticOn)
@@ -593,9 +621,6 @@ public class MANA_Node {
 							targData.lastSpkTime[ii], type.getLRate()); // new dw/dt
 				evtCurrents[ptr] += 10*STDPFunctions.getPSR_UDF(evt_loc.synDat, time); // TODO: do something about magic number..
 				lastArrs[ii][index] = time;
-			}
-			if(!init) {
-				++ptr;
 			}
 		}
 		// NOTE: Acutally adding these currents to the target's currents is done AT THE SECTOR LEVEL!!!
