@@ -1,5 +1,6 @@
 # IGNORE ME!
 *.class
+.idea
 MANA/bin/
 .classpath
 .project

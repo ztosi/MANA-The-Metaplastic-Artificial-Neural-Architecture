@@ -6,8 +6,13 @@ public final class SrcTarPair {
 
 	public final int src;
 	public final int tar;
-	
+
 	public SrcTarPair(final int _src, final int _tar) {
+		this.src = _src;
+		this.tar = _tar;
+	}
+
+	public SrcTarPair(final int _src, final int _tar, double[] values) {
 		this.src = _src;
 		this.tar = _tar;
 	}
