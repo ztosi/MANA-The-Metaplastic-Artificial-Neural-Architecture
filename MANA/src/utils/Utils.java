@@ -100,7 +100,11 @@ public class Utils {
 		double zDiff = z2-z1;
 		return Math.sqrt(xDiff*xDiff + yDiff*yDiff + zDiff*zDiff);
 	}
-	
+
+	public static double euclidean(double [] p1, double [] p2) {
+		return  euclidean(p1[0], p2[0], p1[1], p2[1], p1[2], p2[2]);
+	}
+
 	public static double euclidean(double[][] srcXYZ, double[][] tarXYZ,
 			final int srcInd, final int tarInd) {
 		return euclidean(srcXYZ[0][srcInd], tarXYZ[0][tarInd],
@@ -131,7 +135,56 @@ public class Utils {
 		}
 		return dlys;
 	}
-	
+
+	public static double[] getUniformRandomArray(int n, double floor, double ceil) {
+		double [] arr = new double[n];
+		getUniformRandomArray(arr, floor, ceil);
+		return arr;
+	}
+
+	public static double[] getGaussRandomArray(int n, double mean, double std) {
+		double [] arr = new double[n];
+		getGaussRandomArray(arr, mean, std);
+		return arr;
+	}
+
+
+	public static void getUniformRandomArray(double[] arr, double floor, double ceil) {
+		if (ceil >= floor || checkDoubleValidity(floor) != 0 || checkDoubleValidity(ceil) != 0) {
+			// TODO forward specificity of the particlar reason it's invalid
+			throw new IllegalArgumentException("Invalid floor or ceiling for uniform random.");
+		}
+		for(int ii=0, n=arr.length; ii<n; ++ii) {
+			// TODO forward specificity of the particlar reason it's invalid
+			arr[ii] = (ceil-floor)*ThreadLocalRandom.current().nextDouble() + floor;
+		}
+	}
+
+	public static void getGaussRandomArray(double[] arr, double mean, double std) {
+		if (checkDoubleValidity(mean) != 0 || checkDoubleValidity(std) != 0) {
+			throw new IllegalArgumentException("Invalid mean or standard dev. for gauss random.");
+		}
+		for(int ii=0, n=arr.length; ii<n; ++ii) {
+			arr[ii] = ThreadLocalRandom.current().nextGaussian()*std+mean;
+		}
+	}
+
+	/**
+	 *
+	 * @param d
+	 * @return 0 for valid, 1 for infinite, -1 for NaN
+	 */
+	public static int checkDoubleValidity(double d) {
+		if (!Double.isFinite(d)) {
+			return 1;
+		}
+		if (Double.isNaN(d)) {
+			return -1;
+		}
+		return 0;
+	}
+
+
 	public static double[][] getDelays(final double[][] xyz1, final double[][] xyz2,
 			double maxDist, double maxDly, int[][] conMap) {
 		double[][] dlys = new double[xyz2.length][];

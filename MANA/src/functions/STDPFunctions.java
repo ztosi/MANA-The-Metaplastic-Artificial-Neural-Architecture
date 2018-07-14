@@ -1,7 +1,7 @@
 package functions;
 
 import base_components.SynapseData;
-import base_components.SynapseData.SynType;
+import base_components.enums.SynType;
 import utils.Utils;
 
 public class STDPFunctions {

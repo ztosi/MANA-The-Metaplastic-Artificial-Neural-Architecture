@@ -2,6 +2,7 @@ package base_components;
 
 import java.util.Arrays;
 
+import base_components.enums.SynType;
 import utils.DataWrapper;
 import utils.Utils;
 
@@ -165,12 +166,12 @@ public class MANANeurons implements Neuron {
 	public void update(double dt, double time, boolean[] spkBuffer, double[] lastSpkTimeBuffer) {
 		for(int ii=0; ii<N; ++ii) {
 			dv_m[ii] += i_e[ii];
-			i_e[ii] -= dt*i_e[ii]/SynapseData.ExcTau;
+			i_e[ii] -= dt*i_e[ii]/SynType.ExcTau;
 			
 		}
 		for(int ii=0; ii<N; ++ii) {
 			dv_m[ii] -= i_i[ii];
-			i_i[ii] -= dt*i_i[ii]/SynapseData.InhTau;
+			i_i[ii] -= dt*i_i[ii]/SynType.InhTau;
 		}
 		
 		for(int ii=0; ii<N; ++ii) {

@@ -1,5 +1,6 @@
 package base_components;
 
+import base_components.enums.ConnectRule;
 import base_components.enums.OrderType;
 import base_components.enums.SynType;
 import utils.SrcTarDataPack;
@@ -27,7 +28,9 @@ public class MANAMatrix {
      * @param maxDly
      */
     public MANAMatrix(int offsetSrc, int offsetTar,
-                      MANANeurons src, MANANeurons tar, double maxDist, double maxDly) {
+                      MANANeurons src, MANANeurons tar,
+                      double maxDist, double maxDly,
+                      ConnectRule cRule, double[] params) {
 
         double [][] delays = Utils.getDelays(src.xyzCoors, tar.xyzCoors, src==tar, maxDist, maxDly);
         LinkedList<SrcTarDataPack> targCOOTup = new LinkedList<>();
@@ -37,6 +40,17 @@ public class MANAMatrix {
         for (int ii=0; ii<src.N; ii++) {
             for(int jj=0; jj<tar.N; jj++) {
                 if (src == tar && ii==jj) continue;
+                if (cRule == ConnectRule.Random) {
+                    if (ThreadLocalRandom.current().nextDouble() >= params[0]) {
+                        continue;
+                    }
+                } else if (cRule == ConnectRule.Distance) {
+                    double dist = Utils.euclidean(src.xyzCoors[ii], tar.xyzCoors[jj]);
+                    double cProb = params[0] * Math.exp(-((dist*dist)/(params[1] *params[1])));
+                    if (ThreadLocalRandom.current().nextDouble() >= cProb) {
+                        continue;
+                    }
+                }
                 SrcTarPair coo = new SrcTarPair(ii, jj);
                 double[] tarData = {SynapseData.DEF_NEW_WEIGHT, 0};
                 SrcTarDataPack tarDatPack = new SrcTarDataPack(coo, tarData);
@@ -55,11 +69,8 @@ public class MANAMatrix {
         outDataSOrd = new SynapseMatrix(srcCOOTup, tar.N, src.N,
                 offsetTar, offsetSrc, OrderType.SOURCE);
 
-
-
         // Outbound values... delay, lastArr, U, D, F, u, R
        // outDataSOrd = new SynapseMatrix()
-
 
     }
 
@@ -72,6 +83,21 @@ public class MANAMatrix {
         sData[6] = 1;
     }
 
+    public static void main(String [] args) {
+        int numN = 10;
+        MANANeurons src = new MANANeurons(numN, true,
+                Utils.getUniformRandomArray(numN, 0, 100),
+                Utils.getUniformRandomArray(numN, 0, 100),
+                Utils.getUniformRandomArray(numN, 0, 100));
+        MANANeurons tar = new MANANeurons(numN, true,
+                Utils.getUniformRandomArray(numN, 0, 100),
+                Utils.getUniformRandomArray(numN, 0, 100),
+                Utils.getUniformRandomArray(numN, 0, 100));
+        double [] parms = {0.1};
+        MANAMatrix mm = new MANAMatrix(0,0, src, tar,
+                Math.sqrt(30000), 20, ConnectRule.Random, parms);
+
+    }
 
 
 }

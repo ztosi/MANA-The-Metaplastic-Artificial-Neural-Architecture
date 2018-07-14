@@ -8,14 +8,13 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.PriorityQueue;
-import java.util.Scanner;
 import java.util.Set;
 
 import base_components.InputNeurons;
 import base_components.MANANeurons;
 import base_components.Neuron;
 import base_components.SynapseData;
-import base_components.SynapseData.SynType;
+import base_components.enums.SynType;
 import functions.MHPFunctions;
 import functions.STDPFunctions;
 
