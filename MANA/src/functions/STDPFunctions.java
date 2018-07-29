@@ -1,5 +1,6 @@
 package functions;
 
+import base_components.MANAMatrix;
 import base_components.SynapseData;
 import base_components.enums.SynType;
 import utils.Utils;
@@ -126,7 +127,27 @@ public class STDPFunctions {
 				/ (accumChanges + (normValBase * scalF_old)));
 		dat.setW(newWt);
 	}
-	
+
+	public static final int NUM_OUTBOUND_VALS = 7;
+
+	public static void calcPSR_UDF(int neu_index, double time, MANAMatrix outMat) {
+
+
+    }
+
+
+    // Outbound values... delay, lastArr, U, D, F, u, R
+
+    public static void getPSR_UDF(int index, double time, double [] data) {
+        int ind = index * NUM_OUTBOUND_VALS;
+        double isi = (time + data[ind+0]) - data[ind+1]; // time + delay - lastArrival
+        data[ind+5] = data[ind+2] + (data[ind+5] * (1-data[ind+2])
+                * Math.exp(-isi/data[ind+4]));
+        data[ind+6] = 1 + ((data[ind+6] - (data[ind+5] * data[ind+6]) - 1)
+                * Math.exp(-isi/data[ind+3]));
+
+    }
+
 	public static double getPSR_UDF(SynapseData dat, double time) {
 		double isi = dat.getLastArr() - time;
 		

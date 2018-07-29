@@ -1,7 +1,6 @@
 package utils;
 
-import java.util.Collection;
-import java.util.Iterator;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 import base_components.SynapseData;
@@ -150,7 +149,7 @@ public class Utils {
 
 
 	public static void getUniformRandomArray(double[] arr, double floor, double ceil) {
-		if (ceil >= floor || checkDoubleValidity(floor) != 0 || checkDoubleValidity(ceil) != 0) {
+		if (ceil <= floor || checkDoubleValidity(floor) != 0 || checkDoubleValidity(ceil) != 0) {
 			// TODO forward specificity of the particlar reason it's invalid
 			throw new IllegalArgumentException("Invalid floor or ceiling for uniform random.");
 		}
@@ -184,6 +183,26 @@ public class Utils {
 		return 0;
 	}
 
+	public static <T> int [] getSortKey(List<T> thing, Comparator<T> sorter) {
+		int [] sortKey = new int[thing.size()];
+		List<Object[]> tmp = new ArrayList<>();
+		Integer counter = 0;
+		for(T telm : thing) {
+			Object [] el = {telm, counter++};
+			tmp.add(el);
+		}
+		Comparator<Object[]> compWrapper = (Object[] a, Object[] b) -> {
+			return sorter.compare((T)a[0], (T)b[0]);
+		};
+
+		Collections.sort(tmp, compWrapper);
+
+		counter = 0;
+		for(Object[] oelm : tmp) {
+			sortKey[counter++] = ((Integer) oelm[1]).intValue();
+		}
+		return sortKey;
+	}
 
 	public static double[][] getDelays(final double[][] xyz1, final double[][] xyz2,
 			double maxDist, double maxDly, int[][] conMap) {

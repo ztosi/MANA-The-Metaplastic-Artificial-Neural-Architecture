@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
+import base_components.enums.SynType;
 import com.jmatio.io.MatFileWriter;
 import com.jmatio.types.MLArray;
 import com.jmatio.types.MLDouble;
@@ -16,7 +17,6 @@ import base_components.InputNeurons;
 import base_components.MANANeurons;
 import base_components.Neuron;
 import base_components.SynapseData;
-import base_components.SynapseData.SynType;
 import utils.SpikeTimeData;
 import utils.Utils;
 
