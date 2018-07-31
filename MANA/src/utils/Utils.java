@@ -7,7 +7,7 @@ import base_components.SynapseData;
 
 public class Utils {
 
-	public static enum ProbDistType {
+	public enum ProbDistType {
 		NORMAL {
 			@Override
 			public double getRandom(double mean, double std) {
@@ -236,5 +236,20 @@ public class Utils {
 		}
 		return su;
 	}
-	
+
+	public static int checkSign(double value) {
+		return (int)(Double.doubleToLongBits(value) >>> 63);
+	}
+
+
+	public static void main(String [] args ) {
+		double b = -5;
+		double d = 5;
+
+		System.out.println(Long.toBinaryString(Double.doubleToLongBits(b)));
+
+		System.out.println(checkSign(b));
+		System.out.println(checkSign(d));
+	}
+
 }

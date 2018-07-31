@@ -4,6 +4,7 @@ import base_components.enums.Ordering;
 import utils.SMOperation;
 import utils.SrcTarDataPack;
 
+import java.io.PrintStream;
 import java.util.*;
 
 /**
@@ -20,9 +21,10 @@ public class SynapseMatrix {
     /** Data values, may be interleaved--interleaving facor is nILFac
      * Arranged in the order of target-major, i.e. the fan-in of each neuron is contiguous. */
     private double [] values;
-    /** The position in values where each target neuron's fan in begins capped at the end with the length of values*/
+    /** The position in values where each target neuron's fan in begins capped at the end with the length of values
+     * size is num major + 1*/
     private int [] ptrs;
-    /** The source neuron indices of each value in values .*/
+    /** The source neuron indices of each value in values; size is nnz/nilFac .*/
     private int [] ordIndices;
     /** Number of target neurons. */
     private int noMajor;
@@ -279,8 +281,32 @@ public class SynapseMatrix {
         return cpy;
     }
 
+    public int getStartIndex(int neuronNo) {
+        return ordIndices[neuronNo] * nILFac;
+    }
+
+    public int getEndIndex(int neuronNo) {
+        return ordIndices[neuronNo+1] * nILFac;
+    }
+
+    public int getInc() {
+        return nILFac;
+    }
+
+    public int getStartIndex(int neuronNo, int nILFac) {
+        return ordIndices[neuronNo] * nILFac;
+    }
+
+    public int getEndIndex(int neuronNo, int nILFac) {
+        return ordIndices[neuronNo+1] * nILFac;
+    }
+
     public int getNnz() {
         return  nnz;
+    }
+
+    public void print(PrintStream out) {
+        //TODO:...
     }
 
     //    private void insertTar() {

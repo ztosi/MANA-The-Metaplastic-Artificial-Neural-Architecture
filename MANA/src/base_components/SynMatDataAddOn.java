@@ -34,4 +34,43 @@ public class SynMatDataAddOn {
         }
     }
 
+    /**
+     * This returns the array of pointers to the major ordered coordinates, size will be
+     * same as either how many source neurons or how many target neurons for this synapse
+     * matrix depending upon the order type. --edits to the returned array will
+     * alter values in the synapse matrix accordingly
+     * @return
+     */
+    public int[] getRawPtrs() {
+        return  coordMat.getRawPtrs();
+    }
+
+    /**
+     * This returns the array of minor coordinates--edits to the returned array will
+     * alter values in the synapse matrix accordingly
+     * @return
+     */
+    public int[] getRawOrdIndices() {
+        return coordMat.getRawOrdIndices();
+    }
+
+    public int getStartIndex(int num) {
+        return coordMat.getStartIndex(num, nilFac);
+    }
+
+    public int getEndIndex(int num) {
+        return coordMat.getEndIndex(num, nilFac);
+    }
+
+    public int getInc() {
+        return nilFac;
+    }
+
+    public int getOffsetMajor() {
+        return coordMat.offsetMajor;
+    }
+
+    public int getOffsetMinor() {
+        return coordMat.offsetMinor;
+    }
 }

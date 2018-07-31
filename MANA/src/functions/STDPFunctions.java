@@ -1,7 +1,9 @@
 package functions;
 
 import base_components.MANAMatrix;
+import base_components.SynMatDataAddOn;
 import base_components.SynapseData;
+import base_components.SynapseMatrix;
 import base_components.enums.SynType;
 import utils.Utils;
 
@@ -135,16 +137,32 @@ public class STDPFunctions {
 
     }
 
+//    public static void postTriggeredHebSTDP(
+//            SynapseMatrix wtMat,
+//            SynMatDataAddOn lastArrs,
+//            final int neuNo,
+//            double time,
+//            final double tau,
+//            final double w,
+//            int start,
+//            int num) {
+//	        int startW  = wtMat.getStartIndex(neuNo);
+//	        int endW = wtMat.
+//            for(int ii=wtMat.getStartIndex(neuNo); ii<num; ii+=2) {
+//
+//            }
+//    }
+
 
     // Outbound values... delay, lastArr, U, D, F, u, R
 
     public static void getPSR_UDF(int index, double time, double [] data) {
         int ind = index * NUM_OUTBOUND_VALS;
-        double isi = (time + data[ind+0]) - data[ind+1]; // time + delay - lastArrival
-        data[ind+5] = data[ind+2] + (data[ind+5] * (1-data[ind+2])
-                * Math.exp(-isi/data[ind+4]));
+        double isi = -((time + data[ind]) - data[ind+1]); // time + delay - lastArrival
+        data[ind+5] = data[ind+2] + (data[ind+5] * (1-data[ind+2]) //U + (u * (1-U))*exp(-isi/F)
+                * Math.exp(isi/data[ind+4]));
         data[ind+6] = 1 + ((data[ind+6] - (data[ind+5] * data[ind+6]) - 1)
-                * Math.exp(-isi/data[ind+3]));
+                * Math.exp(isi/data[ind+3]));
 
     }
 

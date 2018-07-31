@@ -21,11 +21,14 @@ public class MANAMatrix {
     /** An addon set of values containing more target ordered data. */
     private SynMatDataAddOn tOrdLastArrivals;
 
+    private SynMatDataAddOn pfrBuffers;
+
     /**
      * A Map from source to target, specifically if you lookup the values when
      * source ordered the integer in this at the same coordinate gives the location
      * of the value when target ordered. Traverse this lookup map to rearrange a
-     * source-ordered set into a target ordered one.
+     * source-ordered set into a target ordered one. It has #synapses number of elements
+     * and for accesses must be multipled by nilFac to get the absolute index.
      */
     private int[] srcToTargLookup;
 
@@ -60,6 +63,7 @@ public class MANAMatrix {
         weightsTOrd = new SynapseMatrix(cooMat.data, targRange, noTar, noSrc,
                 offsetTar, offsetSrc, Ordering.TARGET);
         tOrdLastArrivals = new SynMatDataAddOn(weightsTOrd, 1);
+        pfrBuffers = new SynMatDataAddOn(weightsTOrd, 1);
         int cnt=0;
         for(SrcTarDataPack tup : cooMat.data) {
             tOrdLastArrivals.values[cnt] = tup.values[tup.values.length-2];
@@ -146,6 +150,7 @@ public class MANAMatrix {
                 offsetTar, offsetSrc, Ordering.SOURCE);
         nnz = weightsTOrd.getNnz();
         tOrdLastArrivals = new SynMatDataAddOn(weightsTOrd, 1);
+        pfrBuffers = new SynMatDataAddOn(weightsTOrd, 1);
         assert(nnz == outDataSOrd.getNnz());
 
         srcToTargLookup = Utils.getSortKey(targCOOTup,
@@ -214,6 +219,10 @@ public class MANAMatrix {
                 }
             }
         }
+    }
+
+    public void mhpStage1() {
+
     }
 
     public static void main(String [] args) {

@@ -3,10 +3,31 @@ package functions;
 import java.util.concurrent.ThreadLocalRandom;
 
 import base_components.MANANeurons;
+import base_components.SynMatDataAddOn;
 import utils.Utils;
 
 public class MHPFunctions {
-	
+
+
+	public static void mhpStage1(final double[] efrs, final double[] pfrs,
+								 int tarNo, SynMatDataAddOn pfrLoc) {
+		int start = pfrLoc.getStartIndex(tarNo);
+		int end = pfrLoc.getEndIndex(tarNo);
+		int[] orderInds = pfrLoc.getRawOrdIndices();
+		int tInd = tarNo + pfrLoc.getOffsetMajor();
+		for(int ii = start; ii<end; ii+=pfrLoc.getInc()) {
+			pfrLoc.values[ii] = (efrs[tInd] - efrs[orderInds[ii]+pfrLoc.getOffsetMinor()])/pfrs[tInd];
+			pfrLoc.values[ii] = Math.signum(pfrLoc.values[ii]) * Math.exp(pfrLoc.values[ii]);
+		}
+	}
+
+	public static void mhpStage2(final double[] pfrs, int tarNo,
+								 double f_p, double f_m, SynMatDataAddOn pfrLoc) {
+		int start = pfrLoc.getStartIndex(tarNo);
+		int end = pfrLoc.getEndIndex(tarNo);
+	}
+
+
 	/**
 	 * Executed in Nodes by worker threads
 	 * 
@@ -33,7 +54,8 @@ public class MHPFunctions {
 				}
 			}
 	}
-	
+
+
 	/**
 	 * Executed in Sector by synchronizing worker thread
 	 * @param pfrLTDBuffer
