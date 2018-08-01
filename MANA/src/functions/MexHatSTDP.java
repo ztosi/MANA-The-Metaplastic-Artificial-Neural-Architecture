@@ -1,15 +1,14 @@
 package functions;
 
 import base_components.SynMatDataAddOn;
-import base_components.SynapseMatrix;
+import base_components.Matrices.SynapseMatrix;
 import utils.Utils;
 
 public final class MexHatSTDP implements  STDP {
+
     private SynapseMatrix wts;
 
     private SynMatDataAddOn lastArrs;
-
-    private double[] lastSpkTimes;
 
     public double wPlus = 1.8;
 
@@ -26,20 +25,17 @@ public final class MexHatSTDP implements  STDP {
     private double[] values;
 
 
-    public MexHatSTDP(SynapseMatrix wts, SynMatDataAddOn lastArrs,
-                      final double[] lastSpkTimes) {
+    public MexHatSTDP(SynapseMatrix wts, SynMatDataAddOn lastArrs) {
         this.wts = wts;
         this.lastArrs = lastArrs;
-        this.lastSpkTimes = lastSpkTimes;
         values = wts.getValues();
         setSigma(sig);
     }
 
     public MexHatSTDP(SynapseMatrix wts, SynMatDataAddOn lastArrs,
-                      final double[] lastSpkTimes,
                       double wPlus, double wMinus,
                       double sig, double lRate) {
-        this(wts, lastArrs, lastSpkTimes);
+        this(wts, lastArrs);
         this.lRate = lRate;
         this.wMinus = wMinus;
         this.wPlus = wPlus;
@@ -67,10 +63,10 @@ public final class MexHatSTDP implements  STDP {
 
     // data pack is {arrTime, rel tar ind, udfMultiplier}
 
-    public void preTriggered(int tarNo, float[] dataPack) {
-        values[(int) dataPack[1] * wts.getInc()+1] = mexicanHatWindow(sigSq, nrmTerm,
+    public void preTriggered(int[] dataPack, double[] lastSpkTimes, double dt) {
+        values[dataPack[1] * wts.getInc()+1] = mexicanHatWindow(sigSq, nrmTerm,
                 wPlus, wMinus,
-                dataPack[0] - lastSpkTimes[tarNo+wts.offsetMajor], lRate);
+                (dataPack[0]*dt) - lastSpkTimes[dataPack[3]+wts.offsetMajor], lRate);
     }
 
     public static double mexicanHatWindow(double sigmaSq, double normTerm, double wplus,

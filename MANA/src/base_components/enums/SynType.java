@@ -2,6 +2,8 @@ package base_components.enums;
 
 import base_components.SynapseData;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 public enum SynType {
     EE {
         @Override
@@ -193,5 +195,23 @@ public enum SynType {
                 return SynType.II;
             }
         }
+    }
+
+    public static void setSourceDefaults(final double [] sData, SynType type) {
+        ThreadLocalRandom localRand = ThreadLocalRandom.current();
+        double [] meanVals = type.getDefaultUDFMeans();
+        sData[2] = Math.abs(localRand.nextGaussian()*meanVals[0]/2 + meanVals[0]);
+        sData[3] = Math.abs(localRand.nextGaussian()*meanVals[1]/2 + meanVals[1]);
+        sData[4] = Math.abs(localRand.nextGaussian()*meanVals[2]/2 + meanVals[2]);
+        sData[6] = 1;
+    }
+
+    public static void getPSR_UDF(int index, double time, double [] data) {
+        double isi = -((time + data[index]) - data[index+1]); // time + delay - lastArrival
+        data[index+5] = data[index+2] + (data[index+5] * (1-data[index+2]) //U + (u * (1-U))*exp(-isi/F)
+                * Math.exp(isi/data[index+4]));
+        data[index+6] = 1 + ((data[index+6] - (data[index+5] * data[index+6]) - 1)
+                * Math.exp(isi/data[index+3]));
+
     }
 }

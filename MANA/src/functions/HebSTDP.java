@@ -1,15 +1,13 @@
 package functions;
 
 import base_components.SynMatDataAddOn;
-import base_components.SynapseMatrix;
+import base_components.Matrices.SynapseMatrix;
 
 public final class HebSTDP implements STDP {
 
-    private SynapseMatrix wts;
+    private SynapseMatrix wts; // TODO: Make this a MANANode and have it access it through that... or pass it as an arg...
 
     private SynMatDataAddOn lastArrs;
-
-    private double [] lastSpkTimes;
 
     public double tauPlus = 20;
 
@@ -23,11 +21,9 @@ public final class HebSTDP implements STDP {
 
     private double [] values;
 
-    public HebSTDP(SynapseMatrix wts, SynMatDataAddOn lastArrs,
-                   final double [] lastSpkTimes) {
+    public HebSTDP(SynapseMatrix wts, SynMatDataAddOn lastArrs) {
         this.wts = wts;
         this.lastArrs = lastArrs;
-        this.lastSpkTimes = lastSpkTimes;
         values = wts.getValues();
     }
 
@@ -35,7 +31,7 @@ public final class HebSTDP implements STDP {
                    final double [] lastSpkTimes,
                    double tauPlus, double tauMinus,
                    double wPlus, double wMinus, double lRate) {
-        this(wts, lastArrs, lastSpkTimes);
+        this(wts, lastArrs);
         this.lRate = lRate;
         this.wMinus = wMinus;
         this.wPlus = wPlus;
@@ -63,11 +59,11 @@ public final class HebSTDP implements STDP {
 
     }
 
-    // data pack is {arrTime, rel tar ind, udfMultiplier}
+    // data pack is {arrTime, rel tar ind, udfMultiplier, abs tar ind}
 
-    public void preTriggered(int tarNo, float[] dataPack) {
-        values[(int)dataPack[1]*wts.getInc()+1] = -lRate * wMinus
-                * Math.exp((lastSpkTimes[tarNo+wts.offsetMajor]-dataPack[0])/tauMinus);
+    public void preTriggered(int[] dataPack, double[] lastSpkTimes, double dt) {
+        values[dataPack[1]*wts.getInc()+1] = -lRate * wMinus
+                * Math.exp((lastSpkTimes[dataPack[3]+wts.offsetMajor]-(double)dataPack[0]*dt)/tauMinus);
     }
 
 

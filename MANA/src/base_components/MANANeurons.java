@@ -2,6 +2,7 @@ package base_components;
 
 import java.util.Arrays;
 
+import base_components.Matrices.MANAMatrix;
 import base_components.enums.SynType;
 import utils.DataWrapper;
 import utils.Utils;
@@ -129,7 +130,7 @@ public class MANANeurons implements Neuron {
 		i_i = new double[N];
 		ef = new double[N];
 		adapt = new double[N];
-		
+
 		r_m = new DataWrapper(N, true, default_r_m);
 		v_l = new DataWrapper(N, true, default_v_l);
 		i_bg = new DataWrapper(N, true, default_i_bg);

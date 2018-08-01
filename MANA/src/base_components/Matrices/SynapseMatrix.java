@@ -1,4 +1,4 @@
-package base_components;
+package base_components.Matrices;
 
 import base_components.enums.Ordering;
 import utils.SMOperation;
@@ -77,7 +77,7 @@ public class SynapseMatrix {
         }
 
     }
-
+    //TODO: Resolve issue of ptrs being not absolute
 
     public double get(int tarInd, int srcInd) {
         return get(tarInd, tarInd, 0, 1);
@@ -118,15 +118,17 @@ public class SynapseMatrix {
         return -1;
     }
 
-    public void sumIncoming(double[] localSums, int start, int inc) {
-        checkInc(inc);
+    public void sumIncoming(double[] localSums, int offset) {
+        if (Math.abs(offset) >= nILFac) {
+            throw new IllegalArgumentException("Invalid offset");
+        }
         if(localSums.length != noMajor) {
             throw new IllegalArgumentException("Dimension mismatch between location of stored sums and number of targets");
         }
         for(int ii = 0; ii < noMajor; ++ii) {
             localSums[ii] = 0;
             for(int jj = ptrs[ii], n = ptrs[ii+1]; jj<n; ++jj) {
-                localSums[ii] += values[jj*inc + start];
+                localSums[ii] += values[jj*nILFac + offset];
             }
         }
     }
@@ -136,7 +138,7 @@ public class SynapseMatrix {
      * there. This is specifically for adding the derivative of the weights to the weights.
      */
     public void addDw2W() {
-        for(int ii=0, n=nnz*3; ii<n; ii+=3) {
+        for(int ii=0, n=nnz*nILFac; ii<n; ii+=nILFac) {
             values[ii] += values[ii+1];
         }
     }
@@ -180,6 +182,29 @@ public class SynapseMatrix {
             }
         }
     }
+
+    public final void divFromArray(double[] arr, int offset) {
+        if(arr.length != noMajor) {
+            throw new IllegalArgumentException("Dimension mismatch");
+        }
+        for(int ii=0; ii<noMajor; ++ii) {
+            for(int jj=ptrs[ii], m = ptrs[ii+1]; jj<m; ++jj) {
+                values[jj*nILFac + offset] /= arr[ii];
+            }
+        }
+    }
+
+    public final void mulFromArray(double[] arr, int offset) {
+        if(arr.length != noMajor) {
+            throw new IllegalArgumentException("Dimension mismatch");
+        }
+        for(int ii=0; ii<noMajor; ++ii) {
+            for(int jj=ptrs[ii], m = ptrs[ii+1]; jj<m; ++jj) {
+                values[jj*nILFac + offset] *= arr[ii];
+            }
+        }
+    }
+
 
     public void divMultFanIn(double [] divVal, double [] mulVal, int inc) {
         for(int ii = 0; ii< noMajor; ++ii) {

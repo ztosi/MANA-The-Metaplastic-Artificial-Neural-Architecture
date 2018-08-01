@@ -1,27 +1,27 @@
-package base_components;
+package base_components.Matrices;
 
+import base_components.*;
 import base_components.enums.ConnectRule;
 import base_components.enums.Ordering;
 import base_components.enums.SynType;
+import functions.STDP;
 import utils.SrcTarDataPack;
 import utils.SrcTarPair;
 import utils.Utils;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.PriorityQueue;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class MANAMatrix {
 
-    private SynapseMatrix weightsTOrd;
+    protected SynapseMatrix weightsTOrd;
 
-    private SynapseMatrix outDataSOrd;
+    protected SynapseMatrix outDataSOrd;
 
     /** An addon set of values containing more target ordered data. */
-    private SynMatDataAddOn tOrdLastArrivals;
-
-    private SynMatDataAddOn pfrBuffers;
+    protected SynMatDataAddOn tOrdLastArrivals;
 
     /**
      * A Map from source to target, specifically if you lookup the values when
@@ -30,7 +30,7 @@ public class MANAMatrix {
      * source-ordered set into a target ordered one. It has #synapses number of elements
      * and for accesses must be multipled by nilFac to get the absolute index.
      */
-    private int[] srcToTargLookup;
+    protected int[] srcToTargLookup;
 
     public final SynType type;
 
@@ -63,7 +63,7 @@ public class MANAMatrix {
         weightsTOrd = new SynapseMatrix(cooMat.data, targRange, noTar, noSrc,
                 offsetTar, offsetSrc, Ordering.TARGET);
         tOrdLastArrivals = new SynMatDataAddOn(weightsTOrd, 1);
-        pfrBuffers = new SynMatDataAddOn(weightsTOrd, 1);
+       // pfrBuffers = new SynMatDataAddOn(weightsTOrd, 1);
         int cnt=0;
         for(SrcTarDataPack tup : cooMat.data) {
             tOrdLastArrivals.values[cnt] = tup.values[tup.values.length-2];
@@ -100,7 +100,6 @@ public class MANAMatrix {
                       ConnectRule cRule, double[] params) {
         this.src = src;
         this.tar = tar;
-        double [][] delays = Utils.getDelays(src.getCoordinates(), tar.xyzCoors, src==tar, maxDist, maxDly);
         List<SrcTarDataPack> targCOOTup = new LinkedList<>();
         List<SrcTarDataPack> srcCOOTup = new LinkedList<>();
         type = SynType.getSynType(src.isExcitatory(), tar.isExcitatory());
@@ -133,8 +132,8 @@ public class MANAMatrix {
                 double[] tarData = {SynapseData.DEF_NEW_WEIGHT, 0};
                 SrcTarDataPack tarDatPack = new SrcTarDataPack(coo, tarData);
                 double[] srcData = new double[7];
-                setSourceDefaults(srcData);
-                srcData[0] = delays[ii][jj];
+                SynType.setSourceDefaults(srcData, type);
+                srcData[0] = maxDly * Utils.euclidean(src.getCoordinates()[ii], tar.xyzCoors[jj])/maxDist;
                 SrcTarDataPack srcDatPack = new SrcTarDataPack(coo, srcData);
 
                 targCOOTup.add(tarDatPack);
@@ -150,7 +149,7 @@ public class MANAMatrix {
                 offsetTar, offsetSrc, Ordering.SOURCE);
         nnz = weightsTOrd.getNnz();
         tOrdLastArrivals = new SynMatDataAddOn(weightsTOrd, 1);
-        pfrBuffers = new SynMatDataAddOn(weightsTOrd, 1);
+        //pfrBuffers = new SynMatDataAddOn(weightsTOrd, 1);
         assert(nnz == outDataSOrd.getNnz());
 
         srcToTargLookup = Utils.getSortKey(targCOOTup,
@@ -163,62 +162,67 @@ public class MANAMatrix {
 
     }
 
-    private void setSourceDefaults(final double [] sData) {
-        ThreadLocalRandom localRand = ThreadLocalRandom.current();
-        double [] meanVals = type.getDefaultUDFMeans();
-        sData[2] = Math.abs(localRand.nextGaussian()*meanVals[0]/2 + meanVals[0]);
-        sData[3] = Math.abs(localRand.nextGaussian()*meanVals[1]/2 + meanVals[1]);
-        sData[4] = Math.abs(localRand.nextGaussian()*meanVals[2]/2 + meanVals[2]);
-        sData[6] = 1;
+    public void spike(int noSrc, double time) {
+        int start = outDataSOrd.getStartIndex(noSrc);
+        int end = outDataSOrd.getEndIndex(noSrc);
+        for(int ii=start; ii<end; ii+=outDataSOrd.getInc()) {
+            SynType.getPSR_UDF(ii, time, outDataSOrd.getRawData());
+        }
     }
 
+    // data pack is {arrTime, rel tar ind, udfMultiplier, abs tar ind}
+
+    public void addEvents(int noSrc, double time, double dt, PriorityQueue<int []> eventQ) {
+        int start = outDataSOrd.getStartIndex(noSrc);
+        int end = outDataSOrd.getEndIndex(noSrc);
+        int inc = outDataSOrd.getInc();
+        double [] vals = outDataSOrd.getRawData();
+        for(int ii=start; ii<end; ii+=inc) {
+            int [] evt = new int[4];
+            evt[0] = (int) ((time+vals[ii])/dt);
+            evt[1] = srcToTargLookup[ii] * weightsTOrd.getInc();
+            evt[2] = Float.floatToIntBits((float) (vals[ii+inc-1] * vals[ii+inc-2]));
+            evt[3] = outDataSOrd.getRawOrdIndices()[ii/inc];
+            eventQ.add(evt);
+        }
+    }
+
+    public void processEvents(PriorityQueue<int[]> eventQ, double[] incCur, double time, double dt) {
+        while(eventQ.peek()[0]*dt <= time) {
+            int[] event = eventQ.poll();
+            incCur[event[3]] += weightsTOrd.getRawOrdIndices()[event[1]]
+                    * Float.intBitsToFloat(event[2]);
+        }
+    }
+
+    public void processEventsSTDP(PriorityQueue<int[]> eventQ, double[] incCur, STDP stdpRule,
+                                  double[] lastSpkTimes, double time, double dt) {
+        while(eventQ.peek()[0]*dt <= time) {
+            int[] event = eventQ.poll();
+            incCur[event[3]] += weightsTOrd.getRawOrdIndices()[event[1]]
+                    * Float.intBitsToFloat(event[2]);
+            stdpRule.preTriggered(event, lastSpkTimes, dt);
+        }
+    }
+
+    public void normWts(double[] normVals) {
+        weightsTOrd.mulFromArray(normVals, 0);
+    }
+
+    public void updateWeights() {
+        weightsTOrd.addDw2W();
+    }
+
+    public double[] getWeightSums(double[] localWtSums) {
+        weightsTOrd.sumIncoming(localWtSums, 0);
+        return localWtSums;
+    }
 
     //public List<SrcTarDataPack> getTuples(Ordering )
 
-    /**
-     * A class that converts a MANAMatrix into a set of COO tuples...
-     * this allows one to easily add/remove synapses, then remake
-     * a MANAMatrix from the new values.
-     */
-    public static class COOManaMat {
-        public List<SrcTarDataPack>  data;
-        public final int srcILF;
-        public final int tarILF;
 
-        public COOManaMat(MANAMatrix mat) {
-            data = new LinkedList<>();
-            int [] srcPtrs = mat.outDataSOrd.getRawPtrs();
-            double [] tordVals = mat.weightsTOrd.getRawData();
-            double [] sordVals = mat.outDataSOrd.getRawData();
-            int [] tOrdInds = mat.outDataSOrd.getRawOrdIndices();
-            int [] map = mat.srcToTargLookup;
-            srcILF = mat.outDataSOrd.nILFac;
-            tarILF = mat.weightsTOrd.nILFac;
-            int totData = srcILF+tarILF + 2; // +2 for target last arrival and linear index
-            int src=-1;
-            // Traversing in source-major order
-            for(int ii=0; ii<mat.noSrc; ++ii) {
-                src++;
-                for(int jj = srcPtrs[ii]; jj < srcPtrs[ii+1]; ++jj) { //linear indices
-                    int tOrderIndex = mat.srcToTargLookup[jj];
-                    double [] tmpData = new double[totData];
-                    // copy in target ordered values using the lookup table since we're
-                    // traversing source-ordered
-                    System.arraycopy(tordVals, tOrderIndex*tarILF,
-                            tmpData, 0, tarILF);
-                    // copy in source ordered values for the same synapse
-                    System.arraycopy(sordVals, jj, tmpData, tarILF, srcILF);
-                    tmpData[tmpData.length-2] = mat.tOrdLastArrivals.values[tOrderIndex];
-                    // Attach the linear index when target ordered to support target
-                    // ordered add on sparse values...
-                    tmpData[tmpData.length-1] = tOrderIndex;
+    public void spike(int srcInd) {
 
-                    SrcTarDataPack tmpDatPack =
-                            new SrcTarDataPack(new SrcTarPair(src, tOrdInds[jj]), tmpData);
-                    data.add(tmpDatPack);
-                }
-            }
-        }
     }
 
     public void mhpStage1() {

@@ -1,9 +1,7 @@
 package functions;
 
-import base_components.MANAMatrix;
-import base_components.SynMatDataAddOn;
+import base_components.Matrices.MANAMatrix;
 import base_components.SynapseData;
-import base_components.SynapseMatrix;
 import base_components.enums.SynType;
 import utils.Utils;
 

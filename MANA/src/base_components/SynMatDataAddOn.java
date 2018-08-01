@@ -1,5 +1,7 @@
 package base_components;
 
+import base_components.Matrices.SynapseMatrix;
+
 public class SynMatDataAddOn {
 
     public final SynapseMatrix coordMat;

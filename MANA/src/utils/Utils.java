@@ -237,6 +237,7 @@ public class Utils {
 		return su;
 	}
 
+
 	public static int checkSign(double value) {
 		return (int)(Double.doubleToLongBits(value) >>> 63);
 	}

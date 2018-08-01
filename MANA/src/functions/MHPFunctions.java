@@ -17,16 +17,48 @@ public class MHPFunctions {
 		int tInd = tarNo + pfrLoc.getOffsetMajor();
 		for(int ii = start; ii<end; ii+=pfrLoc.getInc()) {
 			pfrLoc.values[ii] = (efrs[tInd] - efrs[orderInds[ii]+pfrLoc.getOffsetMinor()])/pfrs[tInd];
+		}
+		for(int ii = start; ii<end; ii+=pfrLoc.getInc()) {
 			pfrLoc.values[ii] = Math.signum(pfrLoc.values[ii]) * Math.exp(pfrLoc.values[ii]);
 		}
 	}
 
-	public static void mhpStage2(final double[] pfrs, int tarNo,
-								 double f_p, double f_m, SynMatDataAddOn pfrLoc) {
+	public static void mhpStage2(int tarNo, double f_p, double f_m, SynMatDataAddOn pfrLoc) {
 		int start = pfrLoc.getStartIndex(tarNo);
 		int end = pfrLoc.getEndIndex(tarNo);
+		for(int ii=start; ii<end; ii+=pfrLoc.getInc()) {
+			pfrLoc.values[ii] *= f_p * Utils.checkSign(-pfrLoc.values[ii])
+					+ f_m * Utils.checkSign(pfrLoc.values[ii]);
+		}
 	}
 
+
+	public static void calcfTerm(final double[] pfrs, final long[] fVals, int offset, int n,
+								 double alpha, double beta, double lowFR) {
+		double blowf = beta * lowFR;
+		for(int ii=offset; ii<n; ++ii) {
+			fVals[ii] = Float.floatToIntBits((float)Math.exp(-pfrs[ii]/blowf));
+			fVals[ii] <<= 32;
+		}
+		for(int ii=offset; ii<n; ++ii) {
+			fVals[ii] |= (long) Float.floatToIntBits((float) mhpLTDTerm(pfrs[ii], alpha, lowFR));
+		}
+	}
+
+	public static double mhpLTDTerm(double val, double alpha, double lowF) {
+		if(val > lowF)
+			return 1 + (Math.log(1 + alpha*(val/lowF - 1)))/alpha;
+		else
+			return val/lowF;
+	}
+
+	public static double getFp(long datum) {
+		return Double.longBitsToDouble(datum>>>32);
+	}
+
+	public static double getFm(long datum) {
+		return Double.longBitsToDouble((datum & 0xffff0000)>>>32);
+	}
 
 	/**
 	 * Executed in Nodes by worker threads
