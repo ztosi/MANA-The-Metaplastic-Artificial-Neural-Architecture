@@ -205,6 +205,14 @@ public class MANAMatrix {
     }
 
 
+    public int getOffsetTar() {
+        return weightsTOrd.offsetMajor;
+    }
+
+    public int getOffsetSrc() {
+        return weightsTOrd.offsetMinor;
+    }
+
     /**
      * Processes synaptic events that is, queued spikes which have an arrival time, destination,
      * and which contribute a specific current value. Perform STDP and add the PSP to an array

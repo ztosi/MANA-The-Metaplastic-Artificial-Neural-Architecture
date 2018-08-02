@@ -179,6 +179,7 @@ public class MANA_Node2 {
     }
 
 
+    public void structuralPlasticity()
 
 
     /**

@@ -266,6 +266,14 @@ public class MANANeurons implements Neuron {
 		return sat_a/(1+Utils.expLT0Approx(-sat_b*prefFR[index]))
 				+ sat_c[index];
 	}
+
+	public int[] getProperInDegrees(Neuron src) {
+		if (src.isExcitatory()) {
+			return excInDegree;
+		} else {
+			return inhInDegree;
+		}
+	}
 	
 	@Override
 	public boolean[] getSpikes() {
