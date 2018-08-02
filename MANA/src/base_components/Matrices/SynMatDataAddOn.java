@@ -1,4 +1,4 @@
-package base_components;
+package base_components.Matrices;
 
 import base_components.Matrices.SynapseMatrix;
 

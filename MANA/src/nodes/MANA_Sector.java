@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import base_components.MANANeurons;
+import base_components.enums.SynType;
 import functions.MHPFunctions;
 import functions.STDPFunctions;
 import utils.SpikeTimeData;
@@ -92,6 +93,14 @@ public class MANA_Sector implements Syncable {
 		
 	}
 
+	public boolean[] getNormStatus(SynType type) {
+		if(type == SynType.EE || type == SynType.EI) {
+			return snExcOn;
+		} else {
+			return snInhOn;
+		}
+	}
+
 	/**
 	 * 
 	 */
@@ -126,7 +135,7 @@ public class MANA_Sector implements Syncable {
 		// does not have to be instantiated.
 		spkBuffer = holder;
 
-		spkDat.update(target.spks, time); // record spike times...
+		spkDat.update(target.spks, time); // record calcSpikeResponses times...
 
 		// ditto
 		double[] doubleHolder = target.estFR;
@@ -233,7 +242,7 @@ public class MANA_Sector implements Syncable {
 	public void updateTargetNeurons(double dt, double time) {
 
 		// Figure out voltages and who spikes for the next time-step
-		// and put the new spike times in buffers (no one needs voltage
+		// and put the new calcSpikeResponses times in buffers (no one needs voltage
 		// information non-locally during updates).
 		target.update(dt, time, spkBuffer, lastSpkTimeBuffer);
 

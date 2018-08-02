@@ -3,8 +3,10 @@ package nodes;
 import base_components.*;
 import base_components.Matrices.COOManaMat;
 import base_components.Matrices.MANAMatrix;
+import base_components.Matrices.SynMatDataAddOn;
 import base_components.enums.DampFunction;
 import base_components.enums.SynType;
+import functions.MHPFunctions;
 import functions.STDP;
 import utils.ConnectSpecs;
 
@@ -19,6 +21,8 @@ public class MANA_Node2 {
     public int sector_index;
 
     private MANAMatrix synMatrix;
+
+    private SynMatDataAddOn pfrLoc;
 
     /**
      * Event (AP) source and the neurons (targets of APs/Synapses)
@@ -64,6 +68,10 @@ public class MANA_Node2 {
      */
     public final int height;
 
+    public final int srcOffset;
+
+    public final int tarOffset;
+
     private DampFunction dampener;
 
     /**
@@ -75,16 +83,22 @@ public class MANA_Node2 {
     public final SynType type;
 
     /** The sum of all synaptic weights impinging on each target in this node (locally).*/
-    public double [] localSums;
+    private double [] localSums;
 
-    public double [] locCurrents;
+    private double [] locCurrents;
 
-    public double[] localPFRDep;
+    private double[] localPFRDep;
+
+    private double [] normScalars;
+
+    private boolean [] normFlags;
+
+    public boolean synPlasticityOn = true;
 
     private STDP stdpRule;
 
-    public int[] localInDegrees;
-    public int[] localOutDegrees;
+    private boolean allNrmOn = false;
+    private boolean allMHPOff = true;
 
     private PriorityQueue<int[]> evtQueue = new PriorityQueue<>((int[] a, int[] b) -> { // Sort by arrival time then absolute target index
         if(a[0] < b[0]) {
@@ -102,47 +116,63 @@ public class MANA_Node2 {
         }
     });
 
-    public static MANA_Node2 buildNode(Neuron srcNeu, MANANeurons tarNeu, ConnectSpecs specs,
-                                       DampFunction dampener, STDP stdpRule, boolean isTransUnit,
-                                       int tarOffset, int srcOffset) {
+    public static MANA_Node2 buildNodeAndConnections(MANA_Sector parent, Neuron srcNeu, MANANeurons tarNeu,
+                                                     ConnectSpecs specs, DampFunction dampener,
+                                                     STDP stdpRule, boolean isTransUnit,
+                                                     int srcOffset, int tarOffset) {
         MANAMatrix synMat = new MANAMatrix(srcOffset, tarOffset, srcNeu, tarNeu,
                 specs.maxDist, specs.maxDly, specs.rule, specs.parms);
-        MANA_Node2 tmp = new MANA_Node2(srcNeu, tarNeu, synMat, stdpRule, isTransUnit);
+        MANA_Node2 tmp = new MANA_Node2(srcNeu, tarNeu, isTransUnit, srcOffset, tarOffset);
         tmp.dampener = dampener;
+        tmp.stdpRule = stdpRule;
+        tmp.parent_sector = parent;
+        tmp.normScalars = tmp.type.isExcitatory() ? tmp.targData.exc_sf : tmp.targData.inh_sf;
+        tmp.normFlags = tmp.type.isExcitatory() ? tmp.targData.excSNon : tmp.targData.inhSNon;
+        tmp.pfrLoc = new SynMatDataAddOn(tmp.synMatrix.getWeightsTOrd(), 1);
         return tmp;
     }
 
-    public static MANA_Node2 buildNode(Neuron srcNeu, MANANeurons tarNeu, COOManaMat cooMat,
-                                       DampFunction dampener, STDP stdpRule, boolean isTransUnit,
-                                       int tarOffset, int srcOffset) {
-        MANAMatrix synMat = new MANAMatrix(srcOffset, tarOffset, cooMat, srcNeu, tarNeu);
-        MANA_Node2 tmp = new MANA_Node2(srcNeu, tarNeu, synMat, stdpRule, isTransUnit);
+    public static MANA_Node2 buildNodeFromCOO(MANA_Sector parent, Neuron srcNeu, MANANeurons tarNeu,
+                                              COOManaMat cooMat, DampFunction dampener, STDP stdpRule,
+                                              boolean isTransUnit, int srcOffset, int tarOffset) {
+        MANA_Node2 tmp = new MANA_Node2(srcNeu, tarNeu, isTransUnit, srcOffset, tarOffset);
+        tmp.synMatrix = new MANAMatrix(srcOffset, tarOffset, cooMat, srcNeu, tarNeu);
         tmp.dampener = dampener;
+        tmp.stdpRule = stdpRule;
+        tmp.parent_sector = parent;
+        tmp.pfrLoc = new SynMatDataAddOn(tmp.synMatrix.getWeightsTOrd(), 1);
         return tmp;
     }
 
+    public static MANA_Node2 buildNodeFromMatrix(MANA_Sector parent, Neuron srcNeu, MANANeurons tarNeu,
+                                                 MANAMatrix synMatrix, DampFunction dampener, STDP stdpRule,
+                                                 boolean isTransUnit, int srcOffset, int tarOffset)  {
+        MANA_Node2 tmp = new MANA_Node2(srcNeu, tarNeu, isTransUnit, srcOffset, tarOffset);
+        tmp.synMatrix = synMatrix;
+        tmp.dampener = dampener;
+        tmp.stdpRule = stdpRule;
+        tmp.parent_sector = parent;
+        tmp.pfrLoc = new SynMatDataAddOn(synMatrix.getWeightsTOrd(), 1);
+        return tmp;
+    }
 
-    public MANA_Node2(Neuron srcNeu, MANANeurons tarNeu, MANAMatrix synMatrix, STDP stdpRule,
-                      boolean isTransUnit)  {
+    private MANA_Node2(Neuron srcNeu, MANANeurons tarNeu, boolean isTransUnit, int srcOffset, int tarOffset)  {
         this.srcData = srcNeu;
         this.targData = tarNeu;
-        this.synMatrix = synMatrix;
         this.isTransUnit = isTransUnit;
+        this.srcOffset =srcOffset;
+        this.tarOffset = tarOffset;
         type = synMatrix.type;
         height = srcNeu.getSize();
         width = tarNeu.getSize();
         inputIsExternal = srcData instanceof  InputNeurons;
-        this.stdpRule = stdpRule;
         initBasic();
     }
-
 
     /**
      * Initializes all the basic values that don't really change depending on the constructor.
      */
     private void initBasic() {
-        localOutDegrees = new int[height];
-        localInDegrees = new int[width];
         // Initializing all the 1-D arrays (representing source or target data...)
         localSums = new double[width];
         localPFRDep = new double[width];
@@ -162,29 +192,75 @@ public class MANA_Node2 {
      */
     public void update(final double time, final double dt) {
 
+        // Check for pre-synaptic spikes, schedule the events along synapses of neurons that have,
         for(int ii=0; ii<height; ++ii) {
             if(srcData.getSpikes()[ii]) {
-                synMatrix.spike(ii, time);
+                synMatrix.calcSpikeResponses(ii, time);
                 synMatrix.addEvents(ii, time, dt, evtQueue);
-                stdpRule.postTriggered(ii, time);
             }
         }
 
-        synMatrix.processEventsSTDP(evtQueue, locCurrents, stdpRule,
-                targData.lastSpkTime, time, dt);
+        if (synPlasticityOn) {
+            // Calculate new dws for synapses tied to arriving events, add their currents to the correct target
+            synMatrix.processEventsSTDP(evtQueue, locCurrents, stdpRule,
+                    targData.lastSpkTime, time, dt);
 
-        synMatrix.updateWeights();
+            // Check for post-synaptic spikes and adjust synapses incoming to them accordingly.
+            for(int ii=0; ii<width; ++ii) {
+                if (targData.getSpikes()[ii]) {
+                    stdpRule.postTriggered(synMatrix.getWeightsTOrd(),
+                            synMatrix.gettOrdLastArrivals(), ii, time);
+                }
+            }
+            // If dampening is used, dampen
+            dampener.dampen(synMatrix.getWeightsTOrd().getRawData(), SynapseData.MAX_WEIGHT, 0);
+            // Add dws to ws--update synaptic weights
+            synMatrix.updateWeights();
+        } else {
+            synMatrix.processEvents(evtQueue, locCurrents, time, dt);
+        }
 
-        
+        // Synaptic normalization & scaling
+        if(!allNrmOn) {
+            allNrmOn = true;
+            for(int ii=0; ii<width; ++ii) {
+                allNrmOn &= normFlags[ii];
+                if(normFlags[ii]) {
+                    synMatrix.scaleWeights(ii, normScalars[ii]);
+                    localSums[ii] = synMatrix.getIncomingSum(ii);
+                }
+            }
+            //synMatrix.getWeightsTOrd().sumIncoming(localSums, 0);
+        } else {
+            synMatrix.normWts(normScalars);
+        }
+
+        if(!inputIsExternal && targData.mhpOn) {
+            for(int ii=0; ii<width; ++ii) {
+                MHPFunctions.mhpStage0(targData.estFR, targData.prefFR, ((MANANeurons)srcData).estFR, ii, pfrLoc);
+            }
+            for(int ii=0; ii<width; ++ii) {
+                MHPFunctions.mhpStage1(ii, pfrLoc);
+            }
+            for(int ii=0; ii<width; ++ii) {
+                MHPFunctions.mhpStage2(ii, MHPFunctions.getFp(targData.fVals[ii]),
+                        MHPFunctions.getFm(targData.fVals[ii]), pfrLoc);
+            }
+        }
+
+        // Last thread working on a node in the sector has to update the sector...
+        if(parent_sector.countDown.decrementAndGet() == 0) {
+            parent_sector.updateNoSync(time, dt);
+        }
 
     }
 
-
-
-
-
-
-
+    public void addAndClearLocCurrent(double[] neuronCurrents) {
+        for(int ii=0; ii<width; ++ii) {
+            neuronCurrents[ii] += locCurrents[ii];
+            locCurrents[ii] = 0;
+        }
+    }
 
 }
 

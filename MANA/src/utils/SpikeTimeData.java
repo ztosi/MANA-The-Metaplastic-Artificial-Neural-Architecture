@@ -31,12 +31,12 @@ public class SpikeTimeData {
 	public void update(boolean[] spks, final double time) {
 		for(int ii=0; ii<size;++ii) {
 			if(spks[ii]) { // if the neuron spiked record the time at which it did...
-				if(ptrs[ii] > spkTimes[ii].length * loadFac) { // If we're running out of space to hold spike times, make more...
+				if(ptrs[ii] > spkTimes[ii].length * loadFac) { // If we're running out of space to hold calcSpikeResponses times, make more...
 					double[] newTimes = new double[spkTimes[ii].length*2];
 					System.arraycopy(spkTimes[ii], 0, newTimes, 0, spkTimes[ii].length);
 					spkTimes[ii] = newTimes;
 				} 
-				// record the spike time.
+				// record the calcSpikeResponses time.
 				spkTimes[ii][ptrs[ii]] = time;
 				ptrs[ii]++;
 			}

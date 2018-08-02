@@ -88,6 +88,7 @@ public class MANANeurons implements Neuron {
 	public int[] excInDegree;
 	public int[] inhInDegree;
 	public int[] outDegree;
+	public long[] fVals;
 	
 	public double [][] xyzCoors;
 	
@@ -130,6 +131,7 @@ public class MANANeurons implements Neuron {
 		i_i = new double[N];
 		ef = new double[N];
 		adapt = new double[N];
+		fVals = new long[N];
 
 		r_m = new DataWrapper(N, true, default_r_m);
 		v_l = new DataWrapper(N, true, default_v_l);
@@ -156,7 +158,7 @@ public class MANANeurons implements Neuron {
 	
 	/**
 	 * Updates the equations governing the neurons' memberane potentials
-	 * and adaptations and determines which neurons spike on the next time-step
+	 * and adaptations and determines which neurons calcSpikeResponses on the next time-step
 	 * as a result, storing those in buffers.
 	 * @param dt
 	 * @param time

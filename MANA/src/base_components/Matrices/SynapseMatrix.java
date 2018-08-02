@@ -133,6 +133,15 @@ public class SynapseMatrix {
         }
     }
 
+    public double getMajorSum(int noMajor, int offset) {
+        checkInc(offset);
+        double su = 0;
+        for(int ii=ptrs[noMajor]; ii < ptrs[noMajor+1]; ++ii) {
+            su += values[ii*nILFac+offset];
+        }
+        return su;
+    }
+
     /**
      * A convenience method that probably should be somewhere else. Adds the 2i+1-ith element to the 2i-ith and keeps it
      * there. This is specifically for adding the derivative of the weights to the weights.
@@ -180,6 +189,14 @@ public class SynapseMatrix {
             for(int jj = ptrs[ii]+start, n = nILFac* ptrs[ii+1]; jj<n; jj+=inc) {
                 values[jj] *= a;
             }
+        }
+    }
+
+    public void scaleMajor(int majorInd, double scale, int offset) {
+        checkInc(offset);
+        for(int ii=ptrs[majorInd]; ii<ptrs[majorInd+1]; ++ii) {
+            values[ii*nILFac+offset] *= scale;
+
         }
     }
 

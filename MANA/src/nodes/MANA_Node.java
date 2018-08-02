@@ -467,7 +467,7 @@ public class MANA_Node {
 			//System.out.println("Got here 2");
 			processEvents(time, dt); // Figure out what APs arrived and add their current
 			//System.out.println("Got here 3");
-			handlePostSpikes(time, dt); // Handle STDP for target neurons that spike...
+			handlePostSpikes(time, dt); // Handle STDP for target neurons that calcSpikeResponses...
 //			if (time >= 2 && time < 3) {
 //				System.out.println();
 //			}
@@ -597,7 +597,7 @@ public class MANA_Node {
 
 	/**
 	 * Processes spikes that happened in the source neuron which arrive in this time-step.
-	 * Stores the indices of each target neuron where at least one spike arrived and the total current
+	 * Stores the indices of each target neuron where at least one calcSpikeResponses arrived and the total current
 	 * imbued at each target by all APs that arrive on this time-step. Actual summing of these values into
 	 * the incoming current arrays of the target neuron IS DONE AT THE SECTOR LEVEL.
 	 * @param time

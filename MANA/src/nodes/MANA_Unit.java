@@ -269,7 +269,7 @@ public class MANA_Unit {
 	
 	/**
 	 * 
-	 * @return a list of the spike time data (record of who spiked and when) across all member sectors.
+	 * @return a list of the calcSpikeResponses time data (record of who spiked and when) across all member sectors.
 	 */
 	public List<SpikeTimeData> getSpkTimeData() {
 		List<SpikeTimeData> spktd = new ArrayList<SpikeTimeData>();

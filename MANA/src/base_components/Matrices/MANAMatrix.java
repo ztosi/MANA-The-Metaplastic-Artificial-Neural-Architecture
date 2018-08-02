@@ -162,16 +162,33 @@ public class MANAMatrix {
 
     }
 
-    public void spike(int noSrc, double time) {
+    /**
+     * At the moment a source neuron spikes calculates the UDF-psp contribution
+     * and sets the outgoing last arrival time to when that spike will arrive given
+     * the synapse. Does this for all local outgoing synapses from the source neuron
+     * @param noSrc
+     * @param time
+     */
+    public void calcSpikeResponses(int noSrc, double time) {
         int start = outDataSOrd.getStartIndex(noSrc);
         int end = outDataSOrd.getEndIndex(noSrc);
         for(int ii=start; ii<end; ii+=outDataSOrd.getInc()) {
-            SynType.getPSR_UDF(ii, time, outDataSOrd.getRawData());
+            SynType.getPSR_UDF(ii, time, outDataSOrd.getRawData()); // calculate UDF
+            outDataSOrd.getRawData()[ii+1] = outDataSOrd.getRawData()[ii]+time; // Sets the new last arrival time to when this calcSpikeResponses will arrive.
         }
     }
 
     // data pack is {arrTime, rel tar ind, udfMultiplier, abs tar ind}
 
+    /**
+     * Based on their arrival times, adds event data (what is necessary
+     * to know when and where a spike will arrive and how much of a contribution it'll make). Performs
+     * this for all local outgoing synapses from a given neuron.
+     * @param noSrc
+     * @param time
+     * @param dt
+     * @param eventQ
+     */
     public void addEvents(int noSrc, double time, double dt, PriorityQueue<int []> eventQ) {
         int start = outDataSOrd.getStartIndex(noSrc);
         int end = outDataSOrd.getEndIndex(noSrc);
@@ -187,26 +204,50 @@ public class MANAMatrix {
         }
     }
 
-    public void processEvents(PriorityQueue<int[]> eventQ, double[] incCur, double time, double dt) {
-        while(eventQ.peek()[0]*dt <= time) {
-            int[] event = eventQ.poll();
-            incCur[event[3]] += weightsTOrd.getRawOrdIndices()[event[1]]
-                    * Float.intBitsToFloat(event[2]);
-        }
-    }
 
+    /**
+     * Processes synaptic events that is, queued spikes which have an arrival time, destination,
+     * and which contribute a specific current value. Perform STDP and add the PSP to an array
+     * meant to contain the local total incoming currents to each target neuron.
+     * @param eventQ the event queue of calcSpikeResponses events to be processed, events are stored as integer arrays
+     *               {arrivalTime/dt, absolute index,
+     *               post synaptic response (float encoded in int bits), target number}
+     * @param incCur the local incoming total currents to each target neuron
+     * @param stdpRule the STDP rule used to perform STDP
+     * @param lastSpkTimes the last time each post synaptic cell spiked.
+     * @param time current time
+     * @param dt simulation delta t
+     */
     public void processEventsSTDP(PriorityQueue<int[]> eventQ, double[] incCur, STDP stdpRule,
                                   double[] lastSpkTimes, double time, double dt) {
         while(eventQ.peek()[0]*dt <= time) {
             int[] event = eventQ.poll();
             incCur[event[3]] += weightsTOrd.getRawOrdIndices()[event[1]]
                     * Float.intBitsToFloat(event[2]);
-            stdpRule.preTriggered(event, lastSpkTimes, dt);
+            stdpRule.preTriggered(weightsTOrd, event, lastSpkTimes, dt);
+            tOrdLastArrivals.values[event[1]] = time;
+        }
+    }
+
+    public void processEvents(PriorityQueue<int[]> eventQ, double[] incCur, double time, double dt) {
+        while(eventQ.peek()[0]*dt <= time) {
+            int[] event = eventQ.poll();
+            incCur[event[3]] += weightsTOrd.getRawOrdIndices()[event[1]]
+                    * Float.intBitsToFloat(event[2]);
+            tOrdLastArrivals.values[event[1]] = time;
         }
     }
 
     public void normWts(double[] normVals) {
         weightsTOrd.mulFromArray(normVals, 0);
+    }
+
+    public void scaleWeights(int noTar, double scale) {
+        weightsTOrd.scaleMajor(noTar, scale, 0);
+    }
+
+    public double getIncomingSum(int noTar) {
+       return weightsTOrd.getMajorSum(noTar, 0);
     }
 
     public void updateWeights() {
@@ -221,12 +262,20 @@ public class MANAMatrix {
     //public List<SrcTarDataPack> getTuples(Ordering )
 
 
-    public void spike(int srcInd) {
+    public void calcSpikeResponses(int srcInd) {
 
     }
 
     public void mhpStage1() {
 
+    }
+
+    public SynapseMatrix getWeightsTOrd() {
+        return weightsTOrd;
+    }
+
+    public SynMatDataAddOn gettOrdLastArrivals() {
+        return tOrdLastArrivals;
     }
 
     public static void main(String [] args) {

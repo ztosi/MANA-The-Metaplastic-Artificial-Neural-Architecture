@@ -40,7 +40,7 @@ public class InputNeurons implements Neuron, Syncable {
 				MatFileReader mfr = new MatFileReader(_filename);
 				MLCell asdf = (MLCell) mfr.getContent().get("asdf");
 				if(asdf == null) {
-					throw new IOException("Cell array containing spike times in mat-file must be named \"asdf\"");
+					throw new IOException("Cell array containing calcSpikeResponses times in mat-file must be named \"asdf\"");
 				}
 				ArrayList<MLArray> mlSpkT = asdf.cells();
 				noNeu = mlSpkT.size()-2;
@@ -84,7 +84,7 @@ public class InputNeurons implements Neuron, Syncable {
 			System.exit(0);
 		} catch (ClassCastException e) {
 			e.printStackTrace();
-			System.err.println("asdf was not a cell... asdf format must use cell array. Alternatively, spike times must be doubles.");
+			System.err.println("asdf was not a cell... asdf format must use cell array. Alternatively, calcSpikeResponses times must be doubles.");
 			System.exit(0);
 		} finally {
 			if(sc!=null) {
