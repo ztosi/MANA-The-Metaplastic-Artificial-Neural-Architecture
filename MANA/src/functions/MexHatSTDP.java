@@ -23,8 +23,7 @@ public final class MexHatSTDP implements  STDP {
         setSigma(sig);
     }
 
-    public MexHatSTDP(SynapseMatrix wts, SynMatDataAddOn lastArrs,
-                      double wPlus, double wMinus,
+    public MexHatSTDP(double wPlus, double wMinus,
                       double sig, double lRate) {
         this.lRate = lRate;
         this.wMinus = wMinus;
@@ -50,7 +49,7 @@ public final class MexHatSTDP implements  STDP {
     public void preTriggered(SynapseMatrix wts, int[] dataPack, double[] lastSpkTimes, double dt) {
         wts.getRawData()[dataPack[1] * wts.getInc()+1] = mexicanHatWindow(sigSq, nrmTerm,
                 wPlus, wMinus,
-                (dataPack[0]*dt) - lastSpkTimes[dataPack[3]+wts.offsetMajor], lRate);
+                (dataPack[0]*dt) - lastSpkTimes[dataPack[3]], lRate);
     }
 
     public static double mexicanHatWindow(double sigmaSq, double normTerm, double wplus,

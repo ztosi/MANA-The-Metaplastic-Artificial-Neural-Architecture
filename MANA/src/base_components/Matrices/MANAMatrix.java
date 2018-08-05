@@ -46,14 +46,14 @@ public class MANAMatrix {
 
     /**
      * Makes a MANAMatrix from the COO ordered tuples of all synapse values...
-     * @param offsetSrc
-     * @param offsetTar
      * @param cooMat
      * @param src
      * @param tar
      */
-    public MANAMatrix(int offsetSrc, int offsetTar, COOManaMat cooMat, Neuron src, MANANeurons tar) {
-        //Collections.sort(cooMat.data, Ordering.orderTypeTupleComp(Ordering.SOURCE));
+  //  public MANAMatrix(int offsetSrc, int offsetTar, COOManaMat cooMat, Neuron src, MANANeurons tar) {
+    public MANAMatrix(COOManaMat cooMat, Neuron src, MANANeurons tar) {
+
+            //Collections.sort(cooMat.data, Ordering.orderTypeTupleComp(Ordering.SOURCE));
         noSrc = src.getSize();
         noTar = tar.getSize();
         this.src = src;
@@ -61,7 +61,8 @@ public class MANAMatrix {
         type = SynType.getSynType(src.isExcitatory(), tar.isExcitatory());
         int [] targRange = {0, cooMat.tarILF};
         weightsTOrd = new SynapseMatrix(cooMat.data, targRange, noTar, noSrc,
-                offsetTar, offsetSrc, Ordering.TARGET);
+                //offsetTar, offsetSrc,
+                Ordering.TARGET);
         tOrdLastArrivals = new SynMatDataAddOn(weightsTOrd, 1);
        // pfrBuffers = new SynMatDataAddOn(weightsTOrd, 1);
         int cnt=0;
@@ -74,7 +75,8 @@ public class MANAMatrix {
         // This will source order sort cooMat.data!
         // So now the target ordered linear indices will be in source order...
         outDataSOrd = new SynapseMatrix(cooMat.data, srcRange, noSrc, noTar,
-                offsetSrc, offsetTar, Ordering.SOURCE);
+                //offsetSrc, offsetTar,
+                Ordering.SOURCE);
         srcToTargLookup = new int[cooMat.data.size()];
         cnt = 0;
         // Copy the target linear indices that are source ordered to our lookup table
@@ -85,8 +87,6 @@ public class MANAMatrix {
 
     /**
      * Using a lot of defaults
-     * @param offsetSrc
-     * @param offsetTar
      * @param src
      * @param tar
      * @param maxDist
@@ -94,8 +94,7 @@ public class MANAMatrix {
      * @param params the connection parameters for random
      *              (1 parameter) or distance based random (2 parameters)
      */
-    public MANAMatrix(int offsetSrc, int offsetTar,
-                      Neuron src, MANANeurons tar,
+    public MANAMatrix(Neuron src, MANANeurons tar,
                       double maxDist, double maxDly,
                       ConnectRule cRule, double[] params) {
         this.src = src;
@@ -144,9 +143,11 @@ public class MANAMatrix {
         int[] tRange = {0, 2};
         int[] sRange = {0, 7};
         weightsTOrd = new SynapseMatrix(targCOOTup, tRange, src.getSize(), tar.N,
-                offsetSrc, offsetTar, Ordering.TARGET);
+                //offsetSrc, offsetTar,
+                Ordering.TARGET);
         outDataSOrd = new SynapseMatrix(srcCOOTup, sRange, tar.N, src.getSize(),
-                offsetTar, offsetSrc, Ordering.SOURCE);
+                //offsetTar, offsetSrc,
+                Ordering.SOURCE);
         nnz = weightsTOrd.getNnz();
         tOrdLastArrivals = new SynMatDataAddOn(weightsTOrd, 1);
         //pfrBuffers = new SynMatDataAddOn(weightsTOrd, 1);
@@ -205,13 +206,13 @@ public class MANAMatrix {
     }
 
 
-    public int getOffsetTar() {
-        return weightsTOrd.offsetMajor;
-    }
+//    public int getOffsetTar() {
+//        return weightsTOrd.offsetMajor;
+//    }
 
-    public int getOffsetSrc() {
-        return weightsTOrd.offsetMinor;
-    }
+//    public int getOffsetSrc() {
+//        return weightsTOrd.offsetMinor;
+//    }
 
     /**
      * Processes synaptic events that is, queued spikes which have an arrival time, destination,
@@ -297,7 +298,7 @@ public class MANAMatrix {
                 Utils.getUniformRandomArray(numN, 0, 100),
                 Utils.getUniformRandomArray(numN, 0, 100));
         double [] parms = {0.1};
-        MANAMatrix mm = new MANAMatrix(0,0, src, tar,
+        MANAMatrix mm = new MANAMatrix(src, tar,
                 Math.sqrt(30000), 20, ConnectRule.Random, parms);
 
         // TODO: Actually use JUnit instead of being lazy... so lazy!

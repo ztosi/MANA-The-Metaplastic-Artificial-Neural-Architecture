@@ -4,6 +4,8 @@ import base_components.MANANeurons;
 
 public enum DampFunction {
 
+
+
     HARD_BOUND {
         @Override
         public final void dampen(final double[] dwWVec,
@@ -48,6 +50,8 @@ public enum DampFunction {
                 return;
             }
     };
+
+    public static final DampFunction DEF_DAMPENER = DampFunction.HARD_BOUND;
 
     public abstract void dampen(final double[] dwWVec, double maxVal, double minVal);
 

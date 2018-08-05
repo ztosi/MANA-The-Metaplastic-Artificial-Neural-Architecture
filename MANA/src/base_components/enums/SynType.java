@@ -1,6 +1,9 @@
 package base_components.enums;
 
 import base_components.SynapseData;
+import functions.HebSTDP;
+import functions.MexHatSTDP;
+import functions.STDP;
 
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -157,6 +160,11 @@ public enum SynType {
     private static final double[] IEUDF = new double[]{0.25, 700, 20};
     private static final double[] IIUDF = new double[]{0.32, 144, 60};
 
+    public static final double DEF_EE_C = 0.3;
+    public static final double DEF_EI_C = 0.2;
+    public static final double DEF_IE_C = 0.4;
+    public static final double DEF_II_C = 0.1;
+
     public static final double ExcTau = 3.0;
     public static final double InhTau = 6.0;
 
@@ -194,6 +202,35 @@ public enum SynType {
             } else {
                 return SynType.II;
             }
+        }
+    }
+
+    public static double getConProbBase(boolean srcExc, boolean tarExc) {
+        if (srcExc) {
+            if (tarExc)
+                return DEF_EE_C;
+            else
+                return DEF_EI_C;
+        } else {
+            if (tarExc)
+                return DEF_IE_C;
+            else
+                return DEF_II_C;
+        }
+    }
+
+
+    public static STDP getDefaultSTDP(boolean srcExc, boolean tarExc) {
+        if (srcExc) {
+            if (tarExc)
+                return new HebSTDP(eeTauPlus, eeTauMinus, eeWPlus, eeWMinus, STDP.DEF_LEARNING_RATE);
+            else
+                return new HebSTDP(eiTauPlus, eiTauMinus, eiWPlus, eiWMinus, STDP.DEF_LEARNING_RATE);
+        } else {
+            if (tarExc)
+                return new MexHatSTDP(ieWPlus, ieWMinus, ieSigma, STDP.DEF_LEARNING_RATE);
+            else
+                return new MexHatSTDP(iiWPlus, iiWMinus, iiSigma, STDP.DEF_LEARNING_RATE);
         }
     }
 

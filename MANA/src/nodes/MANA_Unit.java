@@ -63,6 +63,8 @@ public class MANA_Unit {
 
 	public InputNeurons externalInp;
 
+
+
 	/**
 	 * Creates an independent "MANA Unit" comprised of an experimenter-driven,
 	 * dynamic-less input layer attached to a recurrent reservoir. The properties
@@ -195,6 +197,23 @@ public class MANA_Unit {
 		return unit;
 	}
 
+
+
+	/**
+	 * Creates an independent "MANA Unit" comprised of an experimenter-driven,
+	 * dynamic-less input layer attached to a recurrent reservoir. The properties
+	 * of the input are defined in a file and the size of the reservoir is specified.
+	 * Otherwise this constructor uses ALL DEFAULT VALUES to create a MANA reservoir
+	 * as described in Tosi, 2017.
+	 * TODO: Create a constructor where NOT everything is automatically default
+	 * @param _inpFileName
+	 */
+	public static MANA_Unit MANABuilder(final String _inpFileName, int numGroups, int nPerGroup) {
+
+		return null;
+
+	}
+
 	private MANA_Unit() {
 
 	}
@@ -210,7 +229,7 @@ public class MANA_Unit {
 				for(int ii=0; ii<node.width; ++ii) {
 					for(int jj=0; jj<node.weights[ii].length; ++jj) {
 						if(node.weights[ii][jj] > max) {
-							max= node.weights[ii][jj];
+							max = node.weights[ii][jj];
 						}
 					}
 				}

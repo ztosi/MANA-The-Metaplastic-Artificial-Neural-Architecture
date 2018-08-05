@@ -11,6 +11,7 @@ import com.jmatio.types.MLArray;
 import com.jmatio.types.MLCell;
 import com.jmatio.types.MLDouble;
 
+import mana.MANA_Globals;
 import utils.Syncable;
 import utils.Utils;
 import utils.Utils.ProbDistType;
@@ -22,6 +23,7 @@ public class InputNeurons implements Neuron, Syncable {
 	public static final double def_std = 1;
 	public static final ProbDistType def_pd = ProbDistType.NORMAL;
 
+	public final int id;
 	private String filename;
 
 	private double[][] spk_times;
@@ -33,6 +35,7 @@ public class InputNeurons implements Neuron, Syncable {
 	public double[][] xyzCoors;
 
 	public InputNeurons(final String _filename) {
+		id = MANA_Globals.getID();
 		Scanner sc = null;
 		try {
 			int noNeu;
@@ -136,6 +139,11 @@ public class InputNeurons implements Neuron, Syncable {
 	@Override
 	public double[][] getCoordinates() {
 		return xyzCoors;
+	}
+
+	@Override
+	public int getID() {
+		return id;
 	}
 
 }

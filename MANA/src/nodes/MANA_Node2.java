@@ -8,6 +8,7 @@ import base_components.enums.DampFunction;
 import base_components.enums.SynType;
 import functions.MHPFunctions;
 import functions.STDP;
+import functions.StructuralPlasticity;
 import utils.ConnectSpecs;
 
 import java.util.PriorityQueue;
@@ -15,7 +16,7 @@ import java.util.PriorityQueue;
 public class MANA_Node2 {
 
     /** The sector this node belongs to/is managed by. Must have the same target neurons. */
-    public MANA_Sector parent_sector;
+    public MANA_Sector2 parent_sector;
 
     /** Index among other nodes in the sector. */
     public int sector_index;
@@ -68,9 +69,9 @@ public class MANA_Node2 {
      */
     public final int height;
 
-    public final int srcOffset;
+   // public final int srcOffset;
 
-    public final int tarOffset;
+   // public final int tarOffset;
 
     private DampFunction dampener;
 
@@ -116,13 +117,13 @@ public class MANA_Node2 {
         }
     });
 
-    public static MANA_Node2 buildNodeAndConnections(MANA_Sector parent, Neuron srcNeu, MANANeurons tarNeu,
+    public static MANA_Node2 buildNodeAndConnections(MANA_Sector2 parent, Neuron srcNeu, MANANeurons tarNeu,
                                                      ConnectSpecs specs, DampFunction dampener,
-                                                     STDP stdpRule, boolean isTransUnit,
-                                                     int srcOffset, int tarOffset) {
-        MANAMatrix synMat = new MANAMatrix(srcOffset, tarOffset, srcNeu, tarNeu,
+                                                     STDP stdpRule, boolean isTransUnit) {
+                                                     //int srcOffset, int tarOffset) {
+        MANAMatrix synMat = new MANAMatrix(srcNeu, tarNeu,
                 specs.maxDist, specs.maxDly, specs.rule, specs.parms);
-        MANA_Node2 tmp = new MANA_Node2(srcNeu, tarNeu, isTransUnit, srcOffset, tarOffset);
+        MANA_Node2 tmp = new MANA_Node2(srcNeu, tarNeu, isTransUnit);
         tmp.dampener = dampener;
         tmp.stdpRule = stdpRule;
         tmp.parent_sector = parent;
@@ -132,11 +133,11 @@ public class MANA_Node2 {
         return tmp;
     }
 
-    public static MANA_Node2 buildNodeFromCOO(MANA_Sector parent, Neuron srcNeu, MANANeurons tarNeu,
+    public static MANA_Node2 buildNodeFromCOO(MANA_Sector2 parent, Neuron srcNeu, MANANeurons tarNeu,
                                               COOManaMat cooMat, DampFunction dampener, STDP stdpRule,
-                                              boolean isTransUnit, int srcOffset, int tarOffset) {
-        MANA_Node2 tmp = new MANA_Node2(srcNeu, tarNeu, isTransUnit, srcOffset, tarOffset);
-        tmp.synMatrix = new MANAMatrix(srcOffset, tarOffset, cooMat, srcNeu, tarNeu);
+                                              boolean isTransUnit) {
+        MANA_Node2 tmp = new MANA_Node2(srcNeu, tarNeu, isTransUnit);
+        tmp.synMatrix = new MANAMatrix(cooMat, srcNeu, tarNeu);
         tmp.dampener = dampener;
         tmp.stdpRule = stdpRule;
         tmp.parent_sector = parent;
@@ -144,10 +145,10 @@ public class MANA_Node2 {
         return tmp;
     }
 
-    public static MANA_Node2 buildNodeFromMatrix(MANA_Sector parent, Neuron srcNeu, MANANeurons tarNeu,
+    public static MANA_Node2 buildNodeFromMatrix(MANA_Sector2 parent, Neuron srcNeu, MANANeurons tarNeu,
                                                  MANAMatrix synMatrix, DampFunction dampener, STDP stdpRule,
-                                                 boolean isTransUnit, int srcOffset, int tarOffset)  {
-        MANA_Node2 tmp = new MANA_Node2(srcNeu, tarNeu, isTransUnit, srcOffset, tarOffset);
+                                                 boolean isTransUnit)  {
+        MANA_Node2 tmp = new MANA_Node2(srcNeu, tarNeu, isTransUnit);
         tmp.synMatrix = synMatrix;
         tmp.dampener = dampener;
         tmp.stdpRule = stdpRule;
@@ -156,12 +157,10 @@ public class MANA_Node2 {
         return tmp;
     }
 
-    private MANA_Node2(Neuron srcNeu, MANANeurons tarNeu, boolean isTransUnit, int srcOffset, int tarOffset)  {
+    private MANA_Node2(Neuron srcNeu, MANANeurons tarNeu, boolean isTransUnit)  {
         this.srcData = srcNeu;
         this.targData = tarNeu;
         this.isTransUnit = isTransUnit;
-        this.srcOffset =srcOffset;
-        this.tarOffset = tarOffset;
         type = synMatrix.type;
         height = srcNeu.getSize();
         width = tarNeu.getSize();
@@ -179,7 +178,12 @@ public class MANA_Node2 {
     }
 
 
-    public void structuralPlasticity()
+    public void structuralPlasticity(int maxInD, int maxOutD, double lambda, double maxDist, double time) {
+        synMatrix = StructuralPlasticity.pruneGrow(synMatrix, srcData, targData, maxOutD, maxInD,
+                lambda, SynType.getConProbBase(srcData.isExcitatory(),
+                        targData.isExcitatory()), maxDist, time);
+        pfrLoc = new SynMatDataAddOn(synMatrix.getWeightsTOrd(), 1);
+    }
 
 
     /**

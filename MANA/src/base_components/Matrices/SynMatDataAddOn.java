@@ -67,12 +67,12 @@ public class SynMatDataAddOn {
     public int getInc() {
         return nilFac;
     }
+//
+//    public int getOffsetMajor() {
+//        return coordMat.offsetMajor;
+//    }
 
-    public int getOffsetMajor() {
-        return coordMat.offsetMajor;
-    }
-
-    public int getOffsetMinor() {
-        return coordMat.offsetMinor;
-    }
+//    public int getOffsetMinor() {
+//        return coordMat.offsetMinor;
+//    }
 }

@@ -3,12 +3,15 @@ package base_components;
 import java.util.Arrays;
 
 import base_components.Matrices.MANAMatrix;
+
 import base_components.enums.SynType;
+import mana.MANA_Globals;
 import utils.DataWrapper;
 import utils.Utils;
 
 public class MANANeurons implements Neuron {
-	
+
+	public final int id;
 	
 	// TODO: Make separately settable, i.e. not static and not final
 	// as well as put some code somewhere to read in values from file.
@@ -102,7 +105,7 @@ public class MANANeurons implements Neuron {
 	 * @param _exc polarity (excitatory: true, inhibitory: false)
 	 */
 	public MANANeurons(int _N, boolean _exc, double[] xCoor, double[] yCoor, double[] zCoor) {
-		
+		id = MANA_Globals.getID();
 		this.N = _N;
 		this.exc = _exc;
 		dummy = new double[N];
@@ -299,6 +302,11 @@ public class MANANeurons implements Neuron {
 	@Override
 	public double[][] getCoordinates() {
 		return xyzCoors;
+	}
+
+	@Override
+	public int getID() {
+		return id;
 	}
 	
 }

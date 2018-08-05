@@ -15,7 +15,7 @@ public class MHPFunctions {
 		int end = pfrLoc.getEndIndex(tarNo);
 		int[] orderInds = pfrLoc.getRawOrdIndices();
 		for(int ii = start; ii<end; ii+=pfrLoc.getInc()) {
-			pfrLoc.values[ii] = (efrsTar[tarNo] - efrsSrc[orderInds[ii]+pfrLoc.getOffsetMinor()])/pfrsTar[tarNo];
+			pfrLoc.values[ii] = (efrsTar[tarNo] - efrsSrc[orderInds[ii]])/pfrsTar[tarNo];
 		}
 		for(int ii = start; ii<end; ii+=pfrLoc.getInc()) {
 			pfrLoc.values[ii] = Math.signum(pfrLoc.values[ii]) * Math.exp(pfrLoc.values[ii]);

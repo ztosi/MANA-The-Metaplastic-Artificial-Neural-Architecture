@@ -169,7 +169,7 @@ public class MANA_Sector implements Syncable {
 
 	/**
 	 * After all child nodes have been updated, gather information from
-	 * them that is,g gather from them the synaptic currents that arrived from
+	 * them that is, gather from them the synaptic currents that arrived from
 	 * their pre-synaptic neurons, the sum of their new weights, and so on.
 	 * @param time
 	 * @param dt

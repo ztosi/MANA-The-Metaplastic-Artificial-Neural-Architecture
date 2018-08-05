@@ -18,12 +18,12 @@ public class StructuralPlasticity {
 
     public static final double DEF_Thresh= 0.05;
 
-    public static final double DEF_EXC_THRESH = 0.05;
-    public static final double DEF_INH_THRESH = 0.05;
+    //public static final double DEF_EXC_THRESH = 0.05;
+    //public static final double DEF_INH_THRESH = 0.05;
     public static final double DEF_CON_CONST = 0.4;
     public static final double P_ADD_MIN = 0.01;
-    public static final double RT_LOG_PA_MIN = Math.sqrt(-Math.log(P_ADD_MIN));
-    public static final double DEF_PG_INTERVAL = 2500; // ms
+    //public static final double RT_LOG_PA_MIN = Math.sqrt(-Math.log(P_ADD_MIN));
+    //public static final double DEF_PG_INTERVAL = 2500; // ms
     public static final double MAX_ADD_RATIO = 0.01;
 
 
@@ -62,8 +62,8 @@ public class StructuralPlasticity {
                         SynType.setSourceDefaults(data, 2, SynType.getSynType(src.isExcitatory(),
                                 tar.isExcitatory()));
                         data[2] = newDly;
-                        data[3] = time;
-                        data[9] = time;
+                        data[3] = 0; // as far as UDF is concerned this has never spiked, redundant, but important
+                        data[9] = time; // As far as STDP is concerned we're going to pretend a spike arrived now
                         noAdded[ii]++;
                         SrcTarDataPack newDatum = new SrcTarDataPack(new SrcTarPair(ii, jj), data);
                         dataIter.add(newDatum);
@@ -78,7 +78,9 @@ public class StructuralPlasticity {
             tup.values[10] = tarLinInd++;
         }
         coo.data.sort(Ordering.orderTypeTupleComp(Ordering.SOURCE));
-        return  new MANAMatrix(mat.getOffsetSrc(), mat.getOffsetTar(), coo, src, tar);
+        //return new MANAMatrix(mat.getOffsetSrc(), mat.getOffsetTar(), coo, src, tar);
+        return new MANAMatrix(coo, src, tar);
+
     }
 
     public static boolean pruneDecision(int srcOutDegree,

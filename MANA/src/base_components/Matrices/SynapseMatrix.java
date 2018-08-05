@@ -35,16 +35,16 @@ public class SynapseMatrix {
     /** Number of non-zero values.*/
     private int nnz;
 
-    public final int offsetMajor;
+   // public final int offsetMajor;
 
-    public final int offsetMinor;
+    //public final int offsetMinor;
 //
     private int[] reverseDegrees;
 
-    public SynapseMatrix(List<SrcTarDataPack> tuples, int[] dataRange, int noMinor, int noMajor, int offsetMajor, int offsetMinor,
+    public SynapseMatrix(List<SrcTarDataPack> tuples, int[] dataRange, int noMinor, int noMajor, //int offsetMajor, int offsetMinor,
                          final Ordering ordering) {
-        this.offsetMajor = offsetMajor;
-        this.offsetMinor = offsetMinor;
+      //  this.offsetMajor = offsetMajor;
+      //  this.offsetMinor = offsetMinor;
         this.ordering = ordering;
         nnz = tuples.size();
         nILFac = dataRange[1] - dataRange[0];

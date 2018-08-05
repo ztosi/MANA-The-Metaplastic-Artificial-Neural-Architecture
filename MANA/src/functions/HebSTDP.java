@@ -45,7 +45,7 @@ public final class HebSTDP implements STDP {
 
     public void preTriggered(SynapseMatrix wts, int[] dataPack, double[] lastSpkTimes, double dt) {
         wts.getRawData()[dataPack[1]*wts.getInc()+1] = -lRate * wMinus
-                * Math.exp((lastSpkTimes[dataPack[3]+wts.offsetMajor]-(double)dataPack[0]*dt)/tauMinus);
+                * Math.exp((lastSpkTimes[dataPack[3]]-(double)dataPack[0]*dt)/tauMinus);
     }
 
 
