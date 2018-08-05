@@ -197,13 +197,14 @@ public enum SynType {
         }
     }
 
-    public static void setSourceDefaults(final double [] sData, SynType type) {
+    // Outbound values... delay, lastArr, U, D, F, u, R
+    public static void setSourceDefaults(final double [] sData, int start, SynType type) {
         ThreadLocalRandom localRand = ThreadLocalRandom.current();
         double [] meanVals = type.getDefaultUDFMeans();
-        sData[2] = Math.abs(localRand.nextGaussian()*meanVals[0]/2 + meanVals[0]);
-        sData[3] = Math.abs(localRand.nextGaussian()*meanVals[1]/2 + meanVals[1]);
-        sData[4] = Math.abs(localRand.nextGaussian()*meanVals[2]/2 + meanVals[2]);
-        sData[6] = 1;
+        sData[2+start] = Math.abs(localRand.nextGaussian()*meanVals[0]/2 + meanVals[0]);
+        sData[3+start] = Math.abs(localRand.nextGaussian()*meanVals[1]/2 + meanVals[1]);
+        sData[4+start] = Math.abs(localRand.nextGaussian()*meanVals[2]/2 + meanVals[2]);
+        sData[6+start] = 1;
     }
 
     public static void getPSR_UDF(int index, double time, double [] data) {

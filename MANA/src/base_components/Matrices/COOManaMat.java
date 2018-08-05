@@ -1,5 +1,6 @@
 package base_components.Matrices;
 
+import base_components.enums.Ordering;
 import utils.SrcTarDataPack;
 import utils.SrcTarPair;
 
@@ -12,7 +13,7 @@ import java.util.List;
  * a MANAMatrix from the new values.
  */
 public class COOManaMat {
-    public final List<SrcTarDataPack> data;
+    public final LinkedList<SrcTarDataPack> data;
     public final int srcILF;
     public final int tarILF;
 
@@ -22,7 +23,7 @@ public class COOManaMat {
         this.tarILF=tarILF;
     }
 
-    public COOManaMat(MANAMatrix mat) {
+    public COOManaMat(MANAMatrix mat, Ordering orderType) {
         data = new LinkedList<>();
         int [] srcPtrs = mat.outDataSOrd.getRawPtrs();
         double [] tordVals = mat.weightsTOrd.getRawData();
@@ -54,6 +55,9 @@ public class COOManaMat {
                         new SrcTarDataPack(new SrcTarPair(src, tOrdInds[jj]), tmpData);
                 data.add(tmpDatPack);
             }
+        }
+        if(orderType == Ordering.TARGET) { // Target Sort id that was selected... it was already source sorted
+            data.sort(Ordering.orderTypeTupleComp(orderType));
         }
     }
 }

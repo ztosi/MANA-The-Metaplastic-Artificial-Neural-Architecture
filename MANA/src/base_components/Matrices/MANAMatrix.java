@@ -132,7 +132,7 @@ public class MANAMatrix {
                 double[] tarData = {SynapseData.DEF_NEW_WEIGHT, 0};
                 SrcTarDataPack tarDatPack = new SrcTarDataPack(coo, tarData);
                 double[] srcData = new double[7];
-                SynType.setSourceDefaults(srcData, type);
+                SynType.setSourceDefaults(srcData, 0, type);
                 srcData[0] = maxDly * Utils.euclidean(src.getCoordinates()[ii], tar.xyzCoors[jj])/maxDist;
                 SrcTarDataPack srcDatPack = new SrcTarDataPack(coo, srcData);
 
