@@ -101,6 +101,30 @@ public class MANA_Sector2 {
 
 
 
+    public void update(final double time, final double dt) {
+        for(MANA_Node2 node : childNodes.values()) {
+            if (node.srcData.isExcitatory()) {
+                node.addAndClearLocCurrent(target.i_e);
+            } else {
+                node.addAndClearLocCurrent(target.i_i);
+            }
+        }
+
+        for(MANA_Node2 node : childNodes.values()) {
+            if (node.srcData.isExcitatory()) {
+               for(int ii=0; ii<target.N; ++ii) {
+                   secExcSums[ii] += node.l
+               }
+            } else {
+                node.addAndClearLocCurrent(target.i_i);
+            }
+        }
+
+        target.performFullUpdate(spkBuffer, lastSpkTimeBuffer, estFRBuffer, time, dt);
+
+    }
+
+
     public void updateNoSync(final double time, final double dt) {
         try {
         //    gatherChildData(time, dt);

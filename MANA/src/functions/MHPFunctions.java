@@ -22,6 +22,11 @@ public class MHPFunctions {
 		}
 	}
 
+    /**
+     *
+     * @param tarNo
+     * @param pfrLoc
+     */
 	public static void mhpStage1(int tarNo, SynMatDataAddOn pfrLoc) {
 		int start = pfrLoc.getStartIndex(tarNo);
 		int end = pfrLoc.getEndIndex(tarNo);
@@ -40,14 +45,14 @@ public class MHPFunctions {
 	}
 
 
-	public static void calcfTerm(final double[] pfrs, final long[] fVals, int offset, int n,
+	public static void calcfTerm(final double[] pfrs, final long[] fVals,
 								 double alpha, double beta, double lowFR) {
 		double blowf = beta * lowFR;
-		for(int ii=offset; ii<n; ++ii) {
+		for(int ii=0, n=pfrs.length; ii<n; ++ii) {
 			fVals[ii] = Float.floatToIntBits((float)Math.exp(-pfrs[ii]/blowf));
 			fVals[ii] <<= 32;
 		}
-		for(int ii=offset; ii<n; ++ii) {
+		for(int ii=0, n=pfrs.length; ii<n; ++ii) {
 			fVals[ii] |= (long) Float.floatToIntBits((float) mhpLTDTerm(pfrs[ii], alpha, lowFR));
 		}
 	}
