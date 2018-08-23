@@ -260,8 +260,6 @@ public class MANA_Node2 {
 
     }
 
-    //public void accumulateLocalWtSums(double[] sectorSums, doub)
-
     public void addAndClearLocCurrent(double[] neuronCurrents) {
         for(int ii=0; ii<width; ++ii) {
             neuronCurrents[ii] += locCurrents[ii];

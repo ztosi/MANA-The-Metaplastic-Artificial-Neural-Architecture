@@ -102,6 +102,10 @@ public class SynapseMatrix {
         return  0;
     }
 
+
+
+
+
     // TODO: Implement binary search for larger numbers of sources/targets
     public int sub2Ind(int tar, int src) {
         for(int ii = ptrs[tar], n = ptrs[tar]; ii<n; ++ii) {
@@ -299,14 +303,6 @@ public class SynapseMatrix {
         return cpy;
     }
 
-    public int[] getMajorDegrees() {
-        int[] degs = new int[noMajor];
-        for(int ii=0; ii<noMajor; ++ii) {
-            degs[ii] = ptrs[ii+1]-ptrs[ii];
-        }
-        return degs;
-    }
-
     /**
      * Returns a copy of the major order pointers
      * @return
@@ -328,11 +324,11 @@ public class SynapseMatrix {
     }
 
     public int getStartIndex(int neuronNo) {
-        return ptrs[neuronNo] * nILFac;
+        return ordIndices[neuronNo] * nILFac;
     }
 
     public int getEndIndex(int neuronNo) {
-        return ptrs[neuronNo+1] * nILFac;
+        return ordIndices[neuronNo+1] * nILFac;
     }
 
     public int getInc() {
@@ -340,11 +336,11 @@ public class SynapseMatrix {
     }
 
     public int getStartIndex(int neuronNo, int nILFac) {
-        return ptrs[neuronNo] * nILFac;
+        return ordIndices[neuronNo] * nILFac;
     }
 
     public int getEndIndex(int neuronNo, int nILFac) {
-        return ptrs[neuronNo+1] * nILFac;
+        return ordIndices[neuronNo+1] * nILFac;
     }
 
     public int getNnz() {

@@ -2,7 +2,6 @@ package base_components.enums;
 
 import base_components.MANANeurons;
 
-//TODO: Make this an interface
 public enum DampFunction {
 
 

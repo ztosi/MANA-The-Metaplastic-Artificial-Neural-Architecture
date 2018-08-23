@@ -37,11 +37,8 @@ public class MANANeurons implements Neuron {
 	public static final double default_inh_ref_p = 2;
 	public static final double default_sat_a = 300;
 	public static final double default_sat_b = 0.1;
-	public static final double default_exc_SF_tau = 5;
-    public static final double default_inh_SF_tau = 5;
-
-
-    public boolean mhpOn = true;
+	
+	public boolean mhpOn = true;
 	
 	public double lambda = init_tau_HP;
 	public double eta = init_tau_MHP;
@@ -161,16 +158,7 @@ public class MANANeurons implements Neuron {
 		xyzCoors[2] = zCoor;
 	}
 	
-
-	public void performFullUpdate(boolean[] spkBuffer, double[] lastSpkTimeBuffer,
-                                  double[] estFRBuffer, final double time, final double dt) {
-	    update(dt, time, spkBuffer, lastSpkTimeBuffer);
-	    updateEstFR(dt, estFRBuffer);
-	    updateThreshold(dt);
-	    calcScaleFacs();
-
-    }
-
+	
 	/**
 	 * Updates the equations governing the neurons' memberane potentials
 	 * and adaptations and determines which neurons calcSpikeResponses on the next time-step
@@ -240,9 +228,13 @@ public class MANANeurons implements Neuron {
 	 * @param estFRBuffer
 	 */
 	public void updateEstFR(double dt, double[] estFRBuffer) {
+		
 		for(int ii=0; ii<N; ++ii) {
 			double tauA = 10000 / Math.sqrt(prefFR[ii]);
 			ef[ii] -= dt * ef[ii]/tauA;
+			if(spks[ii]) {
+				ef[ii] +=1;
+			}
 			if (Double.isNaN(ef[ii])) {
 				System.out.println("nan");
 			}
@@ -266,16 +258,7 @@ public class MANANeurons implements Neuron {
 			threshRA[ii] += thresh[ii] * lambda + threshRA[ii]*(1-lambda);
 		}
 	}
-
-	public void calcScaleFacs() {
-	    for(int ii=0; ii<N; ++ii) {
-	        exc_sf[ii] = Math.exp((threshRA[ii] - thresh[ii])/default_exc_SF_tau);
-        }
-        for(int ii=0; ii<N; ++ii) {
-            inh_sf[ii] = Math.exp((thresh[ii] - threshRA[ii])/default_inh_SF_tau);
-        }
-    }
-
+	
 	/**
 	 * 
 	 * @param index
