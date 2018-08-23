@@ -5,23 +5,21 @@ import base_components.Neuron;
 import base_components.enums.DampFunction;
 import base_components.enums.SynType;
 import functions.STDP;
-import utils.ConnectSpecs;
-import utils.SpikeTimeData;
+import utils.*;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class MANA_Sector2 {
+public class MANA_Sector2 implements Syncable {
 
     public double [] secExcSums;
     public double [] secInhSums;
-    public boolean [] snExcOn;
-    public boolean [] snInhOn;
-    public double [] pfrLTDAccum;
-    public double [] pfrLTPAccum;
-    public double [] lastSpkTimeBuffer;
-    public double [] estFRBuffer;
-    public boolean [] spkBuffer;
+    public BoolArray snExcOn;
+    public BoolArray snInhOn;
+    public double [] pfrAccum;
+    public BoolArray spkBuffer;
+
+    public boolean synPlasticityOn = true;
 
     public SpikeTimeData spkDat;
 
@@ -57,6 +55,10 @@ public class MANA_Sector2 {
         this.target = target;
         this.parent = parent;
         countDown = new AtomicInteger(0);
+        secExcSums = new double[target.N];
+        secInhSums = new double[target.N];
+        spkBuffer = new BoolArray(target.N);
+        pfrAccum = new double[target.N];
     }
 
 
@@ -101,14 +103,62 @@ public class MANA_Sector2 {
 
 
 
-    public void updateNoSync(final double time, final double dt) {
-        try {
-        //    gatherChildData(time, dt);
-         //   updateTargetNeurons(dt, time);
-          //  countDown.set(numNodes);
-        } catch (Exception e) {
-            e.printStackTrace();
+    public void update(final double time, final double dt) {
+
+        // Determine incoming currents
+        for(MANA_Node2 node : childNodes.values()) {
+            if (node.srcData.isExcitatory()) {
+                node.addAndClearLocCurrent(target.i_e);
+            } else {
+                node.addAndClearLocCurrent(target.i_i);
+            }
         }
+
+        // Sum over the weights
+        if(synPlasticityOn) {
+            Arrays.fill(secExcSums, 0);
+            Arrays.fill(secInhSums, 0);
+            for (MANA_Node2 node : childNodes.values()) {
+                if (node.srcData.isExcitatory()) {
+                    node.accumulateLocalWtSums(secExcSums);
+                } else {
+                    node.accumulateLocalWtSums(secInhSums);
+                }
+            }
+        }
+
+        if (target.mhpOn) {
+            for (MANA_Node2 node : childNodes.values()) {
+               node.accumulatePFRSums(pfrAccum);
+            }
+        }
+
+        target.performFullUpdate(spkBuffer, pfrAccum, time, dt);
+        Arrays.fill(pfrAccum, 0);
+
+    }
+
+    public void recountInDegrees() {
+        int[] excInDs = new int[target.N];
+        int[] inhInDs = new int[target.N];
+
+        for(MANA_Node2 node : childNodes.values()) {
+            if(node.srcData.isExcitatory()) {
+                node.accumInDegrees(excInDs);
+            } else {
+                node.accumInDegrees(inhInDs);
+            }
+        }
+        for(int ii=0; ii<target.N; ++ii) {
+            target.inDegree[ii] = excInDs[ii] + inhInDs[ii];
+        }
+    }
+
+    public void synchronize() {
+        target.spks.copyInto(spkBuffer);
+        target.estFR.pushBufferShallow();
+        target.lastSpkTime.pushBufferDeep();
+        countDown.set(childNodes.size());
     }
 
 }

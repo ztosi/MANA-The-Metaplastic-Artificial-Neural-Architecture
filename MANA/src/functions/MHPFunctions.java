@@ -4,24 +4,30 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import base_components.MANANeurons;
 import base_components.Matrices.SynMatDataAddOn;
+import utils.BufferedFloatArray;
 import utils.Utils;
 
 public class MHPFunctions {
 
 
-	public static void mhpStage0(final double[] efrsTar, final double[] pfrsTar,
-								 final double[] efrsSrc, int tarNo, SynMatDataAddOn pfrLoc) {
+	public static void mhpStage0(final BufferedFloatArray efrsTar, final double[] pfrsTar,
+								 final BufferedFloatArray efrsSrc, int tarNo, SynMatDataAddOn pfrLoc) {
 		int start = pfrLoc.getStartIndex(tarNo);
 		int end = pfrLoc.getEndIndex(tarNo);
 		int[] orderInds = pfrLoc.getRawOrdIndices();
 		for(int ii = start; ii<end; ii+=pfrLoc.getInc()) {
-			pfrLoc.values[ii] = (efrsTar[tarNo] - efrsSrc[orderInds[ii]])/pfrsTar[tarNo];
+			pfrLoc.values[ii] = (efrsTar.getData(tarNo) - efrsSrc.getData(orderInds[ii]))/pfrsTar[tarNo];
 		}
 		for(int ii = start; ii<end; ii+=pfrLoc.getInc()) {
 			pfrLoc.values[ii] = Math.signum(pfrLoc.values[ii]) * Math.exp(pfrLoc.values[ii]);
 		}
 	}
 
+    /**
+     *
+     * @param tarNo
+     * @param pfrLoc
+     */
 	public static void mhpStage1(int tarNo, SynMatDataAddOn pfrLoc) {
 		int start = pfrLoc.getStartIndex(tarNo);
 		int end = pfrLoc.getEndIndex(tarNo);
@@ -40,14 +46,14 @@ public class MHPFunctions {
 	}
 
 
-	public static void calcfTerm(final double[] pfrs, final long[] fVals, int offset, int n,
+	public static void calcfTerm(final double[] pfrs, final long[] fVals,
 								 double alpha, double beta, double lowFR) {
 		double blowf = beta * lowFR;
-		for(int ii=offset; ii<n; ++ii) {
+		for(int ii=0, n=pfrs.length; ii<n; ++ii) {
 			fVals[ii] = Float.floatToIntBits((float)Math.exp(-pfrs[ii]/blowf));
 			fVals[ii] <<= 32;
 		}
-		for(int ii=offset; ii<n; ++ii) {
+		for(int ii=0, n=pfrs.length; ii<n; ++ii) {
 			fVals[ii] |= (long) Float.floatToIntBits((float) mhpLTDTerm(pfrs[ii], alpha, lowFR));
 		}
 	}

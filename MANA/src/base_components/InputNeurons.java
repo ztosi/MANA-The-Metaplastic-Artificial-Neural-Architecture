@@ -11,7 +11,10 @@ import com.jmatio.types.MLArray;
 import com.jmatio.types.MLCell;
 import com.jmatio.types.MLDouble;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import mana.MANA_Globals;
+import utils.BoolArray;
+import utils.BufferedDoubleArray;
 import utils.Syncable;
 import utils.Utils;
 import utils.Utils.ProbDistType;
@@ -29,8 +32,8 @@ public class InputNeurons implements Neuron, Syncable {
 	private double[][] spk_times;
 	private int[] ptrs;
 	private double[] offsets;
-	public double[] lastSpkTime; // vanilla MANA does not use this for inputs, but someone might....
-	public boolean[] spks;
+	public BufferedDoubleArray lastSpkTime; // vanilla MANA does not use this for inputs, but someone might....
+	public BoolArray spks;
 	private int[] outDegree;
 	public double[][] xyzCoors;
 
@@ -71,8 +74,8 @@ public class InputNeurons implements Neuron, Syncable {
 			}
 			ptrs = new int[noNeu];
 			offsets = new double[noNeu];
-			lastSpkTime = new double[noNeu];
-			spks = new boolean[noNeu];
+			lastSpkTime = new BufferedDoubleArray(noNeu);
+			spks = new BoolArray(noNeu);
 			outDegree = new int[noNeu];
 			xyzCoors = new double[3][noNeu];
 		} catch (FileNotFoundException e) {
@@ -96,7 +99,7 @@ public class InputNeurons implements Neuron, Syncable {
 		}
 	}
 
-	public void update(double dt, double time, boolean[] spkBuffer, double[] lastSpkTimeBuffer) {
+	public void update(double dt, double time, BoolArray spkBuffer) {
 		double edge2 = time+dt;
 		for(int ii=0, n=spk_times.length; ii<n; ++ii) {
 			if(ptrs[ii] >= spk_times[ii].length) {
@@ -104,10 +107,10 @@ public class InputNeurons implements Neuron, Syncable {
 				offsets[ii] += time; // start the cycle over again
 			}
 			double nextSpkTime = spk_times[ii][ptrs[ii]];
-			spkBuffer[ii] = nextSpkTime >= time && nextSpkTime < edge2;
-			if(spkBuffer[ii]) {
+			spkBuffer.set(ii, nextSpkTime >= time && nextSpkTime < edge2);
+			if(spkBuffer.get(ii)) {
 				++ptrs[ii];
-				lastSpkTimeBuffer[ii] = nextSpkTime;
+				lastSpkTime.setBuffer(ii, nextSpkTime);
 			}
 		}
 	}
@@ -117,7 +120,7 @@ public class InputNeurons implements Neuron, Syncable {
 
 	}
 
-	public boolean [] getSpikes() {
+	public BoolArray getSpikes() {
 		return spks;
 	}
 

@@ -5,9 +5,9 @@ import java.util.Arrays;
 import base_components.Matrices.MANAMatrix;
 
 import base_components.enums.SynType;
+import functions.MHPFunctions;
 import mana.MANA_Globals;
-import utils.DataWrapper;
-import utils.Utils;
+import utils.*;
 
 public class MANANeurons implements Neuron {
 
@@ -37,8 +37,11 @@ public class MANANeurons implements Neuron {
 	public static final double default_inh_ref_p = 2;
 	public static final double default_sat_a = 300;
 	public static final double default_sat_b = 0.1;
-	
-	public boolean mhpOn = true;
+	public static final double default_exc_SF_tau = 5;
+    public static final double default_inh_SF_tau = 5;
+
+
+    public boolean mhpOn = true;
 	
 	public double lambda = init_tau_HP;
 	public double eta = init_tau_MHP;
@@ -50,8 +53,8 @@ public class MANANeurons implements Neuron {
 	public double [] thresh;
 	public double [] i_e;
 	public double [] i_i;
-	public double [] lastSpkTime;
-	public boolean [] spks;
+	public BufferedDoubleArray lastSpkTime;
+	public BoolArray spks;
 	
 	// Can be the same or different for all neurons
 	public DataWrapper r_m;
@@ -70,15 +73,15 @@ public class MANANeurons implements Neuron {
 	
 	// MANA related properties
 	// TODO: Move these and related functions to a separate class... generic IF neuron and MANA stuff separate
-	public double [] estFR;
+	public BufferedFloatArray estFR;
 	public double [] ef;
 	public double [] dummy; // here to test if my math is right....
 	public double [] prefFR;
 	public double [] threshRA;
 	
 	// Afferent Synapse properties
-	public boolean [] excSNon;
-	public boolean [] inhSNon;
+	public BoolArray excSNon;
+	public BoolArray inhSNon;
 	//public double [] normVals;
 	public double [] normValsExc;
 	public double [] normValsInh;
@@ -112,15 +115,17 @@ public class MANANeurons implements Neuron {
 		v_m = new double[N];
 		dv_m = new double[N];
 		thresh = new double[N];
-		estFR = new double[N];
+		estFR = new BufferedFloatArray(N);
 		prefFR = new double[N];
-		Arrays.fill(estFR, 1);
+		for(int ii=0; ii < N; ++ii) {
+		    estFR.setData(ii, 1.0f);
+        }
 		Arrays.fill(prefFR, 1.0);
 		threshRA = new double[N];
 		exc_sf = new double[N];
 		inh_sf = new double[N];
-		lastSpkTime = new double[N];
-		spks = new boolean[N];
+		lastSpkTime = new BufferedDoubleArray(N);
+		spks = new BoolArray(N);
 		normValsExc = new double[N];
 		normValsInh = new double[N];
 		sat_c = new double[N];
@@ -128,8 +133,8 @@ public class MANANeurons implements Neuron {
 		excInDegree = new int[N];
 		inhInDegree = new int[N];
 		outDegree = new int[N];
-		inhSNon = new boolean[N];
-		excSNon = new boolean[N];
+		inhSNon = new BoolArray(N);
+		excSNon = new BoolArray(N);
 		i_e = new double[N];
 		i_i = new double[N];
 		ef = new double[N];
@@ -157,8 +162,34 @@ public class MANANeurons implements Neuron {
 		xyzCoors[1] = yCoor;
 		xyzCoors[2] = zCoor;
 	}
-	
-	
+
+
+	/**
+	 * Updates everything placing the results in buffers. DOES NOT modify local variables.
+	 * -The voltage & puts who spiked into a buffer as well as the new most recent spike times
+	 * -The estimated firing rate
+	 * -The threshold
+	 * -Calculates the excitatory and inhibitory scale factors
+     * -Updates preferred firing rates
+     * -Calculates new f+ and f- values for new preferred firing rates
+	 * @param spkBuffer
+	 * @param time
+	 * @param dt
+	 */
+	public void performFullUpdate(BoolArray spkBuffer, double[] pfrDts, final double time, final double dt) {
+	    update(dt, time, spkBuffer);
+	    updateEstFR(dt);
+	    updateThreshold(dt);
+	    calcScaleFacs();
+		if (mhpOn) {
+		    for(int ii=0; ii<N; ++ii) {
+		        prefFR[ii] += dt*eta/inDegree[ii] * pfrDts[ii];
+            }
+			MHPFunctions.calcfTerm(prefFR, fVals, default_alpha, default_beta, default_lowFR);
+		}
+
+    }
+
 	/**
 	 * Updates the equations governing the neurons' memberane potentials
 	 * and adaptations and determines which neurons calcSpikeResponses on the next time-step
@@ -166,10 +197,9 @@ public class MANANeurons implements Neuron {
 	 * @param dt
 	 * @param time
 	 * @param spkBuffer
-	 * @param lastSpkTimeBuffer
 	 */
 	@Override
-	public void update(double dt, double time, boolean[] spkBuffer, double[] lastSpkTimeBuffer) {
+	public void update(double dt, double time, BoolArray spkBuffer) {
 		for(int ii=0; ii<N; ++ii) {
 			dv_m[ii] += i_e[ii];
 			i_e[ii] -= dt*i_e[ii]/SynType.ExcTau;
@@ -197,7 +227,7 @@ public class MANANeurons implements Neuron {
 		}
 		
 		for(int ii=0; ii<N; ++ii) {
-			if(time > (ref_p.get(ii) + lastSpkTime[ii])) {
+			if(time > (ref_p.get(ii) + lastSpkTime.getData(ii))) {
 				v_m[ii] += dv_m[ii];
 				if (Double.isNaN(v_m[ii])) {
 					System.out.println(" NaN v");
@@ -208,15 +238,17 @@ public class MANANeurons implements Neuron {
 		for(int ii=0; ii<N; ++ii) {
 			adapt[ii] -= dt*adapt[ii]/tau_w.get(ii);
 		}
+
 		for(int ii=0; ii<N; ++ii) {
-			if(v_m[ii] >= thresh[ii]) {
-				spkBuffer[ii] = true;
-				lastSpkTimeBuffer[ii] = time;
+			spkBuffer.set(ii, v_m[ii] >= thresh[ii]);
+		}
+
+		for(int ii=0; ii<N; ++ii) {
+			if(spkBuffer.get(ii)) {
+				lastSpkTime.setBuffer(ii, time);
 				v_m[ii] = v_reset.get(ii);
 				adapt[ii] += 1;
 				ef[ii] += 1;
-			} else {
-				spkBuffer[ii] = false;
 			}
 		}
 	}
@@ -225,21 +257,16 @@ public class MANANeurons implements Neuron {
 	 * Updates the estimated firing rate of the neurons placing the new
 	 * values in a buffer
 	 * @param dt
-	 * @param estFRBuffer
 	 */
-	public void updateEstFR(double dt, double[] estFRBuffer) {
-		
+	public void updateEstFR(double dt) {
 		for(int ii=0; ii<N; ++ii) {
 			double tauA = 10000 / Math.sqrt(prefFR[ii]);
 			ef[ii] -= dt * ef[ii]/tauA;
-			if(spks[ii]) {
-				ef[ii] +=1;
-			}
 			if (Double.isNaN(ef[ii])) {
 				System.out.println("nan");
 			}
 			dummy[ii] += dt * (ef[ii]/tauA - dummy[ii]);
-			estFRBuffer[ii] = dummy[ii] * 1000;//estFR[ii] + (dt *(1000*ef[ii] - estFR[ii]));
+			estFR.setBuffer(ii,(float) (dummy[ii] * 1000));//estFR[ii] + (dt *(1000*ef[ii] - estFR[ii]));
 		}
 	}
 	
@@ -250,7 +277,7 @@ public class MANANeurons implements Neuron {
 	 */
 	public void updateThreshold(double dt) {
 		for(int ii=0; ii<N; ++ii) {
-			thresh[ii] += dt * lambda * Math.log((estFR[ii]+0.0001)/(prefFR[ii]+0.0001));
+			thresh[ii] += dt * lambda * Math.log((estFR.getData(ii)+0.0001)/(prefFR[ii]+0.0001));
 			if (Double.isNaN(thresh[ii])) {
 				System.out.println("NaN th");
 				break;
@@ -258,7 +285,54 @@ public class MANANeurons implements Neuron {
 			threshRA[ii] += thresh[ii] * lambda + threshRA[ii]*(1-lambda);
 		}
 	}
-	
+
+	public void calcScaleFacs() {
+	    for(int ii=0; ii<N; ++ii) {
+	        exc_sf[ii] = Math.exp((threshRA[ii] - thresh[ii])/default_exc_SF_tau);
+        }
+        for(int ii=0; ii<N; ++ii) {
+            inh_sf[ii] = Math.exp((thresh[ii] - threshRA[ii])/default_inh_SF_tau);
+        }
+    }
+
+    /**
+     * For all total excitatory sums that haven't been set by normalization, checks if they
+     * have exceeded or are equal to what the normalization value should be. Returns whether or
+     * not all neurons have been set.
+     * @param sums
+     * @return
+     */
+    public boolean checkExcSums(double[] sums) {
+		boolean allUp = true;
+		for(int ii=0; ii<N; ++ii) {
+		    if(!excSNon.get(ii)) {
+		        boolean decision = sums[ii] > normValsExc[ii];
+		        excSNon.set(ii, decision);
+		        allUp &= decision;
+            }
+		}
+		return allUp;
+	}
+
+    /**
+     * For all total inhibitory sums that haven't been set by normalization, checks if they
+     * have exceeded or are equal to what the normalization value should be. Returns whether or
+     * not all neurons have been set.
+     * @param sums
+     * @return
+     */
+    public boolean checkInhSums(double[] sums) {
+        boolean allUp = true;
+        for(int ii=0; ii<N; ++ii) {
+            if(!inhSNon.get(ii)) {
+                boolean decision = sums[ii] > normValsInh[ii];
+                inhSNon.set(ii, decision);
+                allUp &= decision;
+            }
+        }
+        return allUp;
+    }
+
 	/**
 	 * 
 	 * @param index
@@ -279,7 +353,7 @@ public class MANANeurons implements Neuron {
 	}
 	
 	@Override
-	public boolean[] getSpikes() {
+	public BoolArray getSpikes() {
 		return spks;
 	}
 	

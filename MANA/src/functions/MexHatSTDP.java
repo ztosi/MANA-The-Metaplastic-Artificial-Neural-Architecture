@@ -2,6 +2,7 @@ package functions;
 
 import base_components.Matrices.SynMatDataAddOn;
 import base_components.Matrices.SynapseMatrix;
+import utils.BufferedDoubleArray;
 import utils.Utils;
 
 public final class MexHatSTDP implements  STDP {
@@ -46,10 +47,10 @@ public final class MexHatSTDP implements  STDP {
 
     // data pack is {arrTime, rel tar ind, udfMultiplier}
 
-    public void preTriggered(SynapseMatrix wts, int[] dataPack, double[] lastSpkTimes, double dt) {
+    public void preTriggered(SynapseMatrix wts, int[] dataPack, BufferedDoubleArray lastSpkTimes, double dt) {
         wts.getRawData()[dataPack[1] * wts.getInc()+1] = mexicanHatWindow(sigSq, nrmTerm,
                 wPlus, wMinus,
-                (dataPack[0]*dt) - lastSpkTimes[dataPack[3]], lRate);
+                (dataPack[0]*dt) - lastSpkTimes.getData(dataPack[3]), lRate);
     }
 
     public static double mexicanHatWindow(double sigmaSq, double normTerm, double wplus,

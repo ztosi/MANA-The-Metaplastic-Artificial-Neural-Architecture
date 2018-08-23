@@ -2,6 +2,7 @@ package functions;
 
 import base_components.Matrices.SynapseMatrix;
 import base_components.Matrices.SynMatDataAddOn;
+import utils.BufferedDoubleArray;
 
 public interface STDP {
 
@@ -11,5 +12,5 @@ public interface STDP {
 
     // data pack is {arrTime, rel tar ind, udfMultiplier}
 
-    void preTriggered(SynapseMatrix wts, int[] dataPack, double[] lastSpkTimes, double dt);
+    void preTriggered(SynapseMatrix wts, int[] dataPack, BufferedDoubleArray lastSpkTimes, double dt);
 }

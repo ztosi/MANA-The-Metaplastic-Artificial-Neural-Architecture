@@ -2,6 +2,7 @@ package functions;
 
 import base_components.Matrices.SynMatDataAddOn;
 import base_components.Matrices.SynapseMatrix;
+import utils.BufferedDoubleArray;
 
 public final class HebSTDP implements STDP {
 
@@ -27,6 +28,7 @@ public final class HebSTDP implements STDP {
         this.tauMinus = tauMinus;
     }
 
+    @Override
     public void postTriggered(SynapseMatrix wts, SynMatDataAddOn lastArrs, int neuNo, double time) {
         int start = wts.getStartIndex(neuNo);
         int laLoc = wts.getStartIndex(neuNo, lastArrs.getInc());
@@ -43,9 +45,10 @@ public final class HebSTDP implements STDP {
 
     // data pack is {arrTime, rel tar ind, udfMultiplier, abs tar ind}
 
-    public void preTriggered(SynapseMatrix wts, int[] dataPack, double[] lastSpkTimes, double dt) {
+    @Override
+    public void preTriggered(SynapseMatrix wts, int[] dataPack, BufferedDoubleArray lastSpkTimes, double dt) {
         wts.getRawData()[dataPack[1]*wts.getInc()+1] = -lRate * wMinus
-                * Math.exp((lastSpkTimes[dataPack[3]]-(double)dataPack[0]*dt)/tauMinus);
+                * Math.exp((lastSpkTimes.getData(dataPack[3])-(double)dataPack[0]*dt)/tauMinus);
     }
 
 

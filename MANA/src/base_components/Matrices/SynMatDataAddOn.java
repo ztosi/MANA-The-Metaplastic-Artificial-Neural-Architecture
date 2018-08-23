@@ -67,6 +67,19 @@ public class SynMatDataAddOn {
     public int getInc() {
         return nilFac;
     }
+
+    /**
+     * adds up the values along the major ordering and accumulates them in the array argument
+     * @param su
+     * @param offset
+     */
+    public void accumSums(final double [] su, int offset) {
+        for(int ii = 0, n=su.length; ii<n; ++ii) {
+            for(int jj=getStartIndex(ii); jj<getEndIndex(ii); ++jj) {
+                su[ii] += values[jj*nilFac+offset];
+            }
+        }
+    }
 //
 //    public int getOffsetMajor() {
 //        return coordMat.offsetMajor;

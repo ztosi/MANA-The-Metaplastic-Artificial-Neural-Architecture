@@ -5,6 +5,7 @@ import base_components.enums.ConnectRule;
 import base_components.enums.Ordering;
 import base_components.enums.SynType;
 import functions.STDP;
+import utils.BufferedDoubleArray;
 import utils.SrcTarDataPack;
 import utils.SrcTarPair;
 import utils.Utils;
@@ -184,11 +185,12 @@ public class MANAMatrix {
     /**
      * Based on their arrival times, adds event data (what is necessary
      * to know when and where a spike will arrive and how much of a contribution it'll make). Performs
-     * this for all local outgoing synapses from a given neuron.
-     * @param noSrc
-     * @param time
-     * @param dt
-     * @param eventQ
+     * this for all local outgoing synapses from a given neuron. This function directly populates
+     * the event queue and therefor performs all the necessary event encoding.
+     * @param noSrc index of the source neuron
+     * @param time simulation clock
+     * @param dt integration time step
+     * @param eventQ the node-local synaptic event queue
      */
     public void addEvents(int noSrc, double time, double dt, PriorityQueue<int []> eventQ) {
         int start = outDataSOrd.getStartIndex(noSrc);
@@ -218,7 +220,7 @@ public class MANAMatrix {
      * Processes synaptic events that is, queued spikes which have an arrival time, destination,
      * and which contribute a specific current value. Perform STDP and add the PSP to an array
      * meant to contain the local total incoming currents to each target neuron.
-     * @param eventQ the event queue of calcSpikeResponses events to be processed, events are stored as integer arrays
+     * @param eventQ the node-local event queue of calcSpikeResponses events to be processed, events are stored as integer arrays
      *               {arrivalTime/dt, absolute index,
      *               post synaptic response (float encoded in int bits), target number}
      * @param incCur the local incoming total currents to each target neuron
@@ -228,7 +230,7 @@ public class MANAMatrix {
      * @param dt simulation delta t
      */
     public void processEventsSTDP(PriorityQueue<int[]> eventQ, double[] incCur, STDP stdpRule,
-                                  double[] lastSpkTimes, double time, double dt) {
+                                  BufferedDoubleArray lastSpkTimes, double time, double dt) {
         while(eventQ.peek()[0]*dt <= time) {
             int[] event = eventQ.poll();
             incCur[event[3]] += weightsTOrd.getRawOrdIndices()[event[1]]
@@ -238,6 +240,18 @@ public class MANAMatrix {
         }
     }
 
+    /**
+     * Processes synapse events i.e. looks in the event queue for all events that arrive (or should have arrived)
+     * at this time (given the time of the last pre-synaptic spike and the delay of the synapse)
+     * and removed them from the event queue. Each event is then processed: meaning that the
+     * appropriate amount of current (the current from the event is stored in the queue) is deposited
+     * on the appropriate target neuron.
+     *
+     * @param eventQ the node local queue containing all synaptic events.
+     * @param incCur the incoming currents to each of the neurons (local to a node) where each synapse's contribution is stored
+     * @param time current simulation clock
+     * @param dt integration time step
+     */
     public void processEvents(PriorityQueue<int[]> eventQ, double[] incCur, double time, double dt) {
         while(eventQ.peek()[0]*dt <= time) {
             int[] event = eventQ.poll();
@@ -247,8 +261,22 @@ public class MANAMatrix {
         }
     }
 
-    public void normWts(double[] normVals) {
+    public void inDegrees(final int[] inD) {
+        for(int ii=0; ii<noTar; ++ii) {
+            inD[ii] += weightsTOrd.getRawPtrs()[ii+1] - weightsTOrd.getRawPtrs()[ii];
+        }
+    }
+
+//    public void normWts(double[] normVals) {
+//        weightsTOrd.mulFromArray(normVals, 0);
+//    }
+
+    public void scaleWts(double[] normVals) {
         weightsTOrd.mulFromArray(normVals, 0);
+    }
+
+    public void rightDivWts(double [] div) {
+        weightsTOrd.divFromArray(div, 0);
     }
 
     public void scaleWeights(int noTar, double scale) {
@@ -263,7 +291,7 @@ public class MANAMatrix {
         weightsTOrd.addDw2W();
     }
 
-    public double[] getWeightSums(double[] localWtSums) {
+    public double[] calcAndGetSums(double[] localWtSums) {
         weightsTOrd.sumIncoming(localWtSums, 0);
         return localWtSums;
     }

@@ -8,9 +8,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import base_components.InputNeurons;
-import nodes.MANA_Node;
-import nodes.MANA_Sector;
-import nodes.MANA_Unit;
+import nodes.*;
 import utils.Syncable;
 
 public class MANA_Executor {
@@ -36,10 +34,10 @@ public class MANA_Executor {
 	
 	public void addUnit(MANA_Unit unit) {
 		syncTasks.add(new InputSyncTask(unit.externalInp));
-		for(MANA_Sector s : unit.sectors) {
+		for(MANA_Sector2 s : unit.sectors) {
 			syncTasks.add(new SectorSyncTask(s));
 		}
-		for(MANA_Node n : unit.nodes) {
+		for(MANA_Node2 n : unit.nodes) {
 			updateTasks.add(new UpdateTask(n));
 		}
 	}
@@ -61,15 +59,15 @@ public class MANA_Executor {
 	
 	public class SectorSyncTask implements Callable<Syncable>{
 
-		public final MANA_Sector sector;
+		public final MANA_Sector2 sector;
 		
-		public SectorSyncTask(final MANA_Sector _sector) {
+		public SectorSyncTask(final MANA_Sector2 _sector) {
 			this.sector = _sector;
 		}
 
 		@Override
-		public MANA_Sector call() throws Exception {
-			sector.synchronize(time);
+		public MANA_Sector2 call() throws Exception {
+			sector.synchronize();
 			System.out.println(time + " " +  ct.incrementAndGet());
 			return sector;
 		}
@@ -86,22 +84,22 @@ public class MANA_Executor {
 		
 		@Override
 		public InputNeurons call() throws Exception {
-			inp.update(dt, time, inp.spks, inp.lastSpkTime);
+			inp.update(dt, time, inp.spks);
 			return inp;
 		}
 		
 	}
 	
-	public class UpdateTask implements Callable<MANA_Node> {
+	public class UpdateTask implements Callable<MANA_Node2> {
 
-		public final MANA_Node node;
+		public final MANA_Node2 node;
 		
-		public UpdateTask(final MANA_Node _node) {
+		public UpdateTask(final MANA_Node2 _node) {
 			this.node = _node;
 		}
 		
 		@Override
-		public MANA_Node call() throws Exception {
+		public MANA_Node2 call() throws Exception {
 			node.update(time, dt);
 			return node;
 		}

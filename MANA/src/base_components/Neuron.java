@@ -1,12 +1,15 @@
 package base_components;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
+import utils.BoolArray;
+
 public interface Neuron {
 
-	boolean[] getSpikes();
+	BoolArray getSpikes();
 	
 	int[] getOutDegree();
 	
-	void update(double dt, double time, boolean[] spkBuffer, double[] lastSpkTimeBuffer);
+	void update(double dt, double time, BoolArray spkBuffer);
 	
 	int getSize();
 	

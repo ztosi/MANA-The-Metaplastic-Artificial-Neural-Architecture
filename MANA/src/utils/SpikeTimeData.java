@@ -1,6 +1,7 @@
 package utils;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -18,6 +19,8 @@ public class SpikeTimeData {
 	public final double loadFac;
 	public final int initCap;
 	public final int size;
+	private double lastFlush = 0;
+	public final List<BoolArray> buffer = new ArrayList<>();
 	
 	public SpikeTimeData(final int n) { // all default values...
 		size = n;
@@ -28,9 +31,9 @@ public class SpikeTimeData {
 		initSpkTimes();
 	}
 
-	public void update(boolean[] spks, final double time) {
+	public void update(BoolArray spks, final double time) {
 		for(int ii=0; ii<size;++ii) {
-			if(spks[ii]) { // if the neuron spiked record the time at which it did...
+			if(spks.get(ii)) { // if the neuron spiked record the time at which it did...
 				if(ptrs[ii] > spkTimes[ii].length * loadFac) { // If we're running out of space to hold calcSpikeResponses times, make more...
 					double[] newTimes = new double[spkTimes[ii].length*2];
 					System.arraycopy(spkTimes[ii], 0, newTimes, 0, spkTimes[ii].length);
@@ -42,6 +45,45 @@ public class SpikeTimeData {
 			}
 			
 		}
+	}
+
+	public void pushSpks(BoolArray spks) {
+		buffer.add(new BoolArray(spks));
+	}
+
+	public void flush(String filename, String name, double time, double dt)
+			throws IOException {
+
+		MLCell asdf = new MLCell(name, new int[]{size+2, 1});
+		asdf.set(new MLDouble("", new double[]{(double)size},1), size+1); // meta-data 1: # of neurons
+		asdf.set(new MLDouble("", new double[]{time, dt}, 1), size+2); // meta-data 2: time and time-bin
+
+		List<ArrayList<Double>> temp = new ArrayList<>();
+		for(int jj=0; jj<size; ++jj) {
+			temp.add(new ArrayList<>());
+		}
+		for(int ii=0, n = buffer.size(); ii < n; ++ii) {
+			for(int jj=0; jj<size; ++jj) {
+				if(buffer.get(ii).get(ii)) {
+					temp.get(jj).add(lastFlush + ii*dt);
+				}
+			}
+		}
+		for(int ii=0; ii<size; ++ii) {
+			asdf.set(new MLDouble("", listDouble2DoubleArr(temp.get(ii)), 1), ii);
+		}
+		new MatFileWriter(filename, Collections.singleton(asdf)); // write to file...
+
+		lastFlush = time;
+		buffer.clear();
+	}
+
+	private double[] listDouble2DoubleArr(List<Double> list) {
+		double [] ret = new double[list.size()];
+		for(int ii=0, n = list.size(); ii < n; ++ii) {
+			ret[ii] = list.get(ii).doubleValue();
+		}
+		return ret;
 	}
 
 	private final void initSpkTimes() {
