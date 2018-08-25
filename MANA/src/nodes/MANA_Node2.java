@@ -94,7 +94,7 @@ public class MANA_Node2 {
 
     private STDP stdpRule;
 
-    private boolean allMHPOff = true;
+    private boolean structureChanged = false;
 
     private PriorityQueue<int[]> evtQueue = new PriorityQueue<>((int[] a, int[] b) -> { // Sort by arrival time then absolute target index
         if(a[0] < b[0]) {
@@ -169,6 +169,7 @@ public class MANA_Node2 {
                 lambda, SynType.getConProbBase(srcData.isExcitatory(),
                         targData.isExcitatory()), maxDist, time);
         pfrLoc = new SynMatDataAddOn(synMatrix.getWeightsTOrd(), 1);
+        structureChanged = true;
     }
 
 
@@ -264,6 +265,14 @@ public class MANA_Node2 {
         int [] inD = new int[width];
         synMatrix.inDegrees(inD);
         return inD;
+    }
+
+    public boolean getStructureChanged() {
+        return  structureChanged;
+    }
+
+    public void structureChangedOff() {
+        structureChanged = false;
     }
 
     public void accumInDegrees(final int [] inDs) {

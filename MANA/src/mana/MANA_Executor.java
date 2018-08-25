@@ -17,12 +17,17 @@ public class MANA_Executor {
 	
 	private double time = 0;
 	private double dt = DEF_DT;
+    private double pruneInterval;
+    public boolean pruneOn = true;
 
-	private final ExecutorService pool;
-	
-	List<UpdateTask> updateTasks = new ArrayList<UpdateTask>();
-	List<Callable<Syncable>> syncTasks = new ArrayList<Callable<Syncable>>();
-	
+	private List<UpdateTask> updateTasks = new ArrayList<>();
+	private List<Callable<Syncable>> syncTasks = new ArrayList<>();
+	private List<PruneTask> pruneTasks = new ArrayList<>();
+
+    AtomicInteger ct = new AtomicInteger(0);
+
+    private final ExecutorService pool;
+
 	public MANA_Executor() {
 		pool = Executors.newFixedThreadPool(8); //Runtime.getRuntime().availableProcessors());
 	}
@@ -32,7 +37,7 @@ public class MANA_Executor {
 		this.dt = _dt;
 	}
 	
-	public void addUnit(MANA_Unit unit) {
+	public void addUnit(MANA_Unit2 unit) {
 		syncTasks.add(new InputSyncTask(unit.externalInp));
 		for(MANA_Sector2 s : unit.sectors) {
 			syncTasks.add(new SectorSyncTask(s));
@@ -42,7 +47,7 @@ public class MANA_Executor {
 		}
 	}
 
-	AtomicInteger ct = new AtomicInteger(0);
+
 	/**
 	 * Updates all nodes given to it to update and synchonizes all inputs and
 	 * reservoir neurons associated with those nodes. Currently does ONLY this,
@@ -51,12 +56,15 @@ public class MANA_Executor {
 	 * @throws InterruptedException
 	 */
 	public void invoke() throws InterruptedException {
+	    if(time > 0 && time %  pruneInterval == 0 && pruneOn) {
+	        pool.invokeAll(pruneTasks);
+        }
 		pool.invokeAll(updateTasks);
 		pool.invokeAll(syncTasks);
 		time += dt;
 		ct.set(0);
 	}
-	
+
 	public class SectorSyncTask implements Callable<Syncable>{
 
 		public final MANA_Sector2 sector;
@@ -88,6 +96,26 @@ public class MANA_Executor {
 			return inp;
 		}
 		
+	}
+
+	public class PruneTask implements Callable<MANA_Node2> {
+	    public final MANA_Node2 node;
+	    public final int maxInD, maxOutD;
+	    public final double lambda, maxDist;
+
+	    public PruneTask(final  MANA_Node2 node, int maxInD, int maxOutD, double lambda, double maxDist) {
+	        this.node = node;
+	        this.maxInD = maxInD;
+	        this.maxOutD = maxOutD;
+	        this.lambda = lambda;
+	        this.maxDist = maxDist;
+	    }
+
+	    @Override
+        public  MANA_Node2 call() throws Exception {
+            node.structuralPlasticity(maxInD, maxOutD, lambda, maxDist, time);
+            return node;
+        }
 	}
 	
 	public class UpdateTask implements Callable<MANA_Node2> {

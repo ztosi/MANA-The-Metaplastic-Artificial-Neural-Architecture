@@ -260,6 +260,26 @@ public class SynapseMatrix {
         }
     }
 
+    public double getMax(int offset) {
+        double max = Double.MIN_VALUE;
+        for(int ii=offset; ii<values.length; ii+=nILFac) {
+            if(values[ii] > max) {
+                max = values[ii];
+            }
+        }
+        return max;
+    }
+
+    public double getMin(int offset) {
+        double min = Double.MAX_VALUE;
+        for(int ii=offset; ii<values.length; ii+=nILFac) {
+            if(values[ii] < min) {
+                min = values[ii];
+            }
+        }
+        return min;
+    }
+
     /**
      * This returns the array of actual values--edits to the returned array will
      * alter values in the synapse matrix accordingly

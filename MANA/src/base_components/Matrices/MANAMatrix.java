@@ -296,6 +296,10 @@ public class MANAMatrix {
         return localWtSums;
     }
 
+    public double getMaxWeight() {
+        return weightsTOrd.getMax(0);
+    }
+
     //public List<SrcTarDataPack> getTuples(Ordering )
 
 

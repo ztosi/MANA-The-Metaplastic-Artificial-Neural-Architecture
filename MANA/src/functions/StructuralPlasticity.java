@@ -36,6 +36,7 @@ public class StructuralPlasticity {
         int[] inDegs = tar.getProperInDegrees(src);
         int maxAdd = (int) (tar.N * MAX_ADD_RATIO) + 1;
         int [] noAdded = new int[src.getSize()];
+        double mx = mat.getMaxWeight();
         for(int ii=0; ii<src.getSize(); ++ii) { // TODO it makes more sense for this to be in the opposite order and iterated that way
             for(int jj=0; jj<tar.getSize(); ++jj) {
                 if(rec && ii==jj) {
@@ -46,7 +47,7 @@ public class StructuralPlasticity {
                     if (datum.coo.src == ii && datum.coo.tar == jj) {
                         if (pruneDecision(src.getOutDegree()[ii],
                                 noOutP, inDegs[jj],
-                                noInP, datum.values[0])) {
+                                noInP, datum.values[0], mx)) {
                             dataIter.remove();
                         }
                         continue;
@@ -85,8 +86,8 @@ public class StructuralPlasticity {
 
     public static boolean pruneDecision(int srcOutDegree,
                                         int outPoss, int tarInDegree,
-                                        int inPoss, double wVal) {
-        if(wVal > SynapseData.MAX_WEIGHT * DEF_Thresh) {
+                                        int inPoss, double wVal, double maxWt) {
+        if(wVal > maxWt * DEF_Thresh) {
             return false;
         } else if (wVal < SynapseData.MIN_WEIGHT) {
             return true;

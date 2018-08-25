@@ -42,15 +42,15 @@ public class MANA_Sector2 implements Syncable {
 
 
 
-    public final MANA_Unit parent;
+    public final MANA_Unit2 parent;
 
 
-    public static MANA_Sector2 buildEmptySector(MANANeurons target, MANA_Unit parent) {
+    public static MANA_Sector2 buildEmptySector(MANANeurons target, MANA_Unit2 parent) {
         MANA_Sector2 sec = new MANA_Sector2(target, parent);
         return sec;
     }
 
-    private MANA_Sector2(MANANeurons target, MANA_Unit parent) {
+    private MANA_Sector2(MANANeurons target, MANA_Unit2 parent) {
         this.target = target;
         this.parent = parent;
         countDown = new AtomicInteger(0);
@@ -69,7 +69,7 @@ public class MANA_Sector2 implements Syncable {
      * @param src
      * @param specs
      */
-    public MANA_Node2 add(MANANeurons src, ConnectSpecs specs) {
+    public MANA_Node2 add(Neuron src, ConnectSpecs specs) {
         MANA_Node2 newEntry = MANA_Node2.buildNodeAndConnections(
                 this, src, target, specs, DampFunction.DEF_DAMPENER,
                 SynType.getDefaultSTDP(src.isExcitatory(), target.isExcitatory()),
@@ -85,7 +85,7 @@ public class MANA_Sector2 implements Syncable {
      * @param src
      * @param specs
      */
-    public MANA_Node2 add(MANANeurons src, ConnectSpecs specs, DampFunction damp, STDP rule) {
+    public MANA_Node2 add(Neuron src, ConnectSpecs specs, DampFunction damp, STDP rule) {
         MANA_Node2 newEntry = MANA_Node2.buildNodeAndConnections(
                 this, src, target, specs,damp, rule,
                 !parent.targets.contains(src));
@@ -105,12 +105,29 @@ public class MANA_Sector2 implements Syncable {
 
     public void update(final double time, final double dt) {
 
-        // Determine incoming currents
+        // Determine incoming currents & check for structural changes
+        boolean structChanged = false;
         for(MANA_Node2 node : childNodes.values()) {
+            structChanged |= node.getStructureChanged();
             if (node.srcData.isExcitatory()) {
                 node.addAndClearLocCurrent(target.i_e);
             } else {
                 node.addAndClearLocCurrent(target.i_i);
+            }
+        }
+
+        if(structChanged) {
+            Arrays.fill(target.excInDegree, 0);
+            Arrays.fill(target.inhInDegree, 0);
+            for(MANA_Node2 node : childNodes.values()) {
+                if(node.srcData.isExcitatory()) {
+                    node.accumInDegrees(target.excInDegree);
+                } else {
+                    node.accumInDegrees(target.inhInDegree);
+                }
+            }
+            for(int ii=0; ii<target.N; ++ii) {
+                target.inDegree[ii] = target.excInDegree[ii] + target.inDegree[ii];
             }
         }
 

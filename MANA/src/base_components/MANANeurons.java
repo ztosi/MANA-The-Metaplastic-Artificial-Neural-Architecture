@@ -101,7 +101,14 @@ public class MANANeurons implements Neuron {
 	/* Misc. Important */
 	public final int N;
 	public final boolean exc;
-	
+
+	public static MANANeurons buildFromLimits(int _N, boolean _exc, double[] xlims, double[] ylims, double[] zlims) {
+	        double[] xCoors = Utils.getRandomArray(Utils.ProbDistType.UNIFORM, xlims[0], xlims[1], _N);
+	        double[] yCoors = Utils.getRandomArray(Utils.ProbDistType.UNIFORM, ylims[0], ylims[1], _N);
+	        double[] zCoors = Utils.getRandomArray(Utils.ProbDistType.UNIFORM, zlims[0], zlims[1], _N);
+	        return new MANANeurons(_N, _exc, xCoors, yCoors, zCoors);
+	}
+
 	/**
 	 * Creates MANA neurons of the specified polarity with default parameters.
 	 * @param _N size of group
