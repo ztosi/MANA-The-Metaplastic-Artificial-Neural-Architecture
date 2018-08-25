@@ -95,9 +95,9 @@ public class MANANeurons implements Neuron {
 	public int[] inhInDegree;
 	public int[] outDegree;
 	public long[] fVals;
-	
+    public boolean allExcSNon = false;
+    public boolean allInhSNon = false;
 	public double [][] xyzCoors;
-	
 	/* Misc. Important */
 	public final int N;
 	public final boolean exc;
@@ -180,14 +180,115 @@ public class MANANeurons implements Neuron {
 	    update(dt, time, spkBuffer);
 	    updateEstFR(dt);
 	    updateThreshold(dt);
+        descaleNormVals();
 	    calcScaleFacs();
-		if (mhpOn) {
+		if (mhpOn && !(allExcSNon && allInhSNon)) {
 		    for(int ii=0; ii<N; ++ii) {
 		        prefFR[ii] += dt*eta/inDegree[ii] * pfrDts[ii];
             }
 			MHPFunctions.calcfTerm(prefFR, fVals, default_alpha, default_beta, default_lowFR);
 		}
+		calcNewNorms();
+		scaleNormVals();
+    }
 
+    /**
+     * For triggered normVals, de scales them so that the new scaling can be applied.
+     */
+    private void descaleNormVals() {
+	    if(!allExcSNon) {
+            for (int ii = 0; ii < N; ++ii) {
+                if (excSNon.get(ii)) {
+                    normValsExc[ii] /= exc_sf[ii];
+                }
+            }
+        } else  {
+            for (int ii = 0; ii < N; ++ii) {
+                normValsExc[ii] /= exc_sf[ii];
+            }
+        }
+        if(!allInhSNon) {
+            for (int ii = 0; ii < N; ++ii) {
+                if (inhSNon.get(ii)) {
+                    normValsInh[ii] /= inh_sf[ii];
+                }
+            }
+        } else {
+            for (int ii = 0; ii < N; ++ii) {
+                normValsInh[ii] /= inh_sf[ii];
+            }
+        }
+    }
+
+    private void scaleNormVals() {
+        for(int ii=0; ii<N; ++ii){
+            normValsInh[ii] *= inh_sf[ii];
+        }
+        for(int ii=0; ii<N; ++ii){
+            normValsExc[ii] *= exc_sf[ii];
+        }
+
+    }
+
+    /**
+     * Checks to see if synaptic sums have exceeded their scaled norm vals. If they all have
+     * sets allExcSNon and/or allInhSNon to true.
+     * @param excSums
+     * @param inhSums
+     */
+    public void updateTriggers(double[] excSums, double[] inhSums) {
+        if(!allExcSNon) {
+            boolean allOn = true;
+            for(int ii=0; ii<N; ++ii) {
+                excSNon.set(ii, excSums[ii] >= normValsExc[ii] && !excSNon.get(ii));
+                allOn &= excSNon.get(ii);
+            }
+            allExcSNon = allOn;
+        }
+        if(!allInhSNon) {
+            boolean allOn = true;
+            for(int ii=0; ii<N; ++ii) {
+                inhSNon.set(ii, inhSums[ii] >= normValsInh[ii] && !inhSNon.get(ii));
+                allOn &= inhSNon.get(ii);
+            }
+            allInhSNon = allOn;
+        }
+    }
+
+    /**
+     * Calculates new normalization values based on pref. firing rate for all non-triggered neurons for
+     * both types...
+     */
+    private void calcNewNorms() {
+	    if(!allInhSNon && !allExcSNon) {
+	        if(allExcSNon && !allInhSNon) {
+	            for(int ii=0; ii<N; ++ii) {
+	                if(!inhSNon.get(ii)) {
+	                    normValsInh[ii] = newNormVal(ii);
+                    }
+                }
+            } else if(allInhSNon && !allExcSNon) {
+                for(int ii=0; ii<N; ++ii) {
+                    if(!excSNon.get(ii)) {
+                        normValsExc[ii] = newNormVal(ii);
+                    }
+                }
+            } else {
+                for(int ii=0; ii<N; ++ii) {
+                    if(!excSNon.get(ii) || !inhSNon.get(ii)) {
+                        double nnV = newNormVal(ii);
+                        if(!excSNon.get(ii)) {
+                            normValsExc[ii] = nnV;
+                        }
+                        if(!inhSNon.get(ii)) {
+                            normValsInh[ii] = nnV;
+                        }
+                    }
+                }
+            }
+        } else {
+	        return;
+        }
     }
 
 	/**
@@ -351,6 +452,10 @@ public class MANANeurons implements Neuron {
 			return inhInDegree;
 		}
 	}
+
+	public boolean getAllNrmOn(boolean exc) {
+	    return exc ? allExcSNon : allInhSNon;
+    }
 	
 	@Override
 	public BoolArray getSpikes() {

@@ -40,8 +40,7 @@ public class MANA_Sector2 implements Syncable {
                 }
             });
 
-    public boolean allExcSNon = false;
-    public boolean allInhSNon = false;
+
 
     public final MANA_Unit parent;
 
@@ -59,6 +58,7 @@ public class MANA_Sector2 implements Syncable {
         secInhSums = new double[target.N];
         spkBuffer = new BoolArray(target.N);
         pfrAccum = new double[target.N];
+        spkDat = new SpikeTimeData(target.N);
     }
 
 
@@ -127,14 +127,20 @@ public class MANA_Sector2 implements Syncable {
             }
         }
 
-        if (target.mhpOn) {
+        // Check whose incoming synaptic currents have exceeded their norm values and
+        // turn on normalization for them
+        target.updateTriggers(secExcSums, secInhSums);
+
+        if (target.mhpOn && !(target.allExcSNon && target.allInhSNon)) {
             for (MANA_Node2 node : childNodes.values()) {
                node.accumulatePFRSums(pfrAccum);
             }
         }
 
         target.performFullUpdate(spkBuffer, pfrAccum, time, dt);
-        Arrays.fill(pfrAccum, 0);
+        spkDat.pushSpks(target.spks); // record spiking data
+        if(!(target.allExcSNon && target.allInhSNon))
+            Arrays.fill(pfrAccum, 0);
 
     }
 

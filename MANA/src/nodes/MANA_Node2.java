@@ -94,7 +94,6 @@ public class MANA_Node2 {
 
     private STDP stdpRule;
 
-    private boolean allNrmOn = false;
     private boolean allMHPOff = true;
 
     private PriorityQueue<int[]> evtQueue = new PriorityQueue<>((int[] a, int[] b) -> { // Sort by arrival time then absolute target index
@@ -196,10 +195,8 @@ public class MANA_Node2 {
 
             // Synaptic normalization & scaling
             if(normalizationOn) {
-                if (!allNrmOn) {
-                    allNrmOn = true;
+                if (!targData.getAllNrmOn(srcData.isExcitatory())) {
                     for (int ii = 0; ii < width; ++ii) {
-                        allNrmOn &= normFlags.get(ii);
                         if (normFlags.get(ii)) {
                             synMatrix.scaleWeights(ii, normVals[ii]/sectorSums[ii]);
                         }
@@ -235,17 +232,25 @@ public class MANA_Node2 {
             synMatrix.calcAndGetSums(localSums);
         }
 
-        if(!inputIsExternal && targData.mhpOn) {
+        if(!inputIsExternal && targData.mhpOn && !(targData.allInhSNon && targData.allExcSNon)) {
             for(int ii=0; ii<width; ++ii) {
-                MHPFunctions.mhpStage0(targData.estFR, targData.prefFR, ((MANANeurons)srcData).estFR, ii, pfrLoc);
+                if(!(targData.excSNon.get(ii) && targData.inhSNon.get(ii))) {
+                    MHPFunctions.mhpStage0(targData.estFR, targData.prefFR, ((MANANeurons) srcData).estFR, ii, pfrLoc);
+                    MHPFunctions.mhpStage1(ii, pfrLoc);
+                    MHPFunctions.mhpStage2(ii, MHPFunctions.getFp(targData.fVals[ii]),
+                            MHPFunctions.getFm(targData.fVals[ii]), pfrLoc);
+                }
+
             }
-            for(int ii=0; ii<width; ++ii) {
-                MHPFunctions.mhpStage1(ii, pfrLoc);
-            }
-            for(int ii=0; ii<width; ++ii) {
-                MHPFunctions.mhpStage2(ii, MHPFunctions.getFp(targData.fVals[ii]),
-                        MHPFunctions.getFm(targData.fVals[ii]), pfrLoc);
-            }
+//            for(int ii=0; ii<width; ++ii) {
+//                if(!(targData.excSNon.get(ii) && targData.inhSNon.get(ii)))
+//                    MHPFunctions.mhpStage1(ii, pfrLoc);
+//            }
+//            for(int ii=0; ii<width; ++ii) {
+//                if(!(targData.excSNon.get(ii) && targData.inhSNon.get(ii)))
+//                    MHPFunctions.mhpStage2(ii, MHPFunctions.getFp(targData.fVals[ii]),
+//                            MHPFunctions.getFm(targData.fVals[ii]), pfrLoc);
+//            }
         }
 
         // Last thread working on a node in the sector has to update the sector...

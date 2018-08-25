@@ -57,7 +57,15 @@ public class SpikeTimeData {
 		MLCell asdf = new MLCell(name, new int[]{size+2, 1});
 		asdf.set(new MLDouble("", new double[]{(double)size},1), size+1); // meta-data 1: # of neurons
 		asdf.set(new MLDouble("", new double[]{time, dt}, 1), size+2); // meta-data 2: time and time-bin
+		List<ArrayList<Double>> temp = flushToASDFFormat(time, dt);
+		for(int ii=0; ii<size; ++ii) {
+			asdf.set(new MLDouble("", listDouble2DoubleArr(temp.get(ii)), 1), ii);
+		}
+		new MatFileWriter(filename, Collections.singleton(asdf)); // write to file...
 
+	}
+
+	public List<ArrayList<Double>> flushToASDFFormat(double time, double dt) {
 		List<ArrayList<Double>> temp = new ArrayList<>();
 		for(int jj=0; jj<size; ++jj) {
 			temp.add(new ArrayList<>());
@@ -69,13 +77,9 @@ public class SpikeTimeData {
 				}
 			}
 		}
-		for(int ii=0; ii<size; ++ii) {
-			asdf.set(new MLDouble("", listDouble2DoubleArr(temp.get(ii)), 1), ii);
-		}
-		new MatFileWriter(filename, Collections.singleton(asdf)); // write to file...
-
 		lastFlush = time;
 		buffer.clear();
+		return temp;
 	}
 
 	private double[] listDouble2DoubleArr(List<Double> list) {
