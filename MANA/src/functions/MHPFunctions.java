@@ -3,7 +3,7 @@ package functions;
 import java.util.concurrent.ThreadLocalRandom;
 
 import base_components.MANANeurons;
-import base_components.Matrices.SynMatDataAddOn;
+import base_components.Matrices.InterleavedSparseAddOn;
 import utils.BufferedFloatArray;
 import utils.Utils;
 
@@ -11,7 +11,7 @@ public class MHPFunctions {
 
 
 	public static void mhpStage0(final BufferedFloatArray efrsTar, final double[] pfrsTar,
-								 final BufferedFloatArray efrsSrc, int tarNo, SynMatDataAddOn pfrLoc) {
+								 final BufferedFloatArray efrsSrc, int tarNo, InterleavedSparseAddOn pfrLoc) {
 		int start = pfrLoc.getStartIndex(tarNo);
 		int end = pfrLoc.getEndIndex(tarNo);
 		int[] orderInds = pfrLoc.getRawOrdIndices();
@@ -28,7 +28,7 @@ public class MHPFunctions {
      * @param tarNo
      * @param pfrLoc
      */
-	public static void mhpStage1(int tarNo, SynMatDataAddOn pfrLoc) {
+	public static void mhpStage1(int tarNo, InterleavedSparseAddOn pfrLoc) {
 		int start = pfrLoc.getStartIndex(tarNo);
 		int end = pfrLoc.getEndIndex(tarNo);
 		for(int ii = start; ii<end; ii+=pfrLoc.getInc()) {
@@ -36,7 +36,7 @@ public class MHPFunctions {
 		}
 	}
 
-	public static void mhpStage2(int tarNo, double f_p, double f_m, SynMatDataAddOn pfrLoc) {
+	public static void mhpStage2(int tarNo, double f_p, double f_m, InterleavedSparseAddOn pfrLoc) {
 		int start = pfrLoc.getStartIndex(tarNo);
 		int end = pfrLoc.getEndIndex(tarNo);
 		for(int ii=start; ii<end; ii+=pfrLoc.getInc()) {

@@ -136,8 +136,8 @@ public class STDPFunctions {
     }
 
 //    public static void postTriggeredHebSTDP(
-//            SynapseMatrix wtMat,
-//            SynMatDataAddOn lastArrs,
+//            InterleavedSparseMatrix wtMat,
+//            InterleavedSparseAddOn lastArrs,
 //            final int neuNo,
 //            double time,
 //            final double tau,

@@ -1,311 +1,206 @@
 package nodes;
 
-import java.util.Arrays;
+import base_components.MANANeurons;
+import base_components.Neuron;
+import base_components.enums.DampFunction;
+import base_components.enums.SynType;
+import functions.STDP;
+import utils.*;
+
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import base_components.MANANeurons;
-import base_components.enums.SynType;
-import functions.MHPFunctions;
-import functions.STDPFunctions;
-import utils.SpikeTimeData;
-import utils.Syncable;
-import utils.Utils;
-
 /**
- * 
- * @author z
+ * A mana sector consists of a set of target MANA neurons and all the MANA nodes connecting that target to a source.
+ * It is responsible for updating the target neurons as well as applying any operations requiring knowledge of
+ * ALL incoming connections and/or source neurons that cannot be performed at the node-level. This includes things
+ * like synaptic normalization. A sector update can only occur once all child node updates have completed and a sector
+ * synchronize can only occur when all sectors have completed their updates. A sector synchronize consists of pushing
+ * all values in buffers to their respective main locations. That is, all data in the target neurons which other
+ * nodes/sectors might still be using.
  *
+ * @author Zoë Tosi
  */
 public class MANA_Sector implements Syncable {
 
-	public final int numNodes;
-	public final int width;
-	public double [] secExcSums;
-	public double [] secInhSums;
-	public boolean [] snExcOn;
-	public boolean [] snInhOn;
-	public double [] pfrLTDAccum;
-	public double [] pfrLTPAccum;
-	public double [] lastSpkTimeBuffer;
-	public double [] estFRBuffer;
-	public boolean [] spkBuffer;
+    public double [] secExcSums;
+    public double [] secInhSums;
+    public BoolArray snExcOn;
+    public BoolArray snInhOn;
+    public double [] pfrAccum;
+    public BoolArray spkBuffer;
+    public final String id;
 
-	public SpikeTimeData spkDat;
+    public boolean synPlasticityOn = true;
 
-	public final AtomicInteger countDown;
+    public SpikeTimeData spkDat;
 
-	public MANA_Node[] childNodes;
-	public final MANANeurons target;
+    public final AtomicInteger countDown;
 
-	public boolean allExcSNon = false;
-	public boolean allInhSNon = false;
+    public final MANANeurons target;
 
-	public final MANA_Unit parent;
+    public final Map<Neuron, MANA_Node> childNodes = new TreeMap<Neuron, MANA_Node>(
+            (Neuron a, Neuron b) -> {
+                if (a.getID() < b.getID()) {
+                    return  -1;
+                } else if (a.getID() > b.getID()) {
+                    return 1;
+                } else {
+                    throw new IllegalStateException("Either multiple neuron groups have been assigned " +
+                            "the same ID or you are trying to add a " +
+                            "source neuron group which already exists here.");
+                }
+            });
 
-	/**
-	 * 
-	 * @param children
-	 * @param target
-	 * @return
-	 */
-	public static MANA_Sector sector_builder(final MANA_Node[] children,
-			final MANANeurons target, final MANA_Unit _parent) {
-		MANA_Sector sector = new MANA_Sector(children, target, _parent);
-		for(int ii=0; ii<children.length; ++ii) {
-			children[ii].parent_sector = sector;
-			children[ii].sector_index = ii;
-			for(int jj=0; jj<sector.width; ++jj) {
-				if(children[ii].isExcitatory()) {
-					sector.target.excInDegree[jj] += children[ii].weights[jj].length;
-				} else {
-					sector.target.inhInDegree[jj] += children[ii].weights[jj].length;
-				}
-				children[ii].calcLocalOutDegs();
-			}
-			children[ii].accumLocalOutDegs(children[ii].srcData.getOutDegree());
-		}
-		return sector;
-	}
 
-	/**
-	 * 
-	 * @param children
-	 * @param _target
-	 */
-	private MANA_Sector(final MANA_Node [] children, final MANANeurons _target, final MANA_Unit _parent) {
-		target = _target;
-		numNodes = children.length;
-		countDown = new AtomicInteger(numNodes);
-		childNodes = children;
-		width = children[0].width;
-		spkDat = new SpikeTimeData(_target.getSize());
-		parent = _parent;
-		pfrLTDAccum = new double[width];
-		pfrLTPAccum = new double[width];
-		secExcSums = new double[width];
-		secInhSums = new double[width];
-		snInhOn = new boolean[width];
-		spkBuffer = new boolean[width];
-		snExcOn = new boolean[width];
-		estFRBuffer = new double[width];
-		lastSpkTimeBuffer = new double[width];
-		
-		
-	}
 
-	public boolean[] getNormStatus(SynType type) {
-		if(type == SynType.EE || type == SynType.EI) {
-			return snExcOn;
-		} else {
-			return snInhOn;
-		}
-	}
+    public final MANA_Unit parent;
 
-	/**
-	 * 
-	 */
-	public void updateInDegrees() {
-		if(parent.synPlasticOn) {
-			Arrays.fill(target.excInDegree, 0);
-			Arrays.fill(target.inhInDegree, 0);
-			for(MANA_Node node : childNodes) {
-				int[] inDegs = node.type.isExcitatory() ? target.excInDegree : target.inhInDegree;
-				for(int ii=0; ii<width; ++ii) {
-					inDegs[ii] += node.localInDegrees[ii];
-				}
-			}
-			for(int ii=0; ii<width; ++ii) {
-				target.inDegree[ii] = target.excInDegree[ii] + target.inhInDegree[ii];
-			}
-		}
-	}
 
-	/**
-	 * Before the next iteration the target neurons this sector is responsible
-	 * for must update these values, however during update they must remain
-	 * in buffers since other MANA nodes require the data for this group
-	 * of neurons from the previous time-step. Must be called before
-	 * the next iteration, but after all sectors have finished updating.
-	 */
-	public void synchronize(final double time) {
-		boolean[] holder = target.spks;
-		// shallow copy over 
-		target.spks = spkBuffer;
-		// switch the addresses of the arrays, so a new one
-		// does not have to be instantiated.
-		spkBuffer = holder;
+    public static MANA_Sector buildEmptySector(MANANeurons target, MANA_Unit parent) {
+        MANA_Sector sec = new MANA_Sector(target, parent);
+        return sec;
+    }
 
-		spkDat.update(target.spks, time); // record calcSpikeResponses times...
+    private MANA_Sector(MANANeurons target, MANA_Unit parent) {
+        this.target = target;
+        this.parent = parent;
+        countDown = new AtomicInteger(0);
+        secExcSums = new double[target.N];
+        secInhSums = new double[target.N];
+        spkBuffer = new BoolArray(target.N);
+        pfrAccum = new double[target.N];
+        spkDat = new SpikeTimeData(target.N);
+        id = "s"+target.id;
+    }
 
-		// ditto
-		double[] doubleHolder = target.estFR;
-		target.estFR = estFRBuffer;
-		estFRBuffer = doubleHolder;
 
-		// deep copy required, since the values here are not updated *every* iteration.
-		System.arraycopy(lastSpkTimeBuffer, 0, target.lastSpkTime, 0, width);
+    /**
+     * Adds a source neuron group and automatically constructs a MANA Node connecting
+     * that group to the target of the sector using connection specifications supplied by
+     * the caller
+     * @param src
+     * @param specs
+     */
+    public MANA_Node add(Neuron src, ConnectSpecs specs) {
+        MANA_Node newEntry = MANA_Node.buildNodeAndConnections(
+                this, src, target, specs, DampFunction.DEF_DAMPENER,
+                SynType.getDefaultSTDP(src.isExcitatory(), target.isExcitatory()),
+                !parent.targets.contains(src));
+        childNodes.put(src, newEntry);
+        return  newEntry;
+    }
 
-		if(parent.hpOn) {
-			STDPFunctions.newNormScaleFactors(target.exc_sf, target.thresh, target.threshRA, 5, true);
-			STDPFunctions.newNormScaleFactors(target.inh_sf, target.thresh, target.threshRA, 5, true);
-		}
+    /**
+     * Adds a source neuron group and automatically constructs a MANA Node connecting
+     * that group to the target of the sector using connection specifications supplied by
+     * the caller
+     * @param src
+     * @param specs
+     */
+    public MANA_Node add(Neuron src, ConnectSpecs specs, DampFunction damp, STDP rule) {
+        MANA_Node newEntry = MANA_Node.buildNodeAndConnections(
+                this, src, target, specs,damp, rule,
+                !parent.targets.contains(src));
+        childNodes.put(src, newEntry);
+        return  newEntry;
+    }
 
-	}
+    public void add(MANA_Node node) {
+        if(node.targData != target) {
+            throw new IllegalArgumentException("Cannot add a pre-built node to a sector that" +
+                    " does not have the same target neurons.");
+        }
+        childNodes.put(node.srcData, node);
+    }
 
-	/**
-	 * 
-	 * @param time
-	 * @param dt
-	 */
-	public void updateNoSync(final double time, final double dt) {
-		try {
-		gatherChildData(time, dt);
-		updateTargetNeurons(dt, time);
-		countDown.set(numNodes);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
 
-	/**
-	 * After all child nodes have been updated, gather information from
-	 * them that is, gather from them the synaptic currents that arrived from
-	 * their pre-synaptic neurons, the sum of their new weights, and so on.
-	 * @param time
-	 * @param dt
-	 */
-	public void gatherChildData(final double time, final double dt) {
 
-		if(parent.synPlasticOn) {
-			Arrays.fill(secExcSums, 0);
-			Arrays.fill(secInhSums, 0);
+    public void update(final double time, final double dt) {
 
-			// Update normalization pools
-			for(int ii=0; ii < childNodes.length; ++ii) {
-				if (childNodes[ii].type.isExcitatory()) {
-					for (int jj = 0; jj < width; ++jj) {
-						secExcSums[jj] += childNodes[ii].localSums[jj];
-					}
-				} else {
-					for (int jj = 0; jj < width; ++jj) {
-						secInhSums[jj] += childNodes[ii].localSums[jj];
-					}
+        // Determine incoming currents & check for structural changes
+        boolean structChanged = false;
+        for(MANA_Node node : childNodes.values()) {
+            structChanged |= node.getStructureChanged();
+            node.structureChangedOff();
+            if (node.srcData.isExcitatory()) {
+                node.addAndClearLocCurrent(target.i_e);
+            } else {
+                node.addAndClearLocCurrent(target.i_i);
+            }
+        }
 
-				}
-			}
-		}
+        // If the structure changed recalculate relevant values like in-degree, etc.
+        if(structChanged) {
+            Arrays.fill(target.excInDegree, 0);
+            Arrays.fill(target.inhInDegree, 0);
+            for(MANA_Node node : childNodes.values()) {
+                if(node.srcData.isExcitatory()) {
+                    node.accumInDegrees(target.excInDegree);
+                } else {
+                    node.accumInDegrees(target.inhInDegree);
+                }
+            }
+            for(int ii=0; ii<target.N; ++ii) {
+                target.inDegree[ii] = target.excInDegree[ii] + target.inDegree[ii];
+            }
+        }
 
-		// Synchronize incoming exc/inh currents
-		for(int ii=0; ii<numNodes; ++ii) {
-			int ptr = childNodes[ii].getEvtPtr();
-			if(ptr > 0) {
-				int[] evtInds = childNodes[ii].evtInds;
-				double[] evtCurrs = childNodes[ii].evtCurrents;
-				if (childNodes[ii].type.isExcitatory()) {
-					for (int jj = 0; jj<ptr ; ++jj) {
-						target.i_e[evtInds[jj]] += evtCurrs[jj];
-					}
-				} else {
-					for (int jj = 0; jj < ptr; ++jj) {
-						target.i_i[evtInds[jj]] += evtCurrs[jj];			
-					}
-				}
-				childNodes[ii].clearEvtCurrents();
-			}
-		}
+        // Sum over the weights
+        if(synPlasticityOn) {
+            Arrays.fill(secExcSums, 0);
+            Arrays.fill(secInhSums, 0);
+            for (MANA_Node node : childNodes.values()) {
+                if (node.srcData.isExcitatory()) {
+                    node.accumulateLocalWtSums(secExcSums);
+                } else {
+                    node.accumulateLocalWtSums(secInhSums);
+                }
+            }
+        }
 
-		if(parent.mhpOn) {
-			// Add up pfr change contributions from member nodes
-			Arrays.fill(pfrLTDAccum, 0);
-			Arrays.fill(pfrLTPAccum, 0);
-			for(int ii=0; ii<numNodes; ++ii) {
-				for(int jj=0; jj < width; ++jj) {
-					pfrLTDAccum[jj] += childNodes[ii].localPFRDep[jj];
-					pfrLTPAccum[jj] += childNodes[ii].localPFRPot[jj];
-				}
-			}
-		}
+        // Check whose incoming synaptic currents have exceeded their norm values and
+        // turn on normalization for them
+        target.updateTriggers(secExcSums, secInhSums);
 
-	}
+        if (target.mhpOn && !(target.allExcSNon && target.allInhSNon)) {
+            for (MANA_Node node : childNodes.values()) {
+               node.accumulatePFRSums(pfrAccum);
+            }
+        }
 
-	/**
-	 * Updates information about the target neurons based on what was calculated
-	 * from the synapses by the child nodes. Should be called after all child nodes
-	 * updates have been executed but before synchronization. Does not update any
-	 * values which are/must be visible to downstream neurons and thus can be
-	 * called asynchronously.
-	 * 
-	 * MUST GATHER CHILD NODE DATA FIRST!!!
-	 * @param dt
-	 * @param time
-	 */
-	public void updateTargetNeurons(double dt, double time) {
+        target.performFullUpdate(spkBuffer, pfrAccum, time, dt);
+        spkDat.pushSpks(target.spks); // record spiking data
+        if(!(target.allExcSNon && target.allInhSNon))
+            Arrays.fill(pfrAccum, 0);
 
-		// Figure out voltages and who spikes for the next time-step
-		// and put the new calcSpikeResponses times in buffers (no one needs voltage
-		// information non-locally during updates).
-		target.update(dt, time, spkBuffer, lastSpkTimeBuffer);
+    }
 
-		// Figure out the estimated firing rates for next time-step
-		// and put them in a buffer
-		target.updateEstFR(dt, estFRBuffer);
+    public void recountInDegrees() {
+        int[] excInDs = new int[target.N];
+        int[] inhInDs = new int[target.N];
 
-		if(parent.mhpOn) {
-			// Figure out new target firing rates using the difference function
-			// between pre- and post- synaptic estimated firing rates as calculated
-			// in each node and accumulated by the sector
-			// MUST CALL gatherChildData(...) first!!!
-			MHPFunctions.metaHPStage2(pfrLTDAccum, pfrLTPAccum,
-					target, target.eta, dt);
-		}
+        for(MANA_Node node : childNodes.values()) {
+            if(node.srcData.isExcitatory()) {
+                node.accumInDegrees(excInDs);
+            } else {
+                node.accumInDegrees(inhInDs);
+            }
+        }
+        for(int ii=0; ii<target.N; ++ii) {
+            target.inDegree[ii] = excInDs[ii] + inhInDs[ii];
+        }
+    }
 
-		if (parent.hpOn) {
-			// Homeostatic plasticity...
-			target.updateThreshold(dt);
-		}
+    public void synchronize() {
+        target.spks.copyInto(spkBuffer);
+        target.estFR.pushBufferShallow();
+        target.lastSpkTime.pushBufferDeep();
+        countDown.set(childNodes.size());
+    }
 
-		if (parent.mhpOn)
-			target.eta += dt * MANANeurons.mhp_decay
-			* (MANANeurons.final_tau_MHP - target.eta);
-		if(parent.hpOn)
-			target.lambda += dt * MANANeurons.hp_decay 
-			* (MANANeurons.final_tau_HP - target.lambda);
-
-		// Check if excitatory synaptic totals for each neuron have exceeded their
-		// norm values for this first time, and turn on synaptic normalization for
-		// each neuron for which that is true
-		if(!allExcSNon) {
-			allExcSNon = target.excSNon[0];
-			for(int ii=1; ii<width; ++ii) {
-				allExcSNon &= target.excSNon[ii];
-				if(!target.excSNon[ii]) {
-					target.normValsExc[ii] = target.sat_a
-							/(1+Math.exp(-target.sat_b*target.prefFR[ii]))
-							///(1+Utils.expLT0Approx(-target.sat_b*target.prefFR[ii]))
-							+ target.sat_c[ii];
-					if(secExcSums[ii] >= target.normValsExc[ii]*target.exc_sf[ii]) {
-						target.excSNon[ii] = true;
-					}
-
-				}
-			}
-		}
-		if(!allInhSNon) {
-			allInhSNon = target.inhSNon[0];
-			for(int ii=1; ii<width; ++ii) {
-				allInhSNon &= target.inhSNon[ii];
-				if(!target.inhSNon[ii]) {
-					target.normValsInh[ii] = target.sat_a
-							/(1+Math.exp(-target.sat_b*target.prefFR[ii]))
-							///(1+Utils.expLT0Approx(-target.sat_b*target.prefFR[ii]))
-							+ target.sat_c[ii];
-					if(secInhSums[ii] >= target.normValsInh[ii]*target.inh_sf[ii]) {
-						target.inhSNon[ii] = true;
-					}
-
-				}
-			}
-		}
-	}
+    public int getWidth() {
+        return target.N;
+    }
 
 }

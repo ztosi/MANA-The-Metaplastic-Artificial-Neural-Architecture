@@ -17,12 +17,12 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class MANAMatrix {
 
-    protected SynapseMatrix weightsTOrd;
+    protected InterleavedSparseMatrix weightsTOrd;
 
-    protected SynapseMatrix outDataSOrd;
+    protected InterleavedSparseMatrix outDataSOrd;
 
     /** An addon set of values containing more target ordered data. */
-    protected SynMatDataAddOn tOrdLastArrivals;
+    protected InterleavedSparseAddOn tOrdLastArrivals;
 
     /**
      * A Map from source to target, specifically if you lookup the values when
@@ -61,11 +61,11 @@ public class MANAMatrix {
         this.tar = tar;
         type = SynType.getSynType(src.isExcitatory(), tar.isExcitatory());
         int [] targRange = {0, cooMat.tarILF};
-        weightsTOrd = new SynapseMatrix(cooMat.data, targRange, noTar, noSrc,
+        weightsTOrd = new InterleavedSparseMatrix(cooMat.data, targRange, noTar, noSrc,
                 //offsetTar, offsetSrc,
                 Ordering.TARGET);
-        tOrdLastArrivals = new SynMatDataAddOn(weightsTOrd, 1);
-       // pfrBuffers = new SynMatDataAddOn(weightsTOrd, 1);
+        tOrdLastArrivals = new InterleavedSparseAddOn(weightsTOrd, 1);
+       // pfrBuffers = new InterleavedSparseAddOn(weightsTOrd, 1);
         int cnt=0;
         for(SrcTarDataPack tup : cooMat.data) {
             tOrdLastArrivals.values[cnt] = tup.values[tup.values.length-2];
@@ -75,7 +75,7 @@ public class MANAMatrix {
         int [] srcRange = {cooMat.tarILF, cooMat.tarILF+cooMat.srcILF};
         // This will source order sort cooMat.data!
         // So now the target ordered linear indices will be in source order...
-        outDataSOrd = new SynapseMatrix(cooMat.data, srcRange, noSrc, noTar,
+        outDataSOrd = new InterleavedSparseMatrix(cooMat.data, srcRange, noSrc, noTar,
                 //offsetSrc, offsetTar,
                 Ordering.SOURCE);
         srcToTargLookup = new int[cooMat.data.size()];
@@ -143,15 +143,15 @@ public class MANAMatrix {
         }
         int[] tRange = {0, 2};
         int[] sRange = {0, 7};
-        weightsTOrd = new SynapseMatrix(targCOOTup, tRange, src.getSize(), tar.N,
+        weightsTOrd = new InterleavedSparseMatrix(targCOOTup, tRange, src.getSize(), tar.N,
                 //offsetSrc, offsetTar,
                 Ordering.TARGET);
-        outDataSOrd = new SynapseMatrix(srcCOOTup, sRange, tar.N, src.getSize(),
+        outDataSOrd = new InterleavedSparseMatrix(srcCOOTup, sRange, tar.N, src.getSize(),
                 //offsetTar, offsetSrc,
                 Ordering.SOURCE);
         nnz = weightsTOrd.getNnz();
-        tOrdLastArrivals = new SynMatDataAddOn(weightsTOrd, 1);
-        //pfrBuffers = new SynMatDataAddOn(weightsTOrd, 1);
+        tOrdLastArrivals = new InterleavedSparseAddOn(weightsTOrd, 1);
+        //pfrBuffers = new InterleavedSparseAddOn(weightsTOrd, 1);
         assert(nnz == outDataSOrd.getNnz());
 
         srcToTargLookup = Utils.getSortKey(targCOOTup,
@@ -160,7 +160,7 @@ public class MANAMatrix {
 
 
         // Outbound values... delay, lastArr, U, D, F, u, R
-       // outDataSOrd = new SynapseMatrix()
+       // outDataSOrd = new InterleavedSparseMatrix()
 
     }
 
@@ -311,11 +311,11 @@ public class MANAMatrix {
 
     }
 
-    public SynapseMatrix getWeightsTOrd() {
+    public InterleavedSparseMatrix getWeightsTOrd() {
         return weightsTOrd;
     }
 
-    public SynMatDataAddOn gettOrdLastArrivals() {
+    public InterleavedSparseAddOn gettOrdLastArrivals() {
         return tOrdLastArrivals;
     }
 

@@ -12,9 +12,9 @@ import java.util.*;
  * which send/receive signals over them. Values can be interleaved in target-major ordering, but also allows for the
  * storage of different values in source major fashion, since optimal data continuity for different synapse operations is
  * different.
- * @author Zoe Tosi
+ * @author Zoë Tosi
  */
-public class SynapseMatrix {
+public class InterleavedSparseMatrix {
 
     private final Ordering ordering;
 
@@ -41,8 +41,8 @@ public class SynapseMatrix {
 //
     private int[] reverseDegrees;
 
-    public SynapseMatrix(List<SrcTarDataPack> tuples, int[] dataRange, int noMinor, int noMajor, //int offsetMajor, int offsetMinor,
-                         final Ordering ordering) {
+    public InterleavedSparseMatrix(List<SrcTarDataPack> tuples, int[] dataRange, int noMinor, int noMajor, //int offsetMajor, int offsetMinor,
+                                   final Ordering ordering) {
       //  this.offsetMajor = offsetMajor;
       //  this.offsetMinor = offsetMinor;
         this.ordering = ordering;
@@ -84,7 +84,7 @@ public class SynapseMatrix {
     }
 
     public double get(int tarInd, int srcInd, int start, int inc) {
-        checkInc(inc);
+        checkOffset(inc);
         if (ptrs[tarInd] == ptrs[tarInd+1])
             return 0;
         if (tarInd > noMajor)
@@ -130,7 +130,7 @@ public class SynapseMatrix {
     }
 
     public double getMajorSum(int noMajor, int offset) {
-        checkInc(offset);
+        checkOffset(offset);
         double su = 0;
         for(int ii=ptrs[noMajor]; ii < ptrs[noMajor+1]; ++ii) {
             su += values[ii*nILFac+offset];
@@ -180,7 +180,7 @@ public class SynapseMatrix {
     //public void
 
     public void scalarMult(double a, int start, int inc) {
-        checkInc(inc);
+        checkOffset(inc);
         for(int ii = 0; ii< noMajor +1; ++ii) {
             for(int jj = ptrs[ii]+start, n = nILFac* ptrs[ii+1]; jj<n; jj+=inc) {
                 values[jj] *= a;
@@ -189,7 +189,7 @@ public class SynapseMatrix {
     }
 
     public void scaleMajor(int majorInd, double scale, int offset) {
-        checkInc(offset);
+        checkOffset(offset);
         for(int ii=ptrs[majorInd]; ii<ptrs[majorInd+1]; ++ii) {
             values[ii*nILFac+offset] *= scale;
 
@@ -236,10 +236,10 @@ public class SynapseMatrix {
 
     /**
      * Checks that the increment makes sense considering the number of interleaved values in values
-     * @param inc
+     * @param offset
      */
-    private void checkInc(int inc) {
-        if (inc > nILFac) {
+    private void checkOffset(int offset) {
+        if (offset >= nILFac) {
             throw new IllegalArgumentException("Increment is larger than number of interleaved values");
         }
     }
@@ -252,7 +252,7 @@ public class SynapseMatrix {
      * @param inc
      */
     public void scalarAdd(double a, int start, int inc) {
-        checkInc(inc);
+        checkOffset(inc);
         for(int ii = 0; ii< noMajor; ++ii) {
             for(int jj = ptrs[ii]+start, n = nILFac* ptrs[ii+1]; jj<n; jj+=inc) {
                 values[jj] += a;
@@ -319,6 +319,28 @@ public class SynapseMatrix {
         return cpy;
     }
 
+    public double [] getValues(int offset) {
+        checkOffset(offset);
+        double[] cpy = new double[nnz];
+        for(int ii=0; ii<nnz; ++ii) {
+            cpy[ii] = values[ii*nILFac + offset];
+        }
+        return cpy;
+    }
+
+    /**
+     * Returns the values at a given offset (if interleaved)
+     * @param vals
+     * @param absShift
+     * @param offset
+     */
+    public void getValues(double[] vals, int absShift, int offset) {
+        checkOffset(offset);
+        for(int ii=0; ii<nnz; ++ii) {
+            vals[ii+absShift] = values[ii*nILFac + offset];
+        }
+    }
+
     public int[] getMajorDegrees() {
         int[] degs = new int[noMajor];
         for(int ii=0; ii<noMajor; ++ii) {
@@ -337,6 +359,20 @@ public class SynapseMatrix {
         return cpy;
     }
 
+    public int[] getPtrsAsIndices() {
+        int[] inds = new int[nnz];
+        getPtrsAsIndices(inds, 0, 0);
+        return inds;
+    }
+
+    public void getPtrsAsIndices(int [] inds, int absShift, int relativeShift) {
+        for(int ii=0; ii<noMajor; ++ii) {
+            for(int jj=ptrs[ii]; jj<ptrs[ii+1]; ++jj) {
+                inds[jj+absShift] = ii + relativeShift;
+            }
+        }
+    }
+
     /**
      * Returns a copy of the minor order coordinates
      * @return
@@ -345,6 +381,13 @@ public class SynapseMatrix {
         int [] cpy = new int[ordIndices.length];
         System.arraycopy(ordIndices, 0, cpy, 0, ordIndices.length);
         return cpy;
+    }
+
+    public void getIndices(int [] inds, int absShift, int relativeShift) {
+        System.arraycopy(ordIndices, 0, inds, absShift, nnz);
+        for(int ii=absShift, n=absShift+nnz; ii<n; ++ii) {
+            inds[ii] += relativeShift;
+        }
     }
 
     public int getStartIndex(int neuronNo) {

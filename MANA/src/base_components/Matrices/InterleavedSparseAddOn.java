@@ -1,17 +1,22 @@
 package base_components.Matrices;
 
-import base_components.Matrices.SynapseMatrix;
+/**
+ * A class that represents a sparse set of values but uses the coordinates of a true InterleavedSparseMatrix, allows
+ * for some values to be not interleaved with the other in an InterleavedSparseMatrix without having to increase
+ * the memory overhead of copies of the ptr and index arrays.
+ *
+ * @author Zoë Tosi
+ */
+public class InterleavedSparseAddOn {
 
-public class SynMatDataAddOn {
-
-    public final SynapseMatrix coordMat;
+    public final InterleavedSparseMatrix coordMat;
 
     public double [] values;
 
     private final int nilFac;
 
 
-    public SynMatDataAddOn(final SynapseMatrix coordMat, final int nilFac) {
+    public InterleavedSparseAddOn(final InterleavedSparseMatrix coordMat, final int nilFac) {
         this.coordMat = coordMat;
         this.nilFac = nilFac;
         values = new double[coordMat.getNnz()/coordMat.nILFac * nilFac];

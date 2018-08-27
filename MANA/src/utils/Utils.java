@@ -238,6 +238,20 @@ public class Utils {
 	}
 
 
+	public static void addScalar(int [] arr, int scalar) {
+		for(int ii=0, n=arr.length; ii<n; ++ii) {
+			arr[ii] += scalar;
+		}
+	}
+
+	public static double[] intArr2Double(int[] src) {
+		double[] dest = new double[src.length];
+		for(int ii=0, n=src.length; ii<n; ++ii) {
+			dest[ii] = (int) src[ii];
+		}
+		return dest;
+	}
+
 	public static int checkSign(double value) {
 		return (int)(Double.doubleToLongBits(value) >>> 63);
 	}
