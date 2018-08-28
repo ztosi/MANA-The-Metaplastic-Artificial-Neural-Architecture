@@ -51,7 +51,7 @@ public class MANA_Executor {
 
 
 	/**
-	 * Updates all nodes given to it to update and synchonizes all inputs and
+	 * Updates all nodes given to it to update and synchronizes all inputs and
 	 * reservoir neurons associated with those nodes. Currently does ONLY this,
 	 * so the calling loop needs to things like schedule growth/pruning periods
 	 * or when to record things...

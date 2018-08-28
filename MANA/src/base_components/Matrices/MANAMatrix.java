@@ -115,7 +115,7 @@ public class MANAMatrix {
                     continue;
                 }
                 if (cRule == ConnectRule.Random) {
-                    if (ThreadLocalRandom.current().nextDouble() >= params[0]) {
+                    if (ThreadLocalRandom.current().nextDouble() >= params[0]) { // TODO: This isn't how this is used... do something _NOT_ dumb with prob dists...
 //                        System.out.print(".");
                         continue;
                     }

@@ -69,8 +69,8 @@ public class RunMANA {
         double maxDist = unit.getMaxDist();
         double lambda = maxDist/3;
         double time = 0.0;
-        int maxAdd = (int)(unit.getSize() * unit.getSize()
-                * SPFunctions.P_ADD_MIN);
+//        int maxAdd = (int)(unit.getSize() * unit.getSize()
+//                * SPFunctions.P_ADD_MIN);
         boolean tripped = false;
 		exec.addUnit(unit, unit.getFullSize(), unit.getSize(), lambda, maxDist); // tell them what unit they'll be working on
 
@@ -92,20 +92,12 @@ public class RunMANA {
 					unit.mhpOn = false;
 					unit.synPlasticOn = false;
 				}
-				// If the prune interval is reached, prune/grow...
-				if(time != 0 && iters% (int)((1/exec.getDt()) * SPFunctions.DEF_PG_INTERVAL) == 0) {
-					SPFunctions.pruneGrow(unit, SPFunctions.DEF_EXC_THRESH,
-							SPFunctions.DEF_INH_THRESH, SynapseData.MIN_WEIGHT,
-							lambda, SPFunctions.DEF_CON_CONST, maxAdd);
-					unit.printData(mainOut.toString(), prefix, time, MANA_Globals.dt);
-				}
-
 				if(time !=0 && time % printInterval == 0) {
 					unit.printData(mainOut.toString(), prefix, time, MANA_Globals.dt);
 				}
 				System.out.println(iters);
-				if(iters%1000 == 0) {
-					System.out.println("------------- " + (int)iters/1000 + "------------- " );
+				if(iters%(1000/MANA_Globals.dt) == 0) {
+					System.out.println("------------- " + time + "------------- " );
 					unit.printData(mainOut.toString(), prefix, time, MANA_Globals.dt);
 				}
 				

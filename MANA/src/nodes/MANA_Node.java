@@ -12,6 +12,7 @@ import functions.STDP;
 import functions.StructuralPlasticity;
 import utils.BoolArray;
 import utils.ConnectSpecs;
+import utils.Utils;
 
 import java.util.PriorityQueue;
 
@@ -276,6 +277,10 @@ public class MANA_Node {
         int [] inD = new int[width];
         synMatrix.inDegrees(inD);
         return inD;
+    }
+
+    public void randomizeWeights(Utils.ProbDistType pdist, double[] params) {
+        synMatrix.getWeightsTOrd().randomize(pdist, params, 0);
     }
 
     public boolean getStructureChanged() {

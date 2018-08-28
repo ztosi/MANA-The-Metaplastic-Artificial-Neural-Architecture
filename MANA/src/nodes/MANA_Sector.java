@@ -112,6 +112,7 @@ public class MANA_Sector implements Syncable {
                     " does not have the same target neurons.");
         }
         childNodes.put(node.srcData, node);
+        countDown.set(childNodes.size()-1);
     }
 
 

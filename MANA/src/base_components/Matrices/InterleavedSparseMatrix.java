@@ -3,6 +3,7 @@ package base_components.Matrices;
 import base_components.enums.Ordering;
 import utils.SMOperation;
 import utils.SrcTarDataPack;
+import utils.Utils;
 
 import java.io.PrintStream;
 import java.util.*;
@@ -13,6 +14,7 @@ import java.util.*;
  * storage of different values in source major fashion, since optimal data continuity for different synapse operations is
  * different.
  * @author Zoë Tosi
+ * TODO: Clean up legacy methods...
  */
 public class InterleavedSparseMatrix {
 
@@ -77,8 +79,6 @@ public class InterleavedSparseMatrix {
         }
 
     }
-    //TODO: Resolve issue of ptrs being not absolute
-
     public double get(int tarInd, int srcInd) {
         return get(tarInd, tarInd, 0, 1);
     }
@@ -101,7 +101,6 @@ public class InterleavedSparseMatrix {
         }
         return  0;
     }
-
     // TODO: Implement binary search for larger numbers of sources/targets
     public int sub2Ind(int tar, int src) {
         for(int ii = ptrs[tar], n = ptrs[tar]; ii<n; ++ii) {
@@ -145,6 +144,12 @@ public class InterleavedSparseMatrix {
     public void addDw2W() {
         for(int ii=0, n=nnz*nILFac; ii<n; ii+=nILFac) {
             values[ii] += values[ii+1];
+        }
+    }
+
+    public void randomize(Utils.ProbDistType pdist, double[] params, int offset) {
+        for(int ii = 0; ii<nnz; ++ii) {
+            values[ii*nILFac + offset] = pdist.getRandom(params[0], params[1]);
         }
     }
 

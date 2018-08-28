@@ -138,10 +138,10 @@ public class MANA_Unit {
 		// Populate the sectors with nodes
 		for(MANA_Sector tar : unit.sectors.values()) {
 			// First node in each sector is always the node containing connections from the input
-			tar.add(inp, new ConnectSpecs(ConnectRule.AllToAll,
-					new double[]{0}, unit.defMaxDist, SynapseData.MAX_DELAY));
+			MANA_Node inpN = tar.add(inp, new ConnectSpecs(ConnectRule.Random,
+					new double[]{0.25}, unit.defMaxDist, SynapseData.MAX_DELAY));
+            inpN.randomizeWeights(Utils.ProbDistType.LOGNORMAL, new double[]{3,1});
 			for(MANANeurons src : unit.targets) {
-
 				// Use default connection specs to connect mana nodes to each other (these are recurrent/reservoir synapses)
 				ConnectSpecs cSpecs = new ConnectSpecs(ConnectRule.Distance,
 						new double[]{SynType.getConProbBase(src.isExcitatory(), tar.target.isExcitatory())*4, unit.defMaxDist/3},
@@ -150,6 +150,10 @@ public class MANA_Unit {
 			}
 			unit.nodes.addAll(tar.childNodes.values());
 		}
+
+		System.out.println("Created MANA Unit with:    " + unit.fullSize
+                + " neurons (including inputs) connected by:     " + unit.getTotalNNZ()
+                + " synapses, contained in    " + unit.nodes.size() + " nodes");
 
 		return unit;
 	}
@@ -160,15 +164,20 @@ public class MANA_Unit {
 
 	}
 
+	public int getTotalNNZ() {
+        int nnzTotal = 0;
+        for(MANA_Node node : nodes) {
+            nnzTotal += node.getNNZ();
+        }
+        return nnzTotal;
+    }
+
     /**
      * Returns the weight matrix represented by the nodes of the collective source and target neurons
      * @return
      */
 	public WeightData getMatrix() {
-		int nnzTotal = 0;
-		for(MANA_Node node : nodes) {
-			nnzTotal += node.getNNZ();
-		}
+        int nnzTotal = getTotalNNZ();
 
 		WeightData wd = new WeightData(nnzTotal);
 
