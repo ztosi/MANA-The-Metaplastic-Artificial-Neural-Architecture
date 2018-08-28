@@ -1,6 +1,5 @@
 package base_components;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import utils.BoolArray;
 
 public interface Neuron {

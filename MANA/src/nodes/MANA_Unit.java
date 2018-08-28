@@ -296,6 +296,27 @@ public class MANA_Unit {
         return maxDist;
     }
 
+    public void setMhpOn(boolean mhpOn) {
+        this.mhpOn = mhpOn;
+        for(MANA_Sector sec : sectors.values()) {
+            sec.target.mhpOn = mhpOn;
+        }
+
+    }
+
+    public void setSynPlasticOn(boolean synPlasticOn) {
+        this.synPlasticOn = synPlasticOn;
+        for(MANA_Node node : nodes) {
+            node.synPlasticityOn = synPlasticOn;
+        }
+    }
+
+    public void setNormalizationOn(boolean normalizationOn) {
+        for(MANA_Node node : nodes) {
+            node.normalizationOn = normalizationOn;
+        }
+    }
+
     public int getNumAllExc() {
         return numAllExc;
     }
@@ -311,5 +332,7 @@ public class MANA_Unit {
     public int getFullSize() {
         return fullSize;
     }
+
+
 
 }

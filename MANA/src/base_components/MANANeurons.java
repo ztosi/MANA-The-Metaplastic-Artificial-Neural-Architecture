@@ -2,8 +2,6 @@ package base_components;
 
 import java.util.Arrays;
 
-import base_components.Matrices.MANAMatrix;
-
 import base_components.enums.SynType;
 import functions.MHPFunctions;
 import mana.MANA_Globals;
@@ -197,6 +195,8 @@ public class MANANeurons implements Neuron {
 		}
 		calcNewNorms();
 		scaleNormVals();
+        lambda += dt * (lambda-final_tau_HP) * hp_decay;
+        eta += dt  * (eta - final_tau_MHP) * mhp_decay;
     }
 
     /**
@@ -225,6 +225,7 @@ public class MANANeurons implements Neuron {
                 normValsInh[ii] /= inh_sf[ii];
             }
         }
+
     }
 
     private void scaleNormVals() {

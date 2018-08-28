@@ -11,7 +11,6 @@ import com.jmatio.types.MLArray;
 import com.jmatio.types.MLCell;
 import com.jmatio.types.MLDouble;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import mana.MANA_Globals;
 import utils.BoolArray;
 import utils.BufferedDoubleArray;

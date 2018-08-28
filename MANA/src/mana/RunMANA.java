@@ -2,8 +2,6 @@ package mana;
 
 import java.io.File;
 
-import base_components.SynapseData;
-import functions.SPFunctions;
 import nodes.MANA_Unit;
 
 public class RunMANA {
@@ -89,11 +87,9 @@ public class RunMANA {
 				if(time >= p_shutOff_f && !tripped) {
 					System.out.println("Turning off plasticity");
 					tripped = true;
-					unit.mhpOn = false;
-					unit.synPlasticOn = false;
-				}
-				if(time !=0 && time % printInterval == 0) {
-					unit.printData(mainOut.toString(), prefix, time, MANA_Globals.dt);
+					unit.setMhpOn(false);
+					unit.setNormalizationOn(false);
+					unit.setSynPlasticOn(false);
 				}
 				System.out.println(iters);
 				if(iters%(1000/MANA_Globals.dt) == 0) {

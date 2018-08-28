@@ -13,10 +13,8 @@ import utils.Syncable;
 
 public class MANA_Executor {
 	
-	public static final double DEF_DT = 0.5; //ms
-	
 	private double time = 0;
-	private double dt = DEF_DT;
+	private double dt = MANA_Globals.dt;
     private double pruneInterval;
     public boolean pruneOn = true;
 
@@ -58,7 +56,7 @@ public class MANA_Executor {
 	 * @throws InterruptedException
 	 */
 	public void invoke() throws InterruptedException {
-	    if(time > 0 && time %  pruneInterval == 0 && pruneOn) {
+	    if(time > 0 && (int)(time/dt) %  (int)(pruneInterval/dt) == 0 && pruneOn) {
 	        pool.invokeAll(pruneTasks);
         }
 		pool.invokeAll(updateTasks);
