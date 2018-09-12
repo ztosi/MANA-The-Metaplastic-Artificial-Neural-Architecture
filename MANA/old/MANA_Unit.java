@@ -1,4 +1,4 @@
-package nodes;
+package Java.org.network.mana.nodes;
 
 import java.io.File;
 import java.io.IOException;
@@ -8,22 +8,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
-import base_components.enums.SynType;
+import Java.org.network.mana.base_components.enums.SynType;
 import com.jmatio.io.MatFileWriter;
 import com.jmatio.types.MLArray;
 import com.jmatio.types.MLDouble;
 
-import base_components.InputNeurons;
-import base_components.MANANeurons;
-import base_components.Neuron;
-import base_components.SynapseData;
-import utils.SpikeTimeData;
-import utils.Utils;
+import Java.org.network.mana.base_components.InputNeurons;
+import Java.org.network.mana.base_components.MANANeurons;
+import Java.org.network.mana.base_components.Neuron;
+import Java.org.network.mana.base_components.SynapseData;
+import Java.org.network.mana.utils.SpikeTimeData;
+import Java.org.network.mana.utils.Utils;
 
 /**
  * 
  * TODO: Currently just a holder for related sectors... eventually this will
- * contain functions for managing multiple "local" sectors as well as interfacing
+ * contain Java.org.network.Java.org.network.mana.mana.functions for managing multiple "local" sectors as well as interfacing
  * with distant other units... can be thought of as roughly a cortical-column
  * equivalent sort of thing which also contains all incoming synaptic connections
  * (from anywhere) to that column. 
@@ -129,7 +129,7 @@ public class MANA_Unit {
 		}
 
 		for(int ii=0; ii<unit.noSecs; ++ii) {
-			// Holds the xyz coordinate copies from the "big array" of all xyz across all neurons in all nodes in the unit
+			// Holds the xyz coordinate copies from the "big array" of all xyz across all neurons in all Java.org.network.mana.nodes in the unit
 			double[] x = new double[secSize];
 			double[] y = new double[secSize];
 			double[] z = new double[secSize];

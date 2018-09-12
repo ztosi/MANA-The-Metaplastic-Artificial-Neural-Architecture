@@ -1,15 +1,15 @@
-package nodes;
+package Java.org.network.mana.nodes;
 
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import base_components.MANANeurons;
-import base_components.enums.SynType;
-import functions.MHPFunctions;
-import functions.STDPFunctions;
-import utils.SpikeTimeData;
-import utils.Syncable;
-import utils.Utils;
+import Java.org.network.mana.base_components.MANANeurons;
+import Java.org.network.mana.base_components.enums.SynType;
+import Java.org.network.mana.functions.MHPFunctions;
+import Java.org.network.mana.functions.STDPFunctions;
+import Java.org.network.mana.utils.SpikeTimeData;
+import Java.org.network.mana.utils.Syncable;
+import Java.org.network.mana.utils.Utils;
 
 /**
  * 
@@ -123,7 +123,7 @@ public class MANA_Sector implements Syncable {
 	/**
 	 * Before the next iteration the target neurons this sector is responsible
 	 * for must update these values, however during update they must remain
-	 * in buffers since other MANA nodes require the data for this group
+	 * in buffers since other MANA Java.org.network.mana.nodes require the data for this group
 	 * of neurons from the previous time-step. Must be called before
 	 * the next iteration, but after all sectors have finished updating.
 	 */
@@ -168,7 +168,7 @@ public class MANA_Sector implements Syncable {
 	}
 
 	/**
-	 * After all child nodes have been updated, gather information from
+	 * After all child Java.org.network.mana.nodes have been updated, gather information from
 	 * them that is, gather from them the synaptic currents that arrived from
 	 * their pre-synaptic neurons, the sum of their new weights, and so on.
 	 * @param time
@@ -215,7 +215,7 @@ public class MANA_Sector implements Syncable {
 		}
 
 		if(parent.mhpOn) {
-			// Add up pfr change contributions from member nodes
+			// Add up pfr change contributions from member Java.org.network.mana.nodes
 			Arrays.fill(pfrLTDAccum, 0);
 			Arrays.fill(pfrLTPAccum, 0);
 			for(int ii=0; ii<numNodes; ++ii) {
@@ -230,7 +230,7 @@ public class MANA_Sector implements Syncable {
 
 	/**
 	 * Updates information about the target neurons based on what was calculated
-	 * from the synapses by the child nodes. Should be called after all child nodes
+	 * from the synapses by the child Java.org.network.mana.nodes. Should be called after all child Java.org.network.mana.nodes
 	 * updates have been executed but before synchronization. Does not update any
 	 * values which are/must be visible to downstream neurons and thus can be
 	 * called asynchronously.

@@ -1,4 +1,4 @@
-package nodes;
+package Java.org.network.mana.nodes;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -10,20 +10,20 @@ import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
 
-import base_components.InputNeurons;
-import base_components.MANANeurons;
-import base_components.Neuron;
-import base_components.SynapseData;
-import base_components.enums.SynType;
-import functions.MHPFunctions;
-import functions.STDPFunctions;
+import Java.org.network.mana.base_components.InputNeurons;
+import Java.org.network.mana.base_components.MANANeurons;
+import Java.org.network.mana.base_components.Neuron;
+import Java.org.network.mana.base_components.SynapseData;
+import Java.org.network.mana.base_components.enums.SynType;
+import Java.org.network.mana.functions.MHPFunctions;
+import Java.org.network.mana.functions.STDPFunctions;
 
 public class MANA_Node {
 
 	/** The sector this node belongs to/is managed by. Must have the same target neurons. */
 	public MANA_Sector parent_sector;
 
-	/** Index among other nodes in the sector. */
+	/** Index among other Java.org.network.mana.nodes in the sector. */
 	public int sector_index;
 
 	/** 
@@ -43,7 +43,7 @@ public class MANA_Node {
 	/** 
 	 * True if and only if the neurons that are the source of
 	 *  the synapses covered by this node are not experimenter-driven
-	 * external input nodes (and therefore provide no contribution to
+	 * external input Java.org.network.mana.nodes (and therefore provide no contribution to
 	 *  meta-homeostatic plastcity)
 	 */
 	public final boolean inputIsExternal;
@@ -66,7 +66,7 @@ public class MANA_Node {
 	public final int width;
 	/** 
 	 * Height -> number of source neurons, can be different from width
-	 *  and even other nodes in the same sector
+	 *  and even other Java.org.network.mana.nodes in the same sector
 	 */
 	public final int height;
 
