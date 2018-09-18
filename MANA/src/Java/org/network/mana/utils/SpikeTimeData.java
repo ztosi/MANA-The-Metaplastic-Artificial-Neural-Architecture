@@ -72,7 +72,7 @@ public class SpikeTimeData {
 		}
 		for(int ii=0, n = buffer.size(); ii < n; ++ii) {
 			for(int jj=0; jj<size; ++jj) {
-				if(buffer.get(ii).get(ii)) {
+				if(buffer.get(ii).get(jj)) {
 					temp.get(jj).add(lastFlush + ii*dt);
 				}
 			}

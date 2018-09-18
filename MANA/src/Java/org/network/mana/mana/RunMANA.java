@@ -4,6 +4,8 @@ import java.io.File;
 
 import Java.org.network.mana.nodes.MANA_Unit;
 
+import static Java.org.network.mana.mana.MANA_Globals.dt;
+
 public class RunMANA {
 
 	public static final String DEF_ODIR = "."+File.separator+"Outputs" + File.separator;
@@ -71,7 +73,7 @@ public class RunMANA {
 //                * SPFunctions.P_ADD_MIN);
         boolean tripped = false;
 		exec.addUnit(unit, unit.getFullSize(), unit.getSize(), lambda, maxDist); // tell them what unit they'll be working on
-
+		unit.initialize(); // Set the various initial values that can only be set once weights/connectivity is known
 		File mainOut = new File(odir);
 		if (!mainOut.exists()) {
 			if (!mainOut.mkdir()) {
@@ -91,10 +93,12 @@ public class RunMANA {
 					unit.setSynPlasticOn(false);
 				}
 
-				System.out.println(iters);
-				if(iters%(1000/MANA_Globals.dt) == 0) {
+				if(iters%((int)(1/dt)) == 0) {
+                    System.out.println((int)(iters*dt));
+                }
+				if((iters+1)%(1000/ dt) == 0) {
 					System.out.println("------------- " + time + "------------- " );
-					unit.printData(mainOut.toString(), prefix, time, MANA_Globals.dt);
+					unit.printData(mainOut.toString(), prefix, time, dt);
 				}
 				exec.invoke();
 
@@ -104,7 +108,7 @@ public class RunMANA {
 		} catch (Exception ie) {
 			ie.printStackTrace();
 		} finally {
-			unit.printData(mainOut.toString(), prefix, time, MANA_Globals.dt);
+			unit.printData(mainOut.toString(), prefix, time, dt);
 		}
 
 	}

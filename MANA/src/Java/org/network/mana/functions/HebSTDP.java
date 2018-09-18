@@ -47,7 +47,7 @@ public final class HebSTDP implements STDP {
 
     @Override
     public void preTriggered(InterleavedSparseMatrix wts, int[] dataPack, BufferedDoubleArray lastSpkTimes, double dt) {
-        wts.getRawData()[dataPack[1]*wts.getInc()+1] = -lRate * wMinus
+        wts.getRawData()[dataPack[1]+1] = -lRate * wMinus
                 * Math.exp((lastSpkTimes.getData(dataPack[3])-(double)dataPack[0]*dt)/tauMinus);
     }
 

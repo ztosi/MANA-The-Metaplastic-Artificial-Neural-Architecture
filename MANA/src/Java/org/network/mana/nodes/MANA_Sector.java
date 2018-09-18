@@ -1,5 +1,6 @@
 package Java.org.network.mana.nodes;
 
+import Java.org.network.mana.base_components.InputNeurons;
 import Java.org.network.mana.base_components.MANANeurons;
 import Java.org.network.mana.base_components.Neuron;
 import Java.org.network.mana.base_components.enums.DampFunction;
@@ -42,6 +43,8 @@ public class MANA_Sector implements Syncable {
 
     public final MANANeurons target;
 
+    private boolean initialized = false;
+
     public final Map<Neuron, MANA_Node> childNodes = new TreeMap<Neuron, MANA_Node>(
             (Neuron a, Neuron b) -> {
                 if (a==b) {
@@ -76,12 +79,29 @@ public class MANA_Sector implements Syncable {
         countDown = new AtomicInteger(0);
         secExcSums = new double[target.N];
         secInhSums = new double[target.N];
+        snExcOn = new BoolArray(target.N);
+        snInhOn = new BoolArray(target.N);
         spkBuffer = new BoolArray(target.N);
         pfrAccum = new double[target.N];
         spkDat = new SpikeTimeData(target.N);
         id = "s"+target.id;
     }
 
+
+    /**
+     *
+     */
+    public void init() {
+        Arrays.fill(target.inDegree, 0);
+        for(MANA_Node node : childNodes.values()) {
+            if(node.srcData.isExcitatory()) {
+                node.accumulateLocalWtSums(secExcSums);
+            }
+        }
+        recountInDegrees();
+        target.setSatC(secExcSums);
+        initialized = true;
+    }
 
     /**
      * Adds a source neuron group and automatically constructs a MANA Node connecting
@@ -96,6 +116,8 @@ public class MANA_Sector implements Syncable {
                 SynType.getDefaultSTDP(src.isExcitatory(), target.isExcitatory()),
                 !parent.targets.contains(src));
         childNodes.put(src, newEntry);
+        countDown.set(childNodes.size());
+        initialized = false;
         return  newEntry;
     }
 
@@ -111,6 +133,8 @@ public class MANA_Sector implements Syncable {
                 this, src, target, specs,damp, rule,
                 !parent.targets.contains(src));
         childNodes.put(src, newEntry);
+        countDown.set(childNodes.size());
+        initialized = false;
         return  newEntry;
     }
 
@@ -120,16 +144,20 @@ public class MANA_Sector implements Syncable {
                     " does not have the same target neurons.");
         }
         childNodes.put(node.srcData, node);
-        countDown.set(childNodes.size()-1);
+        countDown.set(childNodes.size());
     }
 
-
-
     public void update(final double time, final double dt) {
+        if(!initialized) {
+            throw  new IllegalStateException("Sector updates cannot be performed until initialization has been done.");
+        }
 
         // Determine incoming currents & check for structural changes
         boolean structChanged = false;
         for(MANA_Node node : childNodes.values()) {
+            if(!node.updated.get()) {
+                throw new IllegalStateException("Not all child nodes were updated.");
+            }
             structChanged |= node.getStructureChanged();
             node.structureChangedOff();
             if (node.srcData.isExcitatory()) {
@@ -141,18 +169,7 @@ public class MANA_Sector implements Syncable {
 
         // If the structure changed recalculate relevant values like in-degree, etc.
         if(structChanged) {
-            Arrays.fill(target.excInDegree, 0);
-            Arrays.fill(target.inhInDegree, 0);
-            for(MANA_Node node : childNodes.values()) {
-                if(node.srcData.isExcitatory()) {
-                    node.accumInDegrees(target.excInDegree);
-                } else {
-                    node.accumInDegrees(target.inhInDegree);
-                }
-            }
-            for(int ii=0; ii<target.N; ++ii) {
-                target.inDegree[ii] = target.excInDegree[ii] + target.inDegree[ii];
-            }
+            recountInDegrees();
         }
 
         // Sum over the weights
@@ -179,37 +196,56 @@ public class MANA_Sector implements Syncable {
         }
 
         target.performFullUpdate(spkBuffer, pfrAccum, time, dt);
-        spkDat.pushSpks(target.spks); // record spiking data
+//        System.out.println("Spikes for: " + id);
+//        for(int ii=0; ii<this.getWidth(); ++ii) {
+//            if(spkBuffer.get(ii)) {
+//                System.out.print("  " + ii + "  ");
+//            }
+//        }
+//        System.out.println();
         if(!(target.allExcSNon && target.allInhSNon))
             Arrays.fill(pfrAccum, 0);
 
     }
 
     public void recountInDegrees() {
-        int[] excInDs = new int[target.N];
-        int[] inhInDs = new int[target.N];
+       Arrays.fill(target.excInDegree, 0);
+       Arrays.fill(target.inhInDegree, 0);
 
         for(MANA_Node node : childNodes.values()) {
             if(node.srcData.isExcitatory()) {
-                node.accumInDegrees(excInDs);
+                node.accumInDegrees(target.excInDegree);
             } else {
-                node.accumInDegrees(inhInDs);
+                node.accumInDegrees(target.inhInDegree);
             }
         }
         for(int ii=0; ii<target.N; ++ii) {
-            target.inDegree[ii] = excInDs[ii] + inhInDs[ii];
+            target.inDegree[ii] = target.excInDegree[ii] + target.inhInDegree[ii];
         }
     }
 
     public void synchronize() {
+        if (!initialized) {
+            throw new IllegalStateException("Sector synchronization cannot be performed until initialization has been done.");
+        }
         target.spks.copyInto(spkBuffer);
+        spkBuffer.clear();
         target.estFR.pushBufferShallow();
         target.lastSpkTime.pushBufferDeep();
-        countDown.set(childNodes.size());
+        spkDat.pushSpks(target.spks); // record spiking data
+        //   System.out.println(id + "SYNCHRONIZED");
+
+        if (!countDown.compareAndSet(0, childNodes.size())) {
+            throw new IllegalStateException("Synchronization cannot be called unless the count-down timer is zero indicating that all child nodes have been updated.");
+        }
     }
 
     public int getWidth() {
         return target.N;
+    }
+
+    public boolean isInitialized() {
+        return initialized;
     }
 
 }

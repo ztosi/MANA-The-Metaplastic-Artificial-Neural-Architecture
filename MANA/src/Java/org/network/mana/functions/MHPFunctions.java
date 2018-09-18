@@ -10,29 +10,20 @@ import Java.org.network.mana.utils.Utils;
 public class MHPFunctions {
 
 
-	public static void mhpStage0(final BufferedFloatArray efrsTar, final double[] pfrsTar,
+	public static void mhpStage1(final BufferedFloatArray efrsTar, final double[] pfrsTar,
 								 final BufferedFloatArray efrsSrc, int tarNo, InterleavedSparseAddOn pfrLoc) {
 		int start = pfrLoc.getStartIndex(tarNo);
 		int end = pfrLoc.getEndIndex(tarNo);
 		int[] orderInds = pfrLoc.getRawOrdIndices();
-		for(int ii = start; ii<end; ii+=pfrLoc.getInc()) {
-			pfrLoc.values[ii] = (efrsTar.getData(tarNo) - efrsSrc.getData(orderInds[ii]))/pfrsTar[tarNo];
-		}
-		for(int ii = start; ii<end; ii+=pfrLoc.getInc()) {
-			pfrLoc.values[ii] = Math.signum(pfrLoc.values[ii]) * Math.exp(pfrLoc.values[ii]);
-		}
-	}
-
-    /**
-     *
-     * @param tarNo
-     * @param pfrLoc
-     */
-	public static void mhpStage1(int tarNo, InterleavedSparseAddOn pfrLoc) {
-		int start = pfrLoc.getStartIndex(tarNo);
-		int end = pfrLoc.getEndIndex(tarNo);
-		for(int ii = start; ii<end; ii+=pfrLoc.getInc()) {
-			pfrLoc.values[ii] = Math.signum(pfrLoc.values[ii]) * Math.exp(pfrLoc.values[ii]);
+		try {
+			for (int ii = start; ii < end; ii += pfrLoc.getInc()) {
+				pfrLoc.values[ii] = (efrsTar.getData(tarNo) - efrsSrc.getData(orderInds[ii])) / pfrsTar[tarNo];
+			}
+			for (int ii = start; ii < end; ii += pfrLoc.getInc()) {
+				pfrLoc.values[ii] = Utils.sign(pfrLoc.values[ii]) * Math.exp(pfrLoc.values[ii]);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -66,11 +57,12 @@ public class MHPFunctions {
 	}
 
 	public static double getFp(long datum) {
-		return Double.longBitsToDouble(datum>>>32);
+		return Float.intBitsToFloat((int)(datum>>>32));
 	}
 
 	public static double getFm(long datum) {
-		return Double.longBitsToDouble((datum & 0xffff0000)>>>32);
+
+	    return Float.intBitsToFloat((int)(datum & 0x00000000ffffffff));
 	}
 
 	/**

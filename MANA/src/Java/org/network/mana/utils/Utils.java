@@ -183,6 +183,17 @@ public class Utils {
 		return 0;
 	}
 
+	/**
+	 * -1 if negative 1 otherwise (including if v is 0), returns -1 for -0
+	 * @param v
+	 * @return
+	 */
+	public static long sign(double v) {
+		long d = Double.doubleToLongBits(v);
+		d >>>= 63;
+		return -(d*2-1);
+	}
+
 	public static <T> int [] getSortKey(List<T> thing, Comparator<T> sorter) {
 		int [] sortKey = new int[thing.size()];
 		List<Object[]> tmp = new ArrayList<>();
@@ -202,6 +213,16 @@ public class Utils {
 			sortKey[counter++] = ((Integer) oelm[1]).intValue();
 		}
 		return sortKey;
+	}
+
+	public static double maxInt(int[] arr) {
+		double mVal = Double.MIN_VALUE;
+		for(int ii=0, n=arr.length; ii<n; ++ii) {
+			if(arr[ii] > mVal) {
+				mVal = arr[ii];
+			}
+		}
+		return mVal;
 	}
 
 	public static double[][] getDelays(final double[][] xyz1, final double[][] xyz2,

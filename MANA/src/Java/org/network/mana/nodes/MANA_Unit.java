@@ -146,8 +146,7 @@ public class MANA_Unit {
 		for(MANA_Sector tar : unit.sectors.values()) {
 			// First node in each sector is always the node containing connections from the input
 			MANA_Node inpN = tar.add(inp, new ConnectSpecs(ConnectRule.Random,
-					new double[]{0.25}, unit.defMaxDist, SynapseData.MAX_DELAY));
-            inpN.randomizeWeights(Utils.ProbDistType.LOGNORMAL, new double[]{3,1});
+					new double[]{0.25}, Utils.ProbDistType.NORMAL, new double[]{3,1}, unit.defMaxDist, SynapseData.MAX_DELAY));
 			for(MANANeurons src : unit.targets) {
 				// Use default connection specs to connect Java.org.network.mana.mana Java.org.network.mana.nodes to each other (these are recurrent/reservoir synapses)
 				ConnectSpecs cSpecs = new ConnectSpecs(ConnectRule.Distance,
@@ -178,6 +177,36 @@ public class MANA_Unit {
         }
         return nnzTotal;
     }
+
+    public void initialize() {
+		for(MANA_Sector sec : sectors.values()) {
+			sec.init();
+			for(MANA_Node node : sec.childNodes.values()) {
+				if(node.srcData instanceof MANANeurons) {
+					node.accumOutDegrees(((MANANeurons) node.srcData).outDegree);
+				}
+			}
+		}
+	}
+
+	public void revalidateDegrees() {
+		for(MANA_Sector sec : sectors.values()) {
+			sec.recountInDegrees();
+			for(MANA_Node node : sec.childNodes.values()) {
+				if(node.srcData instanceof MANANeurons) {
+					node.accumOutDegrees(((MANANeurons) node.srcData).outDegree);
+				}
+			}
+		}
+	}
+
+	public int getNNZs() {
+		int nnz = 0;
+		for(MANA_Node node : nodes) {
+			nnz += node.getNNZ();
+		}
+		return nnz;
+	}
 
     /**
      * Returns the weight matrix represented by the Java.org.network.mana.nodes of the collective source and target neurons
@@ -292,14 +321,6 @@ public class MANA_Unit {
 
     public double getMaxDist() {
         return Math.sqrt(Math.pow(xf-x0, 2)+Math.pow(yf-y0, 2)+Math.pow(zf-z0, 2));
-    }
-
-    private double maxDist = -1;
-    public double getMaxDistFast() {
-        if(maxDist < 0) {
-            maxDist = getMaxDist();
-        }
-        return maxDist;
     }
 
     public void setMhpOn(boolean mhpOn) {

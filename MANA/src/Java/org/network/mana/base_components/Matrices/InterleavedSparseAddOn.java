@@ -19,7 +19,7 @@ public class InterleavedSparseAddOn {
     public InterleavedSparseAddOn(final InterleavedSparseMatrix coordMat, final int nilFac) {
         this.coordMat = coordMat;
         this.nilFac = nilFac;
-        values = new double[coordMat.getNnz()/coordMat.nILFac * nilFac];
+        values = new double[coordMat.getNnz() * nilFac];
     }
 
     /**
@@ -72,6 +72,11 @@ public class InterleavedSparseAddOn {
     public int getInc() {
         return nilFac;
     }
+
+    public void setValue(int baseIndex, double val, int offset) {
+        values[baseIndex * nilFac + offset] = val;
+    }
+
 
     /**
      * adds up the values along the major ordering and accumulates them in the array argument

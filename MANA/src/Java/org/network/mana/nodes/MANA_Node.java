@@ -7,7 +7,6 @@ import Java.org.network.mana.base_components.Matrices.InterleavedSparseMatrix;
 import Java.org.network.mana.base_components.Matrices.MANAMatrix;
 import Java.org.network.mana.base_components.Matrices.InterleavedSparseAddOn;
 import Java.org.network.mana.base_components.Neuron;
-import Java.org.network.mana.base_components.SynapseData;
 import Java.org.network.mana.base_components.enums.DampFunction;
 import Java.org.network.mana.base_components.enums.SynType;
 import Java.org.network.mana.functions.MHPFunctions;
@@ -18,6 +17,8 @@ import Java.org.network.mana.utils.ConnectSpecs;
 import Java.org.network.mana.utils.Utils;
 
 import java.util.PriorityQueue;
+import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * MANA Java.org.network.mana.nodes are comprised of a set of source neurons (either input neurons or other MANA neurons) and target neurons
@@ -111,7 +112,8 @@ public class MANA_Node {
 
     private boolean structureChanged = false;
 
-    private PriorityQueue<int[]> evtQueue = new PriorityQueue<>((int[] a, int[] b) -> { // Sort by arrival time then absolute target index
+    private PriorityBlockingQueue<int[]> evtQueue = new PriorityBlockingQueue<>(200,
+            (int[] a, int[] b) -> { // Sort by arrival time then absolute target index
         if(a[0] < b[0]) {
             return -1;
         } else if(a[0] == b[0]) {
@@ -132,7 +134,7 @@ public class MANA_Node {
                                                     STDP stdpRule, boolean isTransUnit) {
                                                      //int srcOffset, int tarOffset) {
         MANAMatrix synMat = new MANAMatrix(srcNeu, tarNeu,
-                specs.maxDist, specs.maxDly, specs.rule, specs.parms);
+                specs.maxDist, specs.maxDly, specs);
         MANA_Node tmp = new MANA_Node(srcNeu, tarNeu, parent, isTransUnit, synMat.type);
         tmp.synMatrix = synMat;
         tmp.dampener = dampener;
@@ -190,6 +192,7 @@ public class MANA_Node {
         structureChanged = true;
     }
 
+    public AtomicBoolean updated = new AtomicBoolean(false);
 
     /**
      * Perform all node level updates, including processing arriving action
@@ -197,70 +200,81 @@ public class MANA_Node {
      * processing all action potentials in member neurons (perform post-STDP
      * on the afferents within this node), adding all changes in weights to their
      * respective weights, reporting the new tota
+     *
      * @param time
      * @param dt
      */
     public void update(final double time, final double dt) {
+        if(!updated.compareAndSet(false, true)) {
+            throw new IllegalStateException("Multiple threads trying to update the same node");
+        }
+
+        if(!parent_sector.isInitialized()) {
+            throw  new IllegalStateException("Node updates cannot be performed until initialization has been done on parent sector.");
+        }
+
+//        System.out.println("HELLO");
 
         // Check for pre-synaptic spikes, schedule the events along synapses of neurons that have,
-        for(int ii=0; ii<height; ++ii) {
-            if(srcData.getSpikes().get(ii)) {
-                synMatrix.calcSpikeResponses(ii, time);
-                synMatrix.addEvents(ii, time, dt, evtQueue);
+        try {
+            for (int ii = 0; ii < height; ++ii) {
+                if (srcData.getSpikes().get(ii)) {
+                    synMatrix.calcSpikeResponses(ii, time);
+                    synMatrix.addEvents(ii, time, dt, evtQueue);
+                }
             }
-        }
 
-        if (synPlasticityOn) {
 
-            // Synaptic normalization & scaling
-            if(normalizationOn) {
-                if (!targData.getAllNrmOn(srcData.isExcitatory())) {
-                    for (int ii = 0; ii < width; ++ii) {
-                        if (normFlags.get(ii)) {
-                            synMatrix.scaleWeights(ii, normVals[ii]/sectorSums[ii]);
+            if (synPlasticityOn) {
+
+                // Synaptic normalization & scaling
+                if (normalizationOn) {
+                    if (!targData.getAllNrmOn(srcData.isExcitatory())) {
+                        for (int ii = 0; ii < width; ++ii) {
+                            if (normFlags.get(ii)) {
+                                synMatrix.scaleWeights(ii, normVals[ii] / sectorSums[ii]);
+                            }
+                        }
+                    } else {
+                        for (int ii = 0; ii < width; ++ii) {
+                            synMatrix.scaleWeights(ii, normVals[ii] / sectorSums[ii]);
                         }
                     }
-                } else {
-                    for (int ii = 0; ii < width; ++ii) {
-                        synMatrix.scaleWeights(ii, normVals[ii]/sectorSums[ii]);
+                }
+
+                // Calculate new dws for synapses tied to arriving events, add their currents to the correct target
+                synMatrix.processEventsSTDP(evtQueue, locCurrents, stdpRule,
+                        targData.lastSpkTime, time, dt);
+
+                // Check for post-synaptic spikes and adjust synapses incoming to them accordingly.
+                for (int ii = 0; ii < width; ++ii) {
+                    if (targData.getSpikes().get(ii)) {
+                        stdpRule.postTriggered(synMatrix.getWeightsTOrd(),
+                                synMatrix.gettOrdLastArrivals(), ii, time);
                     }
                 }
+            } else {
+                synMatrix.processEvents(evtQueue, locCurrents, time, dt);
             }
 
-            // Calculate new dws for synapses tied to arriving events, add their currents to the correct target
-            synMatrix.processEventsSTDP(evtQueue, locCurrents, stdpRule,
-                    targData.lastSpkTime, time, dt);
+            // If dampening is used, dampen
+            //    dampener.dampen(synMatrix.getWeightsTOrd().getRawData(), SynapseData.MAX_WEIGHT, 0);
+            // Add dws to ws--update synaptic weights
+            synMatrix.updateWeights();
 
-            // Check for post-synaptic spikes and adjust synapses incoming to them accordingly.
-            for(int ii=0; ii<width; ++ii) {
-                if (targData.getSpikes().get(ii)) {
-                    stdpRule.postTriggered(synMatrix.getWeightsTOrd(),
-                            synMatrix.gettOrdLastArrivals(), ii, time);
+            if (normalizationOn) {
+                synMatrix.calcAndGetSums(localSums);
+            }
+
+            if (!inputIsExternal && targData.mhpOn && !(targData.allInhSNon && targData.allExcSNon)) {
+                for (int ii = 0; ii < width; ++ii) {
+                    if (!(targData.excSNon.get(ii) && targData.inhSNon.get(ii))) {
+                        MHPFunctions.mhpStage1(targData.estFR, targData.prefFR, ((MANANeurons) srcData).estFR, ii, pfrLoc);
+                        MHPFunctions.mhpStage2(ii, MHPFunctions.getFp(targData.fVals[ii]),
+                                MHPFunctions.getFm(targData.fVals[ii]), pfrLoc);
+                    }
+
                 }
-            }
-        } else {
-            synMatrix.processEvents(evtQueue, locCurrents, time, dt);
-        }
-
-        // If dampening is used, dampen
-        dampener.dampen(synMatrix.getWeightsTOrd().getRawData(), SynapseData.MAX_WEIGHT, 0);
-        // Add dws to ws--update synaptic weights
-        synMatrix.updateWeights();
-
-        if (normalizationOn) {
-            synMatrix.calcAndGetSums(localSums);
-        }
-
-        if(!inputIsExternal && targData.mhpOn && !(targData.allInhSNon && targData.allExcSNon)) {
-            for(int ii=0; ii<width; ++ii) {
-                if(!(targData.excSNon.get(ii) && targData.inhSNon.get(ii))) {
-                    MHPFunctions.mhpStage0(targData.estFR, targData.prefFR, ((MANANeurons) srcData).estFR, ii, pfrLoc);
-                    MHPFunctions.mhpStage1(ii, pfrLoc);
-                    MHPFunctions.mhpStage2(ii, MHPFunctions.getFp(targData.fVals[ii]),
-                            MHPFunctions.getFm(targData.fVals[ii]), pfrLoc);
-                }
-
-            }
 //            for(int ii=0; ii<width; ++ii) {
 //                if(!(targData.excSNon.get(ii) && targData.inhSNon.get(ii)))
 //                    MHPFunctions.mhpStage1(ii, pfrLoc);
@@ -270,13 +284,18 @@ public class MANA_Node {
 //                    MHPFunctions.mhpStage2(ii, MHPFunctions.getFp(targData.fVals[ii]),
 //                            MHPFunctions.getFm(targData.fVals[ii]), pfrLoc);
 //            }
-        }
+            }
 
-        // Last thread working on a node in the sector has to update the sector...
-        if(parent_sector.countDown.decrementAndGet() == 0) {
-            parent_sector.update(time, dt);
+            // Last thread working on a node in the sector has to update the sector...
+    //            System.out.println(parent_sector.countDown.get());
+                if (parent_sector.countDown.decrementAndGet() == 0) {
+                    parent_sector.update(time, dt);
+                } else if (parent_sector.countDown.get() < 0) {
+                    throw new IllegalStateException("Sector countdown can never be less than 0.");
+                }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-
     }
 
     public int[] getLocalInDegrees() {
@@ -301,6 +320,10 @@ public class MANA_Node {
         synMatrix.inDegrees(inDs);
     }
 
+    public void accumOutDegrees(final int [] oDs) {
+        synMatrix.outDegrees(oDs);
+    }
+
     public void accumulatePFRSums(final double[] pfrDt) {
         pfrLoc.accumSums(pfrDt, 0);
     }
@@ -318,6 +341,21 @@ public class MANA_Node {
         }
     }
 
+    public double[] calcLocalSums() {
+        return synMatrix.calcAndGetSums(localSums);
+    }
+
+    public double[] calcAndGetWtSums(double [] ret) {
+        return synMatrix.calcAndGetSums(ret);
+    }
+
+    public double[] calcAndAccumWtSums(double [] ret) {
+       synMatrix.calcAndGetSums(localSums);
+       for(int ii=0; ii<width; ++ii) {
+           ret[ii] += localSums[ii];
+       }
+       return ret;
+    }
 
     public int getNNZ() {
         return synMatrix.getWeightsTOrd().getNnz();

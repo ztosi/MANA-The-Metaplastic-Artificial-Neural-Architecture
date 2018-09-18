@@ -48,7 +48,7 @@ public final class MexHatSTDP implements  STDP {
     // data pack is {arrTime, rel tar ind, udfMultiplier}
 
     public void preTriggered(InterleavedSparseMatrix wts, int[] dataPack, BufferedDoubleArray lastSpkTimes, double dt) {
-        wts.getRawData()[dataPack[1] * wts.getInc()+1] = mexicanHatWindow(sigSq, nrmTerm,
+        wts.getRawData()[dataPack[1] + 1] = mexicanHatWindow(sigSq, nrmTerm,
                 wPlus, wMinus,
                 (dataPack[0]*dt) - lastSpkTimes.getData(dataPack[3]), lRate);
     }

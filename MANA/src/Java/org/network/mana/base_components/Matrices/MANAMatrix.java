@@ -1,6 +1,5 @@
 package Java.org.network.mana.base_components.Matrices;
 
-import Java.org.network.mana.base_components.SynapseData;
 import Java.org.network.mana.base_components.enums.ConnectRule;
 import Java.org.network.mana.base_components.enums.Ordering;
 import Java.org.network.mana.base_components.enums.SynType;
@@ -8,14 +7,13 @@ import Java.org.network.mana.base_components.MANANeurons;
 import Java.org.network.mana.base_components.Neuron;
 
 import Java.org.network.mana.functions.STDP;
-import Java.org.network.mana.utils.BufferedDoubleArray;
-import Java.org.network.mana.utils.SrcTarDataPack;
-import Java.org.network.mana.utils.SrcTarPair;
-import Java.org.network.mana.utils.Utils;
+import Java.org.network.mana.mana.MANA_Globals;
+import Java.org.network.mana.utils.*;
 
 import java.util.LinkedList;
 import java.util.List;
 import java.util.PriorityQueue;
+import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class MANAMatrix {
@@ -95,12 +93,10 @@ public class MANAMatrix {
      * @param tar
      * @param maxDist
      * @param maxDly
-     * @param params the connection parameters for random
-     *              (1 parameter) or distance based random (2 parameters)
      */
     public MANAMatrix(Neuron src, MANANeurons tar,
                       double maxDist, double maxDly,
-                      ConnectRule cRule, double[] params) {
+                      ConnectSpecs cSpecs) {
         this.src = src;
         this.tar = tar;
         List<SrcTarDataPack> targCOOTup = new LinkedList<>();
@@ -117,14 +113,14 @@ public class MANAMatrix {
 //                    System.out.print(".");
                     continue;
                 }
-                if (cRule == ConnectRule.Random) {
-                    if (ThreadLocalRandom.current().nextDouble() >= params[0]) { // TODO: This isn't how this is used... do something _NOT_ dumb with prob dists...
+                if (cSpecs.rule == ConnectRule.Random) {
+                    if (ThreadLocalRandom.current().nextDouble() >= cSpecs.parms[0]) { // TODO: This isn't how this is used... do something _NOT_ dumb with prob dists...
 //                        System.out.print(".");
                         continue;
                     }
-                } else if (cRule == ConnectRule.Distance) {
+                } else if (cSpecs.rule == ConnectRule.Distance) {
                     double dist = Utils.euclidean(src.getCoordinates()[ii], tar.xyzCoors[jj]);
-                    double cProb = params[0] * Math.exp(-((dist*dist)/(params[1] *params[1])));
+                    double cProb = cSpecs.parms[0] * Math.exp(-((dist*dist)/(cSpecs.parms[1] * cSpecs.parms[1])));
                     if (ThreadLocalRandom.current().nextDouble() >= cProb) {
 //                        System.out.print(".");
                         continue;
@@ -132,11 +128,12 @@ public class MANAMatrix {
                 }
 //                System.out.print("X");
                 SrcTarPair coo = new SrcTarPair(ii, jj);
-                double[] tarData = {SynapseData.DEF_NEW_WEIGHT, 0};
+                double[] tarData = {cSpecs.getNewWt(), 0};
                 SrcTarDataPack tarDatPack = new SrcTarDataPack(coo, tarData);
                 double[] srcData = new double[7];
                 SynType.setSourceDefaults(srcData, 0, type);
-                srcData[0] = maxDly * Utils.euclidean(src.getCoordinates()[ii], tar.xyzCoors[jj])/maxDist;
+                srcData[0] = MANA_Globals.dt * (int)(maxDly * Utils.euclidean(src.getCoordinates()[ii],
+                        tar.xyzCoors[jj])/(maxDist*MANA_Globals.dt));
                 SrcTarDataPack srcDatPack = new SrcTarDataPack(coo, srcData);
 
                 targCOOTup.add(tarDatPack);
@@ -195,18 +192,25 @@ public class MANAMatrix {
      * @param dt integration time step
      * @param eventQ the node-local synaptic event queue
      */
-    public void addEvents(int noSrc, double time, double dt, PriorityQueue<int []> eventQ) {
+    public void addEvents(int noSrc, double time, double dt, PriorityBlockingQueue<int []> eventQ) {
         int start = outDataSOrd.getStartIndex(noSrc);
         int end = outDataSOrd.getEndIndex(noSrc);
         int inc = outDataSOrd.getInc();
         double [] vals = outDataSOrd.getRawData();
-        for(int ii=start; ii<end; ii+=inc) {
-            int [] evt = new int[4];
-            evt[0] = (int) ((time+vals[ii])/dt);
-            evt[1] = srcToTargLookup[ii] * weightsTOrd.getInc();
-            evt[2] = Float.floatToIntBits((float) (vals[ii+inc-1] * vals[ii+inc-2]));
-            evt[3] = outDataSOrd.getRawOrdIndices()[ii/inc];
-            eventQ.add(evt);
+        try {
+            for (int ii = start; ii < end; ii += inc) {
+                int[] evt = new int[4];
+                evt[0] = (int) ((time + vals[ii]) / dt);
+                evt[1] = srcToTargLookup[ii/inc] * weightsTOrd.getInc();
+                evt[2] = Float.floatToIntBits((float) (10 * vals[ii + inc - 1] * vals[ii + inc - 2]));
+                if(Float.intBitsToFloat(evt[2]) > 200) {
+                    System.out.println("Unusual UDF Response");
+                }
+                evt[3] = outDataSOrd.getRawOrdIndices()[ii / inc];
+                eventQ.add(evt);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -232,14 +236,20 @@ public class MANAMatrix {
      * @param time current time
      * @param dt simulation delta t
      */
-    public void processEventsSTDP(PriorityQueue<int[]> eventQ, double[] incCur, STDP stdpRule,
+    public void processEventsSTDP(PriorityBlockingQueue<int[]> eventQ, double[] incCur, STDP stdpRule,
                                   BufferedDoubleArray lastSpkTimes, double time, double dt) {
-        while(eventQ.peek()[0]*dt <= time) {
-            int[] event = eventQ.poll();
-            incCur[event[3]] += weightsTOrd.getRawOrdIndices()[event[1]]
-                    * Float.intBitsToFloat(event[2]);
-            stdpRule.preTriggered(weightsTOrd, event, lastSpkTimes, dt);
-            tOrdLastArrivals.values[event[1]] = time;
+        int [] event = null;
+        try {
+            while (!eventQ.isEmpty() && eventQ.peek()[0] * dt <= time) {
+                event = eventQ.poll();
+                incCur[event[3]] += weightsTOrd.getRawData()[event[1]]
+                        * Float.intBitsToFloat(event[2]);
+                stdpRule.preTriggered(weightsTOrd, event, lastSpkTimes, dt);
+                // TODO: Fix the event thing to make it not dependent on increment in wts mat, so that callers can apply their own offsets without having to know wts
+                tOrdLastArrivals.setValue(event[1]/2, time, 0);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -255,11 +265,14 @@ public class MANAMatrix {
      * @param time current simulation clock
      * @param dt integration time step
      */
-    public void processEvents(PriorityQueue<int[]> eventQ, double[] incCur, double time, double dt) {
+    public void processEvents(PriorityBlockingQueue<int[]> eventQ, double[] incCur, double time, double dt) {
         while(eventQ.peek()[0]*dt <= time) {
             int[] event = eventQ.poll();
             incCur[event[3]] += weightsTOrd.getRawOrdIndices()[event[1]]
                     * Float.intBitsToFloat(event[2]);
+            if(Float.intBitsToFloat(event[2]) < 0) {
+                throw new IllegalStateException("No negatives");
+            }
             tOrdLastArrivals.values[event[1]] = time;
         }
     }
@@ -267,6 +280,12 @@ public class MANAMatrix {
     public void inDegrees(final int[] inD) {
         for(int ii=0; ii<noTar; ++ii) {
             inD[ii] += weightsTOrd.getRawPtrs()[ii+1] - weightsTOrd.getRawPtrs()[ii];
+        }
+    }
+
+    public void outDegrees(final int[] oD) {
+        for(int ii=0; ii<weightsTOrd.getNnz(); ++ii) {
+            oD[weightsTOrd.getRawOrdIndices()[ii]]++;
         }
     }
 
@@ -322,24 +341,24 @@ public class MANAMatrix {
         return tOrdLastArrivals;
     }
 
-    public static void main(String [] args) {
-        int numN = 10;
-        MANANeurons src = new MANANeurons(numN, true,
-                Utils.getUniformRandomArray(numN, 0, 100),
-                Utils.getUniformRandomArray(numN, 0, 100),
-                Utils.getUniformRandomArray(numN, 0, 100));
-        MANANeurons tar = new MANANeurons(numN, true,
-                Utils.getUniformRandomArray(numN, 0, 100),
-                Utils.getUniformRandomArray(numN, 0, 100),
-                Utils.getUniformRandomArray(numN, 0, 100));
-        double [] parms = {0.1};
-        MANAMatrix mm = new MANAMatrix(src, tar,
-                Math.sqrt(30000), 20, ConnectRule.Random, parms);
-
-        // TODO: Actually use JUnit instead of being lazy... so lazy!
-        System.out.println("Dummy. It's a place for a breakpoint! :D");
-
-    }
+//    public static void main(String [] args) {
+//        int numN = 10;
+//        MANANeurons src = new MANANeurons(numN, true,
+//                Utils.getUniformRandomArray(numN, 0, 100),
+//                Utils.getUniformRandomArray(numN, 0, 100),
+//                Utils.getUniformRandomArray(numN, 0, 100));
+//        MANANeurons tar = new MANANeurons(numN, true,
+//                Utils.getUniformRandomArray(numN, 0, 100),
+//                Utils.getUniformRandomArray(numN, 0, 100),
+//                Utils.getUniformRandomArray(numN, 0, 100));
+//        double [] parms = {0.1};
+//        MANAMatrix mm = new MANAMatrix(src, tar,
+//                Math.sqrt(30000), 20, ConnectRule.Random, parms);
+//
+//        // TODO: Actually use JUnit instead of being lazy... so lazy!
+//        System.out.println("Dummy. It's a place for a breakpoint! :D");
+//
+//    }
 
 
 }

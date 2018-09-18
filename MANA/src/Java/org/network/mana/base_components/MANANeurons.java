@@ -35,6 +35,7 @@ public class MANANeurons implements Neuron {
 	public static final double default_inh_ref_p = 2;
 	public static final double default_sat_a = 300;
 	public static final double default_sat_b = 0.1;
+	public static final double default_sat_c = -100;
 	public static final double default_exc_SF_tau = 5;
     public static final double default_inh_SF_tau = 5;
 
@@ -120,13 +121,10 @@ public class MANANeurons implements Neuron {
 		v_m = new double[N];
 		dv_m = new double[N];
 		thresh = new double[N];
+		threshRA = new double[N];
 		estFR = new BufferedFloatArray(N);
 		prefFR = new double[N];
-		for(int ii=0; ii < N; ++ii) {
-		    estFR.setData(ii, 1.0f);
-        }
-		Arrays.fill(prefFR, 1.0);
-		threshRA = new double[N];
+		ef = new double[N];
 		exc_sf = new double[N];
 		inh_sf = new double[N];
 		lastSpkTime = new BufferedDoubleArray(N);
@@ -142,10 +140,8 @@ public class MANANeurons implements Neuron {
 		excSNon = new BoolArray(N);
 		i_e = new double[N];
 		i_i = new double[N];
-		ef = new double[N];
 		adapt = new double[N];
 		fVals = new long[N];
-
 		r_m = new DataWrapper(N, true, default_r_m);
 		v_l = new DataWrapper(N, true, default_v_l);
 		i_bg = new DataWrapper(N, true, default_i_bg);
@@ -162,6 +158,24 @@ public class MANANeurons implements Neuron {
 			ref_p = default_inh_ref_p;
 			tau_m = new DataWrapper(N, true, default_inh_tau_m);
 		}
+
+
+		Arrays.fill(prefFR, 1.0);
+		Arrays.fill(ef, 0.001);
+		Arrays.fill(threshRA, init_thresh);
+		Arrays.fill(thresh, init_thresh);
+		Arrays.fill(v_m, init_v_m);
+		Arrays.fill(exc_sf, 1.0);
+		Arrays.fill(inh_sf, 1.0);
+		Arrays.fill(dummy, 0.001);
+		Arrays.fill(sat_c, default_sat_c);
+		for(int ii=0; ii < N; ++ii) {
+			estFR.setData(ii, 1.0f);
+			estFR.setBuffer(ii, 1.0f);
+			normValsExc[ii] = newNormVal(ii);
+		}
+		System.arraycopy(normValsExc, 0, normValsInh, 0, N);
+
 		xyzCoors=new double[_N][3];
 		for(int ii=0; ii< _N; ++ii) {
 			xyzCoors[ii][0] = xCoor[ii];
@@ -191,10 +205,19 @@ public class MANANeurons implements Neuron {
 	    calcScaleFacs();
 		if (mhpOn && !(allExcSNon && allInhSNon)) {
 		    for(int ii=0; ii<N; ++ii) {
+		    	if(inDegree[ii] == 0) {
+		    		continue;
+				}
 		        prefFR[ii] += dt*eta/inDegree[ii] * pfrDts[ii];
             }
+			for(int ii=0; ii<N; ++ii) {
+				if(prefFR[ii] < MANA_Globals.MIN_PFR) {
+					prefFR[ii] = MANA_Globals.MIN_PFR;
+				}
+			}
 			MHPFunctions.calcfTerm(prefFR, fVals, default_alpha, default_beta, default_lowFR);
 		}
+
 		calcNewNorms();
 		scaleNormVals();
         lambda += dt * (lambda-final_tau_HP) * hp_decay;
@@ -311,9 +334,10 @@ public class MANANeurons implements Neuron {
 	 */
 	@Override
 	public void update(double dt, double time, BoolArray spkBuffer) {
+
 		for(int ii=0; ii<N; ++ii) {
 			int sgn = Utils.checkSign((lastSpkTime.getData(ii)+ref_p)-time);
-			dv_m[ii] += i_e[ii] * sgn;
+			dv_m[ii] += i_e[ii] + i_bg.get(ii) * sgn;
 			dv_m[ii] -= i_i[ii] * sgn;
 		}
 		for(int ii=0; ii<N; ++ii) {
@@ -356,6 +380,9 @@ public class MANANeurons implements Neuron {
 		for(int ii=0; ii<N; ++ii) {
 			if(spkBuffer.get(ii)) {
 				lastSpkTime.setBuffer(ii, time);
+				if(lastSpkTime.getBuffered(ii) - lastSpkTime.getData(ii) < ref_p) {
+					throw new IllegalStateException("Refractory periods not being respected.");
+				}
 				v_m[ii] = v_reset.get(ii);
 				adapt[ii] += 1;
 				ef[ii] += 1;
@@ -392,7 +419,7 @@ public class MANANeurons implements Neuron {
 				System.out.println("NaN th");
 				break;
 			}
-			threshRA[ii] += thresh[ii] * lambda + threshRA[ii]*(1-lambda);
+			threshRA[ii] = thresh[ii] * (lambda*dt) + threshRA[ii]*(1-(lambda*dt));
 		}
 	}
 
@@ -442,6 +469,20 @@ public class MANANeurons implements Neuron {
         }
         return allUp;
     }
+
+	/**
+	 * Also sets the norm values appropriately
+	 * @param sat_c
+	 */
+	public void setSatC(double [] sat_c) {
+    	this.sat_c = new double[N];
+    	System.arraycopy(sat_c, 0, this.sat_c, 0, N);
+    	for(int ii=0; ii<N; ++ii) {
+    		double nnv = newNormVal(ii);
+    		normValsExc[ii] = nnv * exc_sf[ii];
+    		normValsInh[ii] = nnv * inh_sf[ii];
+		}
+	}
 
 	/**
 	 * 

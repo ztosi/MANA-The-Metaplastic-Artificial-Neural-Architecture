@@ -87,7 +87,7 @@ public class InputNeurons implements Neuron, Syncable {
 					spk_times[ii] = new double[((MLDouble) mlSpkT.get(ii)).getSize()];
 					double[][] temp = ((MLDouble) mlSpkT.get(ii)).getArray();
 					for (int jj = 0; jj < spk_times[ii].length; ++jj){
-						spk_times[ii][jj] = temp[jj][0];
+						spk_times[ii][jj] = temp[0][jj];
 					}
 				}
 			} else {
@@ -168,7 +168,7 @@ public class InputNeurons implements Neuron, Syncable {
 
 	@Override
 	public boolean isExcitatory(){
-		return false;
+		return true;
 	}
 
 	@Override

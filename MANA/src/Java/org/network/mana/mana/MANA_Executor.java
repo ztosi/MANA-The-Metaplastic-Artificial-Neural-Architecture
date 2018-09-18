@@ -21,13 +21,14 @@ public class MANA_Executor {
 	private List<UpdateTask> updateTasks = new ArrayList<>();
 	private List<Callable<Syncable>> syncTasks = new ArrayList<>();
 	private List<PruneTask> pruneTasks = new ArrayList<>();
+	private List<MANA_Unit> units = new ArrayList<>();
 
-    AtomicInteger ct = new AtomicInteger(0);
+    //AtomicInteger ct = new AtomicInteger(0);
 
     private final ExecutorService pool;
 
 	public MANA_Executor(final double pruneInterval) {
-		pool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+		pool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()/2);
 		this.pruneInterval = pruneInterval;
 	}
 	
@@ -45,6 +46,7 @@ public class MANA_Executor {
 			updateTasks.add(new UpdateTask(n));
 			pruneTasks.add(new PruneTask(n, maxID, maxOD, lambda, maxDist));
 		}
+		units.add(unit);
 	}
 
 
@@ -57,12 +59,31 @@ public class MANA_Executor {
 	 */
 	public void invoke() throws InterruptedException {
 	    if(time > 0 && (int)(time/dt) %  (int)(pruneInterval/dt) == 0 && pruneOn) {
+	    	int nnz = 0;
+			for(MANA_Unit unit : units) {
+				nnz += unit.getTotalNNZ();
+			}
+	    	System.out.println("======== " + nnz + " ==========");
 	        pool.invokeAll(pruneTasks);
+	        int nnz2 = 0;
+	        for(MANA_Unit unit : units) {
+	        	unit.revalidateDegrees();
+				nnz2 += unit.getTotalNNZ();
+			}
+			System.out.println("======== " + nnz2 + " ==========");
+			System.out.println("NET: =========" + (nnz2-nnz) + " ==========");
         }
 		pool.invokeAll(updateTasks);
-		pool.invokeAll(syncTasks);
+	    try {
+			pool.invokeAll(syncTasks);
+		} catch (Exception e) {
+	    	e.printStackTrace();
+		}
+		for(UpdateTask t : updateTasks) {
+			t.node.updated.set(false);
+		}
 		time += dt;
-		ct.set(0);
+//		ct.set(0);
 	}
 
 	public class SectorSyncTask implements Callable<Syncable>{
@@ -75,8 +96,9 @@ public class MANA_Executor {
 
 		@Override
 		public MANA_Sector call() throws Exception {
+//			sector.update(time, dt);
 			sector.synchronize();
-			System.out.println(time + " " +  ct.incrementAndGet());
+//			System.out.println(time + " " +  ct.incrementAndGet());
 			return sector;
 		}
 		
