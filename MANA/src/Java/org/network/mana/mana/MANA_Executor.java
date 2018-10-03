@@ -73,8 +73,8 @@ public class MANA_Executor {
 			System.out.println("======== " + nnz2 + " ==========");
 			System.out.println("NET: =========" + (nnz2-nnz) + " ==========");
         }
-		pool.invokeAll(updateTasks);
-	    try {
+		try {
+			pool.invokeAll(updateTasks);
 			pool.invokeAll(syncTasks);
 		} catch (Exception e) {
 	    	e.printStackTrace();

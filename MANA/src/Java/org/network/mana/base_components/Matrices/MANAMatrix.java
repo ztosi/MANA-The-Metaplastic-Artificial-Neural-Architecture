@@ -18,8 +18,16 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class MANAMatrix {
 
+    /**
+     * Interleaved in the following way { weights, dw } contains weight information.
+     */
     protected InterleavedSparseMatrix weightsTOrd;
 
+    /**
+     * Interleaved in the following way { delay, lastArr, U, D, F, u, R }, and arranged in
+     * source-major order (data pertaining to target neurons are contiguous and ordered). Contains
+     * all the necessary information to calculate UDF and spike arrivals.
+     */
     protected InterleavedSparseMatrix outDataSOrd;
 
     /** An addon set of values containing more target ordered data. */
@@ -88,6 +96,9 @@ public class MANAMatrix {
     }
 
     /**
+     * Outgoing data in {@link #outDataSOrd} is interleaved in the following way
+     * { delay, lastArr, U, D, F, u, R }, while {@link #weightsTOrd} is interleaved as
+     * { weight, dw }.
      * Using a lot of defaults
      * @param src
      * @param tar
@@ -180,13 +191,13 @@ public class MANAMatrix {
         }
     }
 
-    // data pack is {arrTime, rel tar ind, udfMultiplier, abs tar ind}
-
     /**
      * Based on their arrival times, adds event data (what is necessary
      * to know when and where a spike will arrive and how much of a contribution it'll make). Performs
      * this for all local outgoing synapses from a given neuron. This function directly populates
      * the event queue and therefor performs all the necessary event encoding.
+     * Order for events is: {arrTime, rel tar ind, udfMultiplier, abs tar ind} with udfMultiplier being
+     * a float represented as int bits.
      * @param noSrc index of the source neuron
      * @param time simulation clock
      * @param dt integration time step
@@ -204,7 +215,8 @@ public class MANAMatrix {
                 evt[1] = srcToTargLookup[ii/inc] * weightsTOrd.getInc();
                 evt[2] = Float.floatToIntBits((float) (10 * vals[ii + inc - 1] * vals[ii + inc - 2]));
                 if(Float.intBitsToFloat(evt[2]) > 200) {
-                    System.out.println("Unusual UDF Response");
+
+                    throw new IllegalStateException("Unusual UDF Response");
                 }
                 evt[3] = outDataSOrd.getRawOrdIndices()[ii / inc];
                 eventQ.add(evt);

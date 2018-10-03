@@ -44,7 +44,7 @@ public class COOManaMat {
                 System.arraycopy(tordVals, tOrderIndex*tarILF,
                         tmpData, 0, tarILF);
                 // copy in source ordered values for the same synapse
-                System.arraycopy(sordVals, jj, tmpData, tarILF, srcILF);
+                System.arraycopy(sordVals, jj*srcILF, tmpData, tarILF, srcILF);
                 tmpData[tmpData.length-2] = mat.tOrdLastArrivals.values[tOrderIndex];
                 // Attach the linear index when target ordered to support target
                 // ordered add on sparse values...

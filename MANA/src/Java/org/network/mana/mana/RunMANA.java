@@ -17,7 +17,7 @@ public class RunMANA {
 		int numNeu = 2000;
 		double time_f0 = 7.2E6; // two hours...
 		double plastShutOff0 = time_f0/2;
-		double spInterval = 5000;
+		double spInterval = 3000;
 		String filename = null;
 		String odir = DEF_ODIR;
 		String prefix = DEF_PREFIX;

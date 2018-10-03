@@ -37,25 +37,29 @@ public class StructuralPlasticity {
         int maxAdd = (int) (tar.N * MAX_ADD_RATIO) + 1;
         int [] noAdded = new int[src.getSize()];
         double mx = mat.getMaxWeight();
+        int noRemoved=0;
+        int addcount = 0;
         for(int ii=0; ii<src.getSize(); ++ii) { // TODO it makes more sense for this to be in the opposite order and iterated that way
             for(int jj=0; jj<tar.getSize(); ++jj) {
                 if(rec && ii==jj) {
                     continue;
                 }
                 if (dataIter.hasNext()) {
-                    SrcTarDataPack datum = dataIter.next();
+                    SrcTarDataPack datum = coo.data.get(dataIter.nextIndex());
                     if (datum.coo.src == ii && datum.coo.tar == jj) {
+                        dataIter.next();
                         if (pruneDecision(src.getOutDegree()[ii],
                                 noOutP, inDegs[jj],
                                 noInP, datum.values[0], mx)) {
                             dataIter.remove();
+                            noRemoved++;
                         }
                         continue;
                     }
                 }
                 if (noAdded[ii] < maxAdd) { // We have not added the maximum number of allowed synapses from this source
                     double newDly = growDecision(src.getCoordinates()[ii], tar.getCoordinates()[jj],
-                            lambda, c_x, maxDist);
+                            c_x, lambda, maxDist);
                     if(newDly > 0) {
                         double[] data = new double[11];
                         data[0] = SynapseData.DEF_NEW_WEIGHT;
@@ -68,6 +72,7 @@ public class StructuralPlasticity {
                         noAdded[ii]++;
                         SrcTarDataPack newDatum = new SrcTarDataPack(new SrcTarPair(ii, jj), data);
                         dataIter.add(newDatum);
+                        addcount++;
                     }
                 }
 
@@ -78,6 +83,10 @@ public class StructuralPlasticity {
         for(SrcTarDataPack tup : coo.data) {
             tup.values[10] = tarLinInd++;
         }
+
+        System.out.println("REMOVED: " + noRemoved);
+        System.out.println("ADDED: " + addcount);
+
         coo.data.sort(Ordering.orderTypeTupleComp(Ordering.SOURCE));
         //return new MANAMatrix(mat.getOffsetSrc(), mat.getOffsetTar(), coo, src, tar);
         return new MANAMatrix(coo, src, tar);
@@ -87,10 +96,10 @@ public class StructuralPlasticity {
     public static boolean pruneDecision(int srcOutDegree,
                                         int outPoss, int tarInDegree,
                                         int inPoss, double wVal, double maxWt) {
-        if(wVal > maxWt * DEF_Thresh) {
-            return false;
-        } else if (wVal < SynapseData.MIN_WEIGHT) {
+        if(wVal < SynapseData.MIN_WEIGHT){
             return true;
+        } else if  (wVal > maxWt * DEF_Thresh) {
+            return false;
         } else {
             double p = Math.pow((double) srcOutDegree/outPoss ,2) * tarInDegree/inPoss;
             return ThreadLocalRandom.current().nextDouble() < p;

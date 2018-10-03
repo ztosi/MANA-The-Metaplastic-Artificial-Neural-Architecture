@@ -229,8 +229,8 @@ public class MANA_Unit {
 				MANA_Node node = sec.childNodes.get(n);
 				int nnz = node.getNNZ();
 
-				node.getWeightMatrix().getPtrsAsIndices(wd.srcInds, absShift, srcOff);
-				node.getWeightMatrix().getIndices(wd.tarInds, absShift, targOff);
+				node.getWeightMatrix().getPtrsAsIndices(wd.tarInds, absShift, targOff);
+				node.getWeightMatrix().getIndices(wd.srcInds, absShift, srcOff);
                 node.getWeightValues(wd.values, absShift);
 
 				srcOff += n.getSize();
@@ -241,7 +241,11 @@ public class MANA_Unit {
 		}
 		return  wd;
 	}
-
+//
+//
+//	public double [][] getPositions() {
+//	    double[][] positions = new double[][]
+//    }
 
     /**
      * Flushes recorded spike data from each sector into {@link #allSpikes} (which empties all the sector spike
@@ -269,12 +273,13 @@ public class MANA_Unit {
      * @param dt
      */
 	public void printData(final String outDir, final String outPrefix, final double time, final double dt) {
-		Map<String, double []> data = new HashMap<String, double[]>();
+		Map<String, double []> data = new HashMap<>();
 		data.put("PrefFRs", new double[size]);
 		data.put("EstFRs", new double[size]);
 		data.put("Threshs", new double[size]);
 		data.put("NormBaseExc", new double[size]);
 		data.put("NormBaseInh", new double[size]);
+//        data.put("Positions", new double[size]);
 
 		int i_offset = 0;
 		for(String id : sectors.keySet()) {
@@ -298,12 +303,12 @@ public class MANA_Unit {
         Utils.addScalar(wd.srcInds, 1);
         Utils.addScalar(wd. tarInds, 1);
 
-        mlData.add(new MLInt32("srcInds", wd.srcInds));
-        mlData.add(new MLInt32("tarInds", wd.tarInds));
+        mlData.add(new MLInt32("srcInds", wd.srcInds, 1));
+        mlData.add(new MLInt32("tarInds", wd.tarInds, 1));
 		mlData.add(new MLDouble("wtValues", wd.values, 1));
 
-		collectSpikes(time, dt);
         MLCell asdfCell = new MLCell("asdf", new int[]{fullSize+2, 1});
+        collectSpikes(time, dt);
         for(int ii=0; ii<fullSize; ++ii) {
             asdfCell.set(new MLDouble("", Utils.getDoubleArr(allSpikes.get(ii)), 1), ii);
         }
@@ -312,7 +317,7 @@ public class MANA_Unit {
 
         mlData.add(asdfCell);
 		try {
-			new MatFileWriter(outDir + File.separator + (int)time/1000 + "_" + outPrefix + ".mat", mlData);
+			new MatFileWriter(outDir + File.separator + (int)(time+dt)/1000 + "_" + outPrefix + ".mat", mlData);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
