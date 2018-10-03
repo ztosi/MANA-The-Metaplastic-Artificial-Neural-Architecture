@@ -51,19 +51,20 @@ public class StructuralPlasticity {
                         if (pruneDecision(src.getOutDegree()[ii],
                                 noOutP, inDegs[jj],
                                 noInP, datum.values[0], mx)) {
+
                             dataIter.remove();
                             noRemoved++;
                         }
                         continue;
                     }
                 }
-                if (noAdded[ii] < maxAdd) { // We have not added the maximum number of allowed synapses from this source
+               // if (noAdded[ii] < maxAdd) { // We have not added the maximum number of allowed synapses from this source
                     double newDly = growDecision(src.getCoordinates()[ii], tar.getCoordinates()[jj],
-                            c_x, lambda, maxDist);
+                            c_x/10, lambda, maxDist);
                     if(newDly > 0) {
                         double[] data = new double[11];
                         data[0] = SynapseData.DEF_NEW_WEIGHT;
-                        data[1] = SynapseData.DEF_INIT_WDERIV;
+                        data[1] = SynapseData.DEF_INIT_WDERIV * SynapseData.E_LR;
                         SynType.setSourceDefaults(data, 2, SynType.getSynType(src.isExcitatory(),
                                 tar.isExcitatory()));
                         data[2] = newDly;
@@ -74,7 +75,7 @@ public class StructuralPlasticity {
                         dataIter.add(newDatum);
                         addcount++;
                     }
-                }
+               // }
 
             }
         }
@@ -101,7 +102,7 @@ public class StructuralPlasticity {
         } else if  (wVal > maxWt * DEF_Thresh) {
             return false;
         } else {
-            double p = Math.pow((double) srcOutDegree/outPoss ,2) * tarInDegree/inPoss;
+            double p = (double) srcOutDegree/outPoss * tarInDegree/inPoss;
             return ThreadLocalRandom.current().nextDouble() < p;
         }
     }

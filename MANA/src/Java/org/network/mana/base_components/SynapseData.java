@@ -21,10 +21,10 @@ public final class SynapseData {
 	
 	public static final double MAX_WEIGHT= 20;
 	public static final double MIN_WEIGHT = 0.01;
-	public static final double DEF_NEW_WEIGHT = 0.01;
-	public static final double MAX_DELAY= 15; //ms
+	public static final double DEF_NEW_WEIGHT = 0.00001;
+	public static final double MAX_DELAY= 20; //ms
 	
-	public static final double DEF_INIT_WDERIV = 0.5;
+	public static final double DEF_INIT_WDERIV = 0;
 
 	
 	public double[] w;

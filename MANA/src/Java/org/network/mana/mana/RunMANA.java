@@ -17,7 +17,7 @@ public class RunMANA {
 		int numNeu = 2000;
 		double time_f0 = 7.2E6; // two hours...
 		double plastShutOff0 = time_f0/2;
-		double spInterval = 3000;
+		double spInterval = 5000;
 		String filename = null;
 		String odir = DEF_ODIR;
 		String prefix = DEF_PREFIX;
@@ -83,6 +83,7 @@ public class RunMANA {
 			}
 		}
 		long iters = 0;
+		boolean first = true;
 		try {
 			while(time < time_f) {
 				if(time >= p_shutOff_f && !tripped) {
@@ -96,9 +97,12 @@ public class RunMANA {
 				if(iters%((int)(1/dt)) == 0) {
                     System.out.println((int)(iters*dt));
                 }
-				if((iters+1)%(1000/ dt) == 0) {
+				if((iters)%(1000/ dt) == 0 && time != 0) {
 					System.out.println("------------- " + time + "------------- " );
-					unit.printData(mainOut.toString(), prefix, time, dt);
+					if ((iters)%(10000/ dt) == 0 || first) {
+						unit.printData(mainOut.toString(), prefix, time, dt);
+						first = false;
+					}
 				}
 				exec.invoke();
 

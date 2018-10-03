@@ -8,7 +8,7 @@ public class MANA_Globals {
 
     public static final double dt = 0.25;
 
-    public static final double DEF_INIT_WT = 0.01;
+    public static final double DEF_INIT_WT = 0.00001;
 
     public static final double MIN_PFR = 0.01;
 

@@ -172,17 +172,17 @@ public enum SynType {
     public static final double eeTauMinus = 100;
     public static final double eiTauPlus = 25;
     public static final double eiTauMinus = 100;
-    public static final double ieSigma = 22;
+    public static final double ieSigma = 24;
     public static final double iiSigma = 12;
 
-    public static final double eeWPlus = 5;
-    public static final double eeWMinus = 1;
-    public static final double eiWPlus = 5;
-    public static final double eiWMinus = 1;
+    public static final double eeWPlus = 5.1;
+    public static final double eeWMinus = .9;
+    public static final double eiWPlus = 5.1;
+    public static final double eiWMinus = .9;
     public static final double ieWPlus = 1.8;
-    public static final double ieWMinus = 1.8;
+    public static final double ieWMinus = 1.2;
     public static final double iiWPlus = 1.2;
-    public static final double iiWMinus = 2.2;
+    public static final double iiWMinus = 2;
 
     public static final double ieNrmSq = 2.0/(Math.sqrt(3*ieSigma)*PI_4TH_RT);
     public static final double ieSigSq = ieSigma * ieSigma;

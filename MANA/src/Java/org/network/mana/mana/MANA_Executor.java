@@ -28,7 +28,7 @@ public class MANA_Executor {
     private final ExecutorService pool;
 
 	public MANA_Executor(final double pruneInterval) {
-		pool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()/2);
+		pool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 		this.pruneInterval = pruneInterval;
 	}
 	
@@ -63,15 +63,15 @@ public class MANA_Executor {
 			for(MANA_Unit unit : units) {
 				nnz += unit.getTotalNNZ();
 			}
-	    	System.out.println("======== " + nnz + " ==========");
+	    	System.out.println("========== " + nnz + " ==========");
 	        pool.invokeAll(pruneTasks);
 	        int nnz2 = 0;
 	        for(MANA_Unit unit : units) {
 	        	unit.revalidateDegrees();
 				nnz2 += unit.getTotalNNZ();
 			}
-			System.out.println("======== " + nnz2 + " ==========");
-			System.out.println("NET: =========" + (nnz2-nnz) + " ==========");
+			System.out.println("======== " + nnz2 + " =========");
+			System.out.println("NET: ===== " + (nnz2-nnz) + " =========");
         }
 		try {
 			pool.invokeAll(updateTasks);

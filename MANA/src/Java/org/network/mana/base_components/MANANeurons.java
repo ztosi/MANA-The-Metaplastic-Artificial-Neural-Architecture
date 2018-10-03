@@ -22,8 +22,8 @@ public class MANANeurons implements Neuron {
 	public static final double final_tau_HP = 5E-5;
 	public static final double init_tau_MHP = 0.05;
 	public static final double final_tau_MHP = 1E-7;
-	public static final double hp_decay = 1E-6;
-	public static final double mhp_decay = 1E-6;
+	public static final double hp_decay = 5E-6;
+	public static final double mhp_decay = 5E-6;
 	public static final double default_alpha = 2;
 	public static final double default_lowFR = 1.0;
 	public static final double default_beta = 15;
@@ -273,15 +273,23 @@ public class MANANeurons implements Neuron {
         if(!allExcSNon) {
             boolean allOn = true;
             for(int ii=0; ii<N; ++ii) {
-                excSNon.set(ii, excSums[ii] >= normValsExc[ii] && !excSNon.get(ii));
-                allOn &= excSNon.get(ii);
+				if(excSums[ii] >= normValsExc[ii] && !excSNon.get(ii)) {
+					excSNon.set(ii, true);
+					System.out.println(id + " " + ii + " EXCIT TRIPPED");
+				}
+
+				allOn &= excSNon.get(ii);
             }
             allExcSNon = allOn;
         }
         if(!allInhSNon) {
             boolean allOn = true;
             for(int ii=0; ii<N; ++ii) {
-                inhSNon.set(ii, inhSums[ii] >= normValsInh[ii] && !inhSNon.get(ii));
+            	if(inhSums[ii] >= normValsInh[ii] && !inhSNon.get(ii)) {
+					inhSNon.set(ii, true);
+					System.out.println(id + " " + ii + " INHIB TRIPPED");
+				}
+
                 allOn &= inhSNon.get(ii);
             }
             allInhSNon = allOn;

@@ -190,6 +190,7 @@ public class MANA_Node {
                 lambda, SynType.getConProbBase(srcData.isExcitatory(),
                         targData.isExcitatory())/2, maxDist, time);
         pfrLoc = new InterleavedSparseAddOn(synMatrix.getWeightsTOrd(), 1);
+        evtQueue.clear(); // TODO: This is very bad! Figure out a better way!
         structureChanged = true;
     }
 
