@@ -11,10 +11,16 @@ public enum DampFunction {
         @Override
         public final void dampen(final double[] dwWVec,
                                  double maxVal, double minVal) {
-            hardMinBound(dwWVec, minVal);
+//            hardMinBound(dwWVec, minVal);
             for(int ii=dwWVec.length-2; ii>=0; ii-=2) {
-                double dm = dwWVec[ii] - maxVal;
-                dwWVec[ii] = maxVal - (dm - Math.abs(dm))/2;
+//                double dm = dwWVec[ii] - maxVal;
+//                dwWVec[ii] = maxVal - (dm - Math.abs(dm))/2;
+                if(dwWVec[ii] > maxVal) {
+                    dwWVec[ii] = maxVal;
+                } else if (dwWVec[ii] < minVal) {
+                    dwWVec[ii] = minVal;
+                }
+
             }
         }
     }, EXP_BOUND {
@@ -43,14 +49,14 @@ public enum DampFunction {
                                  double maxVal, double minVal) {
             hardMinBound(dwWVec, minVal);
         }
-    },
-        NONE{
-            @Override
-            public final void dampen(final double[] dwWVec,
-            double maxVal, double minVal) {
-                return;
-            }
-    };
+    };//,
+//        NONE{
+//            @Override
+//            public final void dampen(final double[] dwWVec,
+//            double maxVal, double minVal) {
+//                return;
+//            }
+//    };
 
     public static final DampFunction DEF_DAMPENER = DampFunction.HARD_BOUND;
 

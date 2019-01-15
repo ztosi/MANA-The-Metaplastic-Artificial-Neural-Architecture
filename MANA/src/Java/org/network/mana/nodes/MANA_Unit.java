@@ -120,7 +120,7 @@ public class MANA_Unit {
 		unit.numExc = (int)(0.8*unit.size);
 		unit.numAllExc = unit.numExc + unit.noInp;
 		unit.numInh = (int)(0.2*unit.size);
-		int nodD = unit.numInh/200;
+		int nodD = unit.numInh/100;
 		unit.noSecs = nodD*2;
 		int secSize = _N/unit.noSecs;
 		unit.nodesPerSec = unit.noSecs+1; // input

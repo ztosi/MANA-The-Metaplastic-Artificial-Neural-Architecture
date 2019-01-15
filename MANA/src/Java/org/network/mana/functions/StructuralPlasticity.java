@@ -20,12 +20,11 @@ public class StructuralPlasticity {
 
     //public static final double DEF_EXC_THRESH = 0.05;
     //public static final double DEF_INH_THRESH = 0.05;
-    public static final double DEF_CON_CONST = 0.4;
+    public static final double DEF_CON_CONST = 0.02;
     public static final double P_ADD_MIN = 0.01;
     //public static final double RT_LOG_PA_MIN = Math.sqrt(-Math.log(P_ADD_MIN));
     //public static final double DEF_PG_INTERVAL = 2500; // ms
     public static final double MAX_ADD_RATIO = 0.01;
-
 
     public static MANAMatrix pruneGrow(MANAMatrix mat, Neuron src, MANANeurons tar,
                                        int noOutP, int noInP, double lambda, double c_x,
@@ -60,7 +59,7 @@ public class StructuralPlasticity {
                 }
                // if (noAdded[ii] < maxAdd) { // We have not added the maximum number of allowed synapses from this source
                     double newDly = growDecision(src.getCoordinates()[ii], tar.getCoordinates()[jj],
-                            c_x/10, lambda, maxDist);
+                            c_x * DEF_CON_CONST, lambda, maxDist);
                     if(newDly > 0) {
                         double[] data = new double[11];
                         data[0] = SynapseData.DEF_NEW_WEIGHT;
