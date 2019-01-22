@@ -17,8 +17,9 @@ public final class MexHatSTDP implements  STDP {
 
     private double nrmTerm;
 
-    public double lRate = 1E-6;
+    public double lRate = 1E-5;
 
+    public double a = 10;
 
     public MexHatSTDP() {
         setSigma(sig);
@@ -55,7 +56,7 @@ public final class MexHatSTDP implements  STDP {
 
     public static double mexicanHatWindow(double sigmaSq, double normTerm, double wplus,
                                           double wminus, double delta_t, double lrate) {
-        double dw = mexicanHatFunction(delta_t, sigmaSq, normTerm);
+        double dw = 10 * mexicanHatFunction(delta_t, sigmaSq, normTerm);
         if (dw < 0) {
             dw *= -wminus;
         } else {

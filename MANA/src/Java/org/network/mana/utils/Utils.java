@@ -239,7 +239,20 @@ public class Utils {
 		}
 		return dlys;
 	}
-	
+
+	public static double [] scalarMulti(double[] arr, double val) {
+		for(int ii=0, n=arr.length; ii<n; ++ii) {
+			arr[ii] *= val;
+		}
+		return arr;
+	}
+
+	public static double [] scalarMult(double [] arr, double val) {
+		double [] cpy = new double[arr.length];
+		System.arraycopy(arr, 0, cpy, 0, arr.length);
+		return scalarMulti(cpy, val);
+	}
+
 	public static double[] getDoubleArr(Collection<Double> doubleCol) {
 		double[] out = new double[doubleCol.size()];
 		Iterator<Double> dcIter = doubleCol.iterator();

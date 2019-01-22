@@ -120,8 +120,7 @@ public class MANA_Unit {
 		unit.numExc = (int)(0.8*unit.size);
 		unit.numAllExc = unit.numExc + unit.noInp;
 		unit.numInh = (int)(0.2*unit.size);
-		int nodD = unit.numInh/100;
-		unit.noSecs = nodD*2;
+		unit.noSecs = 5;
 		int secSize = _N/unit.noSecs;
 		unit.nodesPerSec = unit.noSecs+1; // input
 
@@ -133,7 +132,7 @@ public class MANA_Unit {
 		for(int ii=0; ii< unit.noSecs; ++ii) {
 
 			// Placement in a 3D space handled by builder methods...
-			MANANeurons neu = MANANeurons.buildFromLimits(secSize, ii < (unit.noSecs *0.8),
+			MANANeurons neu = MANANeurons.buildFromLimits(secSize, ii < (unit.noSecs * 0.8),
 					unit.defXBounds,
 					unit.defYBounds,
 					unit.defZBounds);
@@ -146,11 +145,11 @@ public class MANA_Unit {
 		for(MANA_Sector tar : unit.sectors.values()) {
 			// First node in each sector is always the node containing connections from the input
 			MANA_Node inpN = tar.add(inp, new ConnectSpecs(ConnectRule.Random,
-					new double[]{0.25}, Utils.ProbDistType.NORMAL, new double[]{3,1}, unit.defMaxDist, SynapseData.MAX_DELAY));
+					new double[]{0.25}, Utils.ProbDistType.NORMAL, new double[]{2,1}, unit.defMaxDist, SynapseData.MAX_DELAY));
 			for(MANANeurons src : unit.targets) {
 				// Use default connection specs to connect Java.org.network.mana.mana Java.org.network.mana.nodes to each other (these are recurrent/reservoir synapses)
-				ConnectSpecs cSpecs = new ConnectSpecs(ConnectRule.Distance,
-						new double[]{SynType.getConProbBase(src.isExcitatory(), tar.target.isExcitatory())*4, unit.defMaxDist/3},
+				ConnectSpecs cSpecs = new ConnectSpecs(ConnectRule.Random,
+						new double[]{0.8},
 						unit.defMaxDist, SynapseData.MAX_DELAY);
 				tar.add(src, cSpecs);
 			}
@@ -231,7 +230,14 @@ public class MANA_Unit {
 
 				node.getWeightMatrix().getPtrsAsIndices(wd.tarInds, absShift, targOff);
 				node.getWeightMatrix().getIndices(wd.srcInds, absShift, srcOff);
-                node.getWeightValues(wd.values, absShift);
+				node.getWeightValues(wd.values, absShift);
+
+				if(!node.srcData.isExcitatory()) {
+					for(int ii=0; ii < nnz; ++ii) {
+						wd.values[ii+absShift] *= -1;
+					}
+
+				}
 
 				srcOff += n.getSize();
 				absShift += nnz;
@@ -301,7 +307,7 @@ public class MANA_Unit {
 		}
 		WeightData wd = getMatrix();
         Utils.addScalar(wd.srcInds, 1);
-        Utils.addScalar(wd. tarInds, 1);
+        Utils.addScalar(wd.tarInds, 1);
 
         mlData.add(new MLInt32("srcInds", wd.srcInds, 1));
         mlData.add(new MLInt32("tarInds", wd.tarInds, 1));

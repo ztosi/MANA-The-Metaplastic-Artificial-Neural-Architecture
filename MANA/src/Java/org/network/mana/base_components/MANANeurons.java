@@ -18,16 +18,16 @@ public class MANANeurons implements Neuron {
 	public static final double default_v_l = -70;
 	public static final double default_r_m = 1.0;
 	public static final double default_i_bg = 18;
-	public static final double init_tau_HP = 1E-4;
-	public static final double final_tau_HP = 5E-5;
+	public static final double init_tau_HP = 5E-5;
+	public static final double final_tau_HP = 1E-5;
 	public static final double init_tau_MHP = 0.05;
-	public static final double final_tau_MHP = 1E-7;
-	public static final double hp_decay = 5E-6;
-	public static final double mhp_decay = 5E-6;
-	public static final double default_alpha = 2;
+	public static final double final_tau_MHP = 1E-8;
+	public static final double hp_decay = 1E-6;
+	public static final double mhp_decay = 1E-6;
+	public static final double default_alpha = 4;
 	public static final double default_lowFR = 1.0;
-	public static final double default_beta = 15;
-	public static final double default_noiseVar = 0.7;
+	public static final double default_beta = 10;
+	public static final double default_noiseVar = 0.5;
 	
 	public static final double default_exc_tau_m = 30;
 	public static final double default_inh_tau_m = 20;
@@ -100,6 +100,7 @@ public class MANANeurons implements Neuron {
 	/* Misc. Important */
 	public final int N;
 	public final boolean exc;
+	public double adaptJump = 1;
 
 	public static MANANeurons buildFromLimits(int _N, boolean _exc, double[] xlims, double[] ylims, double[] zlims) {
 	        double[] xCoors = Utils.getRandomArray(Utils.ProbDistType.UNIFORM, xlims[0], xlims[1], _N);
@@ -153,10 +154,14 @@ public class MANANeurons implements Neuron {
 		
 		if(exc) {
 			ref_p = default_exc_ref_p;
-			tau_m = new DataWrapper(N, true, default_exc_tau_m);
+//			tau_m = new DataWrapper(N, true, default_exc_tau_m);
+			tau_m = new DataWrapper(Utils.getRandomArray(Utils.ProbDistType.NORMAL, 22, 1.5, N));
+			//adaptJump = 15;
 		} else {
 			ref_p = default_inh_ref_p;
-			tau_m = new DataWrapper(N, true, default_inh_tau_m);
+//			tau_m = new DataWrapper(N, true, default_inh_tau_m);
+			tau_m = new DataWrapper(Utils.getRandomArray(Utils.ProbDistType.NORMAL, 26, 2.5, N));
+			//adaptJump = 10;
 		}
 
 
@@ -174,6 +179,7 @@ public class MANANeurons implements Neuron {
 			estFR.setBuffer(ii, 1.0f);
 			normValsExc[ii] = newNormVal(ii);
 		}
+
 		System.arraycopy(normValsExc, 0, normValsInh, 0, N);
 
 		xyzCoors=new double[_N][3];
@@ -392,7 +398,7 @@ public class MANANeurons implements Neuron {
 					throw new IllegalStateException("Refractory periods not being respected.");
 				}
 				v_m[ii] = v_reset.get(ii);
-				adapt[ii] += 1;
+				adapt[ii] += adaptJump;
 				ef[ii] += 1;
 			}
 		}

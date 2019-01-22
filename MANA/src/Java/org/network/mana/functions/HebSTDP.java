@@ -14,7 +14,7 @@ public final class HebSTDP implements STDP {
 
     public double wMinus = 1;
 
-    public double lRate = 1E-6;
+    public double lRate = 1E-5;
 
     public HebSTDP() {
     }

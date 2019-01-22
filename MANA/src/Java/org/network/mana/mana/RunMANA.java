@@ -67,7 +67,7 @@ public class RunMANA {
 			System.out.print(unit.nodes.get(ii).type.isExcitatory() + " ");
 		}
         double maxDist = unit.getMaxDist();
-        double lambda = maxDist/3;
+        double lambda = maxDist/2;
         double time = 0.0;
 //        int maxAdd = (int)(unit.getSize() * unit.getSize()
 //                * SPFunctions.P_ADD_MIN);
@@ -99,7 +99,7 @@ public class RunMANA {
                 }
 				if((iters)%(1000/ dt) == 0 && time != 0) {
 					System.out.println("------------- " + time + "------------- " );
-					if ((iters)%(10000/ dt) == 0 || first) {
+					if ((iters)%(10000/ dt) == 0 || first || iters == (int)(1000/dt)) {
 						unit.printData(mainOut.toString(), prefix, time, dt);
 						first = false;
 					}

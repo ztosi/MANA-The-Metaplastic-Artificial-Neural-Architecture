@@ -20,7 +20,7 @@ public class StructuralPlasticity {
 
     //public static final double DEF_EXC_THRESH = 0.05;
     //public static final double DEF_INH_THRESH = 0.05;
-    public static final double DEF_CON_CONST = 0.02;
+    public static final double DEF_CON_CONST = 0.001;
     public static final double P_ADD_MIN = 0.01;
     //public static final double RT_LOG_PA_MIN = Math.sqrt(-Math.log(P_ADD_MIN));
     //public static final double DEF_PG_INTERVAL = 2500; // ms

@@ -174,9 +174,9 @@ public class MANA_Node {
         this.targData = tarNeu;
         this.isTransUnit = isTransUnit;
         this.type = type;
-        normVals = tarNeu.isExcitatory() ? targData.normValsExc : targData.normValsInh;
-        normFlags = tarNeu.isExcitatory() ? parent.snExcOn : parent.snInhOn;
-        sectorSums = tarNeu.isExcitatory() ? parent.secExcSums : parent.secInhSums;
+        normVals = srcNeu.isExcitatory() ? targData.normValsExc : targData.normValsInh;
+        normFlags = srcNeu.isExcitatory() ? parent.snExcOn : parent.snInhOn;
+        sectorSums = srcNeu.isExcitatory() ? parent.secExcSums : parent.secInhSums;
         height = srcNeu.getSize();
         width = tarNeu.getSize();
         inputIsExternal = srcData instanceof InputNeurons;
