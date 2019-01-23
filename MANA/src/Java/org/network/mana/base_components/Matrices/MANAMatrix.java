@@ -10,6 +10,7 @@ import Java.org.network.mana.functions.STDP;
 import Java.org.network.mana.mana.MANA_Globals;
 import Java.org.network.mana.utils.*;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.PriorityQueue;
@@ -353,24 +354,129 @@ public class MANAMatrix {
         return tOrdLastArrivals;
     }
 
-//    public static void main(String [] args) {
-//        int numN = 10;
-//        MANANeurons src = new MANANeurons(numN, true,
-//                Utils.getUniformRandomArray(numN, 0, 100),
-//                Utils.getUniformRandomArray(numN, 0, 100),
-//                Utils.getUniformRandomArray(numN, 0, 100));
-//        MANANeurons tar = new MANANeurons(numN, true,
-//                Utils.getUniformRandomArray(numN, 0, 100),
-//                Utils.getUniformRandomArray(numN, 0, 100),
-//                Utils.getUniformRandomArray(numN, 0, 100));
-//        double [] parms = {0.1};
-//        MANAMatrix mm = new MANAMatrix(src, tar,
-//                Math.sqrt(30000), 20, ConnectRule.Random, parms);
-//
-//        // TODO: Actually use JUnit instead of being lazy... so lazy!
-//        System.out.println("Dummy. It's a place for a breakpoint! :D");
-//
-//    }
+    public static void main(String [] args) {
+        int numN = 10;
+        MANANeurons src = new MANANeurons(numN, true,
+                Utils.getUniformRandomArray(numN, 0, 100),
+                Utils.getUniformRandomArray(numN, 0, 100),
+                Utils.getUniformRandomArray(numN, 0, 100));
+        MANANeurons tar = new MANANeurons(numN, true,
+                Utils.getUniformRandomArray(numN, 0, 100),
+                Utils.getUniformRandomArray(numN, 0, 100),
+                Utils.getUniformRandomArray(numN, 0, 100));
+        ConnectSpecs cSpecs = new ConnectSpecs(ConnectRule.Random,
+                new double[]{0.2}, Math.sqrt(30000), 20);
+        MANAMatrix mm = new MANAMatrix(src, tar,
+                Math.sqrt(30000), 20, cSpecs);
+        double[] rawVals = mm.weightsTOrd.getRawData();
+        for(int ii=0; ii<rawVals.length; ++ii) {
+            rawVals[ii] =Math.ceil( Math.random() * 10);
+        }
+
+        System.out.println(Arrays.toString(mm.weightsTOrd.getPtrs()));
+        System.out.println();
+        System.out.println(Arrays.toString(mm.weightsTOrd.getOrdIndices()));
+        System.out.println();
+        System.out.println(Arrays.toString(mm.weightsTOrd.getValues()));
+
+        int[] srcInd = new int[mm.nnz];
+        int[] tarInd = new int[mm.nnz];
+        double [] vals = new double[mm.nnz];
+
+        mm.weightsTOrd.getInCOO(srcInd, tarInd, vals, 0);
+
+        double[][] mat = new double[numN][numN];
+        int[][] matC = new int[numN][numN];
+
+        for(int ii=0; ii<mm.nnz; ++ii) {
+            mat[srcInd[ii]][tarInd[ii]] = vals[ii];
+            matC[srcInd[ii]][tarInd[ii]]++;
+        }
+
+        System.out.println();
+
+        for(int ii=0; ii<numN; ++ii) {
+            System.out.println(Arrays.toString(mat[ii]));
+        }
+
+        System.out.println();
+
+        for(int ii=0; ii<numN; ++ii) {
+            System.out.println(Arrays.toString(matC[ii]));
+        }
+
+        double[] sus = new double[10];
+        mm.calcAndGetSums(sus);
+
+        System.out.println();
+        System.out.println(Arrays.toString(sus));
+
+        for(int ii=0; ii<numN; ++ii) {
+            mm.scaleWeights(ii, 1/sus[ii]);
+        }
+
+        System.out.println();
+        System.out.println(Arrays.toString(mm.weightsTOrd.getPtrs()));
+        System.out.println();
+        System.out.println(Arrays.toString(mm.weightsTOrd.getOrdIndices()));
+        System.out.println();
+        System.out.println(Arrays.toString(mm.weightsTOrd.getValues()));
+
+        srcInd = new int[mm.nnz];
+        tarInd = new int[mm.nnz];
+        vals = new double[mm.nnz];
+
+        mm.weightsTOrd.getInCOO(srcInd, tarInd, vals, 0);
+
+        mat = new double[numN][numN];
+        matC = new int[numN][numN];
+
+        for(int ii=0; ii<mm.nnz; ++ii) {
+            mat[srcInd[ii]][tarInd[ii]] = vals[ii];
+            matC[srcInd[ii]][tarInd[ii]]++;
+        }
+        System.out.println();
+
+        for(int ii=0; ii<numN; ++ii) {
+            System.out.println(Arrays.toString(mat[ii]));
+        }
+
+
+        COOManaMat coomana = new COOManaMat(mm, Ordering.TARGET);
+
+        MANAMatrix convMana = new MANAMatrix(coomana, src, tar);
+
+        System.out.println();
+        System.out.println(Arrays.toString(convMana.weightsTOrd.getPtrs()));
+        System.out.println();
+        System.out.println(Arrays.toString(convMana.weightsTOrd.getOrdIndices()));
+        System.out.println();
+        System.out.println(Arrays.toString(convMana.weightsTOrd.getValues()));
+
+        srcInd = new int[convMana.nnz];
+        tarInd = new int[convMana.nnz];
+        vals = new double[convMana.nnz];
+
+        convMana.weightsTOrd.getInCOO(srcInd, tarInd, vals, 0);
+
+        mat = new double[numN][numN];
+        matC = new int[numN][numN];
+
+        for(int ii=0; ii<mm.nnz; ++ii) {
+            mat[srcInd[ii]][tarInd[ii]] = vals[ii];
+            matC[srcInd[ii]][tarInd[ii]]++;
+        }
+        System.out.println();
+
+        for(int ii=0; ii<numN; ++ii) {
+            System.out.println(Arrays.toString(mat[ii]));
+        }
+
+
+        // TODO: Actually use JUnit instead of being lazy... so lazy!
+        System.out.println("Dummy. It's a place for a breakpoint! :D");
+
+    }
 
 
 }

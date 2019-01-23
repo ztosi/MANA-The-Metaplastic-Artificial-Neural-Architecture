@@ -45,14 +45,15 @@ public class BoolArray {
 
     public static void main(String [] args) {
         BoolArray bob = new BoolArray(100);
-
-        bob.set(99, true);
-        System.out.println(bob.get(99));
-        bob.set(80, true);
-        System.out.println(bob.get(99));
+        System.out.println(bob.get(79));
+        bob.set(79, true);
+        System.out.println(bob.get(79));
         System.out.println(bob.get(80));
-        bob.set(99, false);
-        System.out.println(bob.get(99));
+        bob.set(80, true);
+        System.out.println(bob.get(79));
+        System.out.println(bob.get(80));
+        bob.set(79, false);
+        System.out.println(bob.get(79));
         System.out.println(bob.get(80));
 
     }

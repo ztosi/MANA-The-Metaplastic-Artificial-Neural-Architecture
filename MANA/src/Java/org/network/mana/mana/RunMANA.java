@@ -99,7 +99,7 @@ public class RunMANA {
                 }
 				if((iters)%(1000/ dt) == 0 && time != 0) {
 					System.out.println("------------- " + time + "------------- " );
-					if ((iters)%(10000/ dt) == 0 || first || iters == (int)(1000/dt)) {
+					if ((iters)%(100000/ dt) == 0 || first || iters == (int)(1000/dt)) {
 						unit.printData(mainOut.toString(), prefix, time, dt);
 						first = false;
 					}

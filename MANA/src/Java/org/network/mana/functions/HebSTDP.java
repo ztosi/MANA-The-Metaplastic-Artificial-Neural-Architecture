@@ -14,7 +14,9 @@ public final class HebSTDP implements STDP {
 
     public double wMinus = 1;
 
-    public double lRate = 1E-5;
+    public double lRate = 1E-3;
+
+    public static final double twentRt = Math.pow(20, 1.0/4.0);
 
     public HebSTDP() {
     }
@@ -33,8 +35,15 @@ public final class HebSTDP implements STDP {
         int start = wts.getStartIndex(neuNo);
         int laLoc = wts.getStartIndex(neuNo, lastArrs.getInc());
         int end = wts.getEndIndex(neuNo);
+
         for(int ii = start; ii<end; ii+=wts.getInc()) {
-            wts.getRawData()[ii+1] = lRate* wPlus;
+            if(wts.getRawData()[ii] > 20) {
+                wts.getRawData()[ii] = 20;
+            }
+        }
+
+        for(int ii = start; ii<end; ii+=wts.getInc()) {
+            wts.getRawData()[ii+1] = lRate* wPlus * Math.pow(-wts.getRawData()[ii]+20, 0.25)/twentRt;
         }
         for(int ii = start; ii<end; ii+=wts.getInc()) {
             wts.getRawData()[ii+1] *= Math.exp((lastArrs.values[laLoc]-time)/tauPlus);

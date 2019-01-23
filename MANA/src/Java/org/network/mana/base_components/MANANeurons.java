@@ -79,8 +79,8 @@ public class MANANeurons implements Neuron {
 	public double [] threshRA;
 	
 	// Afferent Synapse properties
-	public BoolArray excSNon;
-	public BoolArray inhSNon;
+	public final BoolArray excSNon;
+	public final BoolArray inhSNon;
 	//public double [] normVals;
 	public double [] normValsExc;
 	public double [] normValsInh;
@@ -155,7 +155,7 @@ public class MANANeurons implements Neuron {
 		if(exc) {
 			ref_p = default_exc_ref_p;
 //			tau_m = new DataWrapper(N, true, default_exc_tau_m);
-			tau_m = new DataWrapper(Utils.getRandomArray(Utils.ProbDistType.NORMAL, 22, 1.5, N));
+			tau_m = new DataWrapper(Utils.getRandomArray(Utils.ProbDistType.NORMAL, 23, 1.5, N));
 			//adaptJump = 15;
 		} else {
 			ref_p = default_inh_ref_p;
@@ -207,8 +207,8 @@ public class MANANeurons implements Neuron {
 	    update(dt, time, spkBuffer);
 	    updateEstFR(dt);
 	    updateThreshold(dt);
-        descaleNormVals();
-	    calcScaleFacs();
+        //descaleNormVals();
+	    //calcScaleFacs();
 		if (mhpOn && !(allExcSNon && allInhSNon)) {
 		    for(int ii=0; ii<N; ++ii) {
 		    	if(inDegree[ii] == 0) {
@@ -225,7 +225,7 @@ public class MANANeurons implements Neuron {
 		}
 
 		calcNewNorms();
-		scaleNormVals();
+		//scaleNormVals();
         lambda += dt * (lambda-final_tau_HP) * hp_decay;
         eta += dt  * (eta - final_tau_MHP) * mhp_decay;
     }
@@ -279,8 +279,9 @@ public class MANANeurons implements Neuron {
         if(!allExcSNon) {
             boolean allOn = true;
             for(int ii=0; ii<N; ++ii) {
-				if(excSums[ii] >= normValsExc[ii] && !excSNon.get(ii)) {
+				if((excSums[ii] >= normValsExc[ii]) && !excSNon.get(ii)) {
 					excSNon.set(ii, true);
+					System.out.println();
 					System.out.println(id + " " + ii + " EXCIT TRIPPED");
 				}
 
@@ -291,8 +292,9 @@ public class MANANeurons implements Neuron {
         if(!allInhSNon) {
             boolean allOn = true;
             for(int ii=0; ii<N; ++ii) {
-            	if(inhSums[ii] >= normValsInh[ii] && !inhSNon.get(ii)) {
+            	if((inhSums[ii] >= normValsInh[ii]) && !inhSNon.get(ii)) {
 					inhSNon.set(ii, true);
+					System.out.println();
 					System.out.println(id + " " + ii + " INHIB TRIPPED");
 				}
 
@@ -307,35 +309,23 @@ public class MANANeurons implements Neuron {
      * both types...
      */
     private void calcNewNorms() {
-	    if(!allInhSNon && !allExcSNon) {
-	        if(allExcSNon && !allInhSNon) {
-	            for(int ii=0; ii<N; ++ii) {
-	                if(!inhSNon.get(ii)) {
-	                    normValsInh[ii] = newNormVal(ii);
-                    }
-                }
-            } else if(allInhSNon && !allExcSNon) {
-                for(int ii=0; ii<N; ++ii) {
-                    if(!excSNon.get(ii)) {
-                        normValsExc[ii] = newNormVal(ii);
-                    }
-                }
-            } else {
-                for(int ii=0; ii<N; ++ii) {
-                    if(!excSNon.get(ii) || !inhSNon.get(ii)) {
-                        double nnV = newNormVal(ii);
-                        if(!excSNon.get(ii)) {
-                            normValsExc[ii] = nnV;
-                        }
-                        if(!inhSNon.get(ii)) {
-                            normValsInh[ii] = nnV;
-                        }
-                    }
-                }
-            }
-        } else {
-	        return;
-        }
+
+    	if(!allExcSNon) {
+    		for(int ii=0; ii<N; ++ii) {
+    			if(!excSNon.get(ii)) {
+    				normValsExc[ii] = newNormVal(ii);
+				}
+			}
+		}
+
+    	if(!allInhSNon) {
+    		for(int ii=0; ii<N; ++ii) {
+    			if(!inhSNon.get(ii)) {
+    				normValsInh[ii] = newNormVal(ii);
+				}
+			}
+		}
+
     }
 
 	/**
@@ -493,8 +483,8 @@ public class MANANeurons implements Neuron {
     	System.arraycopy(sat_c, 0, this.sat_c, 0, N);
     	for(int ii=0; ii<N; ++ii) {
     		double nnv = newNormVal(ii);
-    		normValsExc[ii] = nnv * exc_sf[ii];
-    		normValsInh[ii] = nnv * inh_sf[ii];
+    		normValsExc[ii] = nnv; //* exc_sf[ii];
+    		normValsInh[ii] = nnv; //* inh_sf[ii];
 		}
 	}
 

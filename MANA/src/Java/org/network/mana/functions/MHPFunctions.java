@@ -15,6 +15,7 @@ public class MHPFunctions {
 		int start = pfrLoc.getStartIndex(tarNo);
 		int end = pfrLoc.getEndIndex(tarNo);
 		int[] orderInds = pfrLoc.getRawOrdIndices();
+		//int swapper = exc ? 1:-1;
 		try {
 			for (int ii = start; ii < end; ii += pfrLoc.getInc()) {
 				pfrLoc.values[ii] = (efrsTar.getData(tarNo) - efrsSrc.getData(orderInds[ii])) / pfrsTar[tarNo];

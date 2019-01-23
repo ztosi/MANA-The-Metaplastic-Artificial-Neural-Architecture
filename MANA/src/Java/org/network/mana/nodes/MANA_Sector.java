@@ -203,7 +203,7 @@ public class MANA_Sector implements Syncable {
 //            }
 //        }
 //        System.out.println();
-        if(!(target.allExcSNon && target.allInhSNon))
+        //if(!(target.allExcSNon && target.allInhSNon))
             Arrays.fill(pfrAccum, 0);
 
     }

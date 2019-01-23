@@ -148,8 +148,11 @@ public class MANA_Unit {
 					new double[]{0.25}, Utils.ProbDistType.NORMAL, new double[]{2,1}, unit.defMaxDist, SynapseData.MAX_DELAY));
 			for(MANANeurons src : unit.targets) {
 				// Use default connection specs to connect Java.org.network.mana.mana Java.org.network.mana.nodes to each other (these are recurrent/reservoir synapses)
-				ConnectSpecs cSpecs = new ConnectSpecs(ConnectRule.Random,
-						new double[]{0.8},
+				//ConnectSpecs cSpecs = new ConnectSpecs(ConnectRule.Random,
+				//		new double[]{0.8},
+				//		unit.defMaxDist, SynapseData.MAX_DELAY);
+				ConnectSpecs cSpecs = new ConnectSpecs(ConnectRule.Distance,
+						new double[]{2, unit.defMaxDist/4},
 						unit.defMaxDist, SynapseData.MAX_DELAY);
 				tar.add(src, cSpecs);
 			}

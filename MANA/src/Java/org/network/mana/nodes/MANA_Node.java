@@ -175,7 +175,7 @@ public class MANA_Node {
         this.isTransUnit = isTransUnit;
         this.type = type;
         normVals = srcNeu.isExcitatory() ? targData.normValsExc : targData.normValsInh;
-        normFlags = srcNeu.isExcitatory() ? parent.snExcOn : parent.snInhOn;
+        normFlags = srcNeu.isExcitatory() ? targData.excSNon : targData.inhSNon;
         sectorSums = srcNeu.isExcitatory() ? parent.secExcSums : parent.secInhSums;
         height = srcNeu.getSize();
         width = tarNeu.getSize();
@@ -231,17 +231,17 @@ public class MANA_Node {
 
                 // Synaptic normalization & scaling
                 if (normalizationOn) {
-                    if (!targData.getAllNrmOn(srcData.isExcitatory())) {
+                //    if (!targData.getAllNrmOn(srcData.isExcitatory())) {
                         for (int ii = 0; ii < width; ++ii) {
                             if (normFlags.get(ii)) {
                                 synMatrix.scaleWeights(ii, normVals[ii] / sectorSums[ii]);
                             }
                         }
-                    } else {
-                        for (int ii = 0; ii < width; ++ii) {
-                            synMatrix.scaleWeights(ii, normVals[ii] / sectorSums[ii]);
-                        }
-                    }
+//                    } else {
+//                        for (int ii = 0; ii < width; ++ii) {
+//                            synMatrix.scaleWeights(ii, normVals[ii] / sectorSums[ii]);
+//                        }
+//                    }
                 }
 
                 // Calculate new dws for synapses tied to arriving events, add their currents to the correct target
@@ -263,6 +263,7 @@ public class MANA_Node {
             //    dampener.dampen(synMatrix.getWeightsTOrd().getRawData(), SynapseData.MAX_WEIGHT, 0);
             // Add dws to ws--update synaptic weights
             synMatrix.updateWeights();
+            //synMatrix.getWeightsTOrd().
 
             if (normalizationOn) {
                 synMatrix.calcAndGetSums(localSums);
@@ -271,7 +272,8 @@ public class MANA_Node {
             if (!inputIsExternal && targData.mhpOn && !(targData.allInhSNon && targData.allExcSNon)) {
                 for (int ii = 0; ii < width; ++ii) {
                     if (!(targData.excSNon.get(ii) && targData.inhSNon.get(ii))) {
-                        MHPFunctions.mhpStage1(targData.estFR, targData.prefFR, ((MANANeurons) srcData).estFR, ii, pfrLoc);
+                        MHPFunctions.mhpStage1(targData.estFR, targData.prefFR, ((MANANeurons) srcData).estFR, ii,
+                                pfrLoc);
                         MHPFunctions.mhpStage2(ii, MHPFunctions.getFp(targData.fVals[ii]),
                                 MHPFunctions.getFm(targData.fVals[ii]), pfrLoc);
                     }

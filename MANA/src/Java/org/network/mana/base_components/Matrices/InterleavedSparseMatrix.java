@@ -165,6 +165,19 @@ public class InterleavedSparseMatrix {
 
     }
 
+    public void getInCOO(int[] src, int[] tar, double[] wt, int offset) {
+        // TODO: Add checks... and options for ranges in args...
+        int kk = 0;
+        for(int ii=0; ii<noMajor; ++ii) {
+            for(int jj=ptrs[ii]; jj<ptrs[ii+1]; ++jj) {
+                tar[kk] = ii;
+                src[kk] = ordIndices[jj];
+                wt[kk++] = values[jj*nILFac+offset];
+            }
+
+        }
+    }
+
    // public void update(SMOperation op, double[] srcBlock )
 
     public void reductionExtraTarArg(SMOperation op, double [] result, double[] srcVars,
