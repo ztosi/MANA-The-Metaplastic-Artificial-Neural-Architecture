@@ -8,9 +8,11 @@ public class MANA_Globals {
 
     public static final double dt = 0.2;
 
-    public static final double DEF_INIT_WT = 0.001;
+    public static final double DEF_INIT_WT = 0.0001;
 
     public static final double MIN_PFR = 0.1;
+
+    public static final double MAX_PFR = 100;
 
     public static int getID() {
         return ID.getAndIncrement();

@@ -19,7 +19,7 @@ public final class MexHatSTDP implements  STDP {
 
     public double lRate = 1E-3;
 
-    public double a = 5;
+    public static double a = 10;
 
     public static final double twentRt = Math.pow(20, 1.0/4.0);
 
@@ -40,6 +40,11 @@ public final class MexHatSTDP implements  STDP {
         int start = wts.getStartIndex(neuNo);
         int laLoc = wts.getStartIndex(neuNo, lastArrs.getInc());
         int end = wts.getEndIndex(neuNo);
+        for(int ii = start; ii<end; ii+=wts.getInc()) {
+            if(wts.getRawData()[ii] > 20) {
+                wts.getRawData()[ii] = 20;
+            }
+        }
         for (int ii = start; ii < end; ii += wts.getInc()) {
             wts.getRawData()[ii + 1] = mexicanHatWindow(sigSq, nrmTerm,
                     wPlus, wMinus,
@@ -51,6 +56,9 @@ public final class MexHatSTDP implements  STDP {
     // data pack is {arrTime, rel tar ind, udfMultiplier}
 
     public void preTriggered(InterleavedSparseMatrix wts, int[] dataPack, BufferedDoubleArray lastSpkTimes, double dt) {
+        if(wts.getRawData()[dataPack[1]] > 20) {
+            wts.getRawData()[dataPack[1]] = 20;
+        }
         wts.getRawData()[dataPack[1] + 1] = mexicanHatWindow(sigSq, nrmTerm,
                 wPlus, wMinus,
                 (dataPack[0]*dt) - lastSpkTimes.getData(dataPack[3]), lRate, wts.getRawData()[dataPack[1]]);
@@ -58,7 +66,7 @@ public final class MexHatSTDP implements  STDP {
 
     public static double mexicanHatWindow(double sigmaSq, double normTerm, double wplus,
                                           double wminus, double delta_t, double lrate, double wt) {
-        double dw = 10 * mexicanHatFunction(delta_t, sigmaSq, normTerm);
+        double dw = a * mexicanHatFunction(delta_t, sigmaSq, normTerm);
         if (dw < 0) {
             dw *= -wminus;
         } else {

@@ -113,7 +113,7 @@ public class MANA_Node {
 
     private boolean structureChanged = false;
 
-    private PriorityBlockingQueue<int[]> evtQueue = new PriorityBlockingQueue<>(200,
+    private PriorityBlockingQueue<int[]> evtQueue = new PriorityBlockingQueue<>(5000,
             (int[] a, int[] b) -> { // Sort by arrival time then absolute target index
         if(a[0] < b[0]) {
             return -1;
@@ -270,14 +270,16 @@ public class MANA_Node {
             }
 
             if (!inputIsExternal && targData.mhpOn && !(targData.allInhSNon && targData.allExcSNon)) {
-                for (int ii = 0; ii < width; ++ii) {
-                    if (!(targData.excSNon.get(ii) && targData.inhSNon.get(ii))) {
-                        MHPFunctions.mhpStage1(targData.estFR, targData.prefFR, ((MANANeurons) srcData).estFR, ii,
-                                pfrLoc);
-                        MHPFunctions.mhpStage2(ii, MHPFunctions.getFp(targData.fVals[ii]),
-                                MHPFunctions.getFm(targData.fVals[ii]), pfrLoc);
-                    }
+                if((int)(time/dt) % (int)(1/dt) == 0) {
+                    for (int ii = 0; ii < width; ++ii) {
+                        if (!(targData.excSNon.get(ii) && targData.inhSNon.get(ii))) {
+                            MHPFunctions.mhpStage1(targData.estFR, targData.prefFR, ((MANANeurons) srcData).estFR, ii,
+                                    pfrLoc);
+                            MHPFunctions.mhpStage2(ii, MHPFunctions.getFp(targData.fVals[ii]),
+                                    MHPFunctions.getFm(targData.fVals[ii]), pfrLoc);
+                        }
 
+                    }
                 }
 //            for(int ii=0; ii<width; ++ii) {
 //                if(!(targData.excSNon.get(ii) && targData.inhSNon.get(ii)))

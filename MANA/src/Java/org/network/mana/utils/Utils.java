@@ -299,6 +299,12 @@ public class Utils {
 
 		System.out.println(checkSign(b));
 		System.out.println(checkSign(d));
+		System.out.println(sign(-12.0));
+		System.out.println(sign(12.0));
+		System.out.println(sign(1E20));
+		System.out.println(sign(0));
+		System.out.println(sign(-0));
+		System.out.println(sign(-10));
 	}
 
 }

@@ -1,6 +1,7 @@
 package Java.org.network.mana.base_components;
 
 import java.util.Arrays;
+import java.util.concurrent.ThreadLocalRandom;
 
 import Java.org.network.mana.base_components.enums.SynType;
 import Java.org.network.mana.functions.MHPFunctions;
@@ -18,16 +19,17 @@ public class MANANeurons implements Neuron {
 	public static final double default_v_l = -70;
 	public static final double default_r_m = 1.0;
 	public static final double default_i_bg = 18;
-	public static final double init_tau_HP = 5E-5;
+	public static final double init_tau_HP = 1E-5;
 	public static final double final_tau_HP = 1E-5;
 	public static final double init_tau_MHP = 0.05;
-	public static final double final_tau_MHP = 1E-8;
-	public static final double hp_decay = 1E-6;
-	public static final double mhp_decay = 1E-6;
-	public static final double default_alpha = 4;
+	public static final double final_tau_MHP = 1E-7;
+	public static final double hp_decay = 2.5E-6;
+	public static final double mhp_decay = 2.5E-6;
+	public static final double default_alpha = 2;
 	public static final double default_lowFR = 1.0;
-	public static final double default_beta = 10;
-	public static final double default_noiseVar = 0.5;
+	public static final double default_beta = 15;
+	public static final double default_noiseVar = 0.2;
+	public static final double mhpPressure = 2;
 	
 	public static final double default_exc_tau_m = 30;
 	public static final double default_inh_tau_m = 20;
@@ -127,7 +129,9 @@ public class MANANeurons implements Neuron {
 		prefFR = new double[N];
 		ef = new double[N];
 		exc_sf = new double[N];
+		Arrays.fill(exc_sf, 1);
 		inh_sf = new double[N];
+		Arrays.fill(inh_sf, 1);
 		lastSpkTime = new BufferedDoubleArray(N);
 		spks = new BoolArray(N);
 		normValsExc = new double[N];
@@ -207,27 +211,35 @@ public class MANANeurons implements Neuron {
 	    update(dt, time, spkBuffer);
 	    updateEstFR(dt);
 	    updateThreshold(dt);
-        //descaleNormVals();
-	    //calcScaleFacs();
+        descaleNormVals();
+	    calcScaleFacs();
 		if (mhpOn && !(allExcSNon && allInhSNon)) {
-		    for(int ii=0; ii<N; ++ii) {
-		    	if(inDegree[ii] == 0) {
-		    		continue;
-				}
-		        prefFR[ii] += dt*eta/inDegree[ii] * pfrDts[ii];
-            }
+
 			for(int ii=0; ii<N; ++ii) {
 				if(prefFR[ii] < MANA_Globals.MIN_PFR) {
-					prefFR[ii] = MANA_Globals.MIN_PFR;
+					prefFR[ii] = MANA_Globals.MIN_PFR + (1+ThreadLocalRandom.current().nextGaussian() * 0.1);
 				}
+				if(prefFR[ii] > MANA_Globals.MAX_PFR) {
+					prefFR[ii] = MANA_Globals.MAX_PFR;
+				}
+
+				//double lwVal = Math.exp((MANA_Globals.MIN_PFR - estFR.getData(ii))/prefFR[ii]);
+				//double hgVal = -Math.exp((estFR.getData(ii)-MANA_Globals.MAX_PFR)/prefFR[ii]);
+
+				//lwVal *= mhpPressure * MHPFunctions.mhpLTPTerm(prefFR[ii], default_beta, default_lowFR) / (inDegree[ii]+1);
+				//hgVal *= mhpPressure * MHPFunctions.mhpLTDTerm(prefFR[ii], default_alpha, default_lowFR) / (inDegree[ii]+1);
+
+				prefFR[ii] += (dt*eta/(double)(inDegree[ii]+1)) * pfrDts[ii] * ((1+ThreadLocalRandom.current().nextGaussian()) * 0.5); //* (pfrDts[ii] + lwVal + hgVal);
+
+
 			}
 			MHPFunctions.calcfTerm(prefFR, fVals, default_alpha, default_beta, default_lowFR);
 		}
 
 		calcNewNorms();
-		//scaleNormVals();
-        lambda += dt * (lambda-final_tau_HP) * hp_decay;
-        eta += dt  * (eta - final_tau_MHP) * mhp_decay;
+		scaleNormVals();
+        lambda += dt * (final_tau_HP-lambda) * hp_decay;
+        eta += dt  * (final_tau_MHP-eta) * mhp_decay;
     }
 
     /**
@@ -418,7 +430,23 @@ public class MANANeurons implements Neuron {
 	 */
 	public void updateThreshold(double dt) {
 		for(int ii=0; ii<N; ++ii) {
-			thresh[ii] += dt * lambda * Math.log((estFR.getData(ii)+0.0001)/(prefFR[ii]+0.0001));
+			double estISI = 1/(estFR.getData(ii)+0.001);
+			double estTerm = Math.exp(estISI/tau_m.get(ii));
+			double e_l_hat = v_reset.get(ii) - thresh[ii]*estTerm;
+			e_l_hat /= 1-estTerm;
+			double prefISI = 1/prefFR[ii];
+			double prefThresh = e_l_hat - (e_l_hat-v_reset.get(ii))/Math.exp(prefISI/tau_m.get(ii));
+
+			double thDelta = dt * lambda * (prefThresh - thresh[ii]);
+
+			if(Math.abs(thresh[ii]-init_thresh) < Math.abs(thresh[ii]+thDelta-init_thresh)) {
+				double softBound = Math.exp(-Math.abs(init_thresh - thresh[ii])/4.0);
+				thresh[ii] += thDelta * softBound;
+			} else {
+				thresh[ii] += thDelta;
+			}
+
+			//thresh[ii] += dt * lambda * Math.log((estFR.getData(ii)+0.0001)/(prefFR[ii]+0.0001));
 			if (Double.isNaN(thresh[ii])) {
 				System.out.println("NaN th");
 				break;

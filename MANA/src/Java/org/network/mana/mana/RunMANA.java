@@ -17,7 +17,7 @@ public class RunMANA {
 		int numNeu = 2000;
 		double time_f0 = 7.2E6; // two hours...
 		double plastShutOff0 = time_f0/2;
-		double spInterval = 5000;
+		double spInterval = 10000;
 		String filename = null;
 		String odir = DEF_ODIR;
 		String prefix = DEF_PREFIX;
@@ -99,7 +99,7 @@ public class RunMANA {
                 }
 				if((iters)%(1000/ dt) == 0 && time != 0) {
 					System.out.println("------------- " + time + "------------- " );
-					if ((iters)%(100000/ dt) == 0 || first || iters == (int)(1000/dt)) {
+					if ((iters)%(100000/ dt) == 0 || first || iters == (int)(10000/dt)) {
 						unit.printData(mainOut.toString(), prefix, time, dt);
 						first = false;
 					}

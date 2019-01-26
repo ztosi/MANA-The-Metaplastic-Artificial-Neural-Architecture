@@ -9,6 +9,8 @@ import Java.org.network.mana.utils.Utils;
 
 public class MHPFunctions {
 
+	public static double c_plus = 1;
+	public static double c_minus = 1;
 
 	public static void mhpStage1(final BufferedFloatArray efrsTar, final double[] pfrsTar,
 								 final BufferedFloatArray efrsSrc, int tarNo, InterleavedSparseAddOn pfrLoc) {
@@ -32,8 +34,8 @@ public class MHPFunctions {
 		int start = pfrLoc.getStartIndex(tarNo);
 		int end = pfrLoc.getEndIndex(tarNo);
 		for(int ii=start; ii<end; ii+=pfrLoc.getInc()) {
-			pfrLoc.values[ii] *= f_p * Utils.checkSign(-pfrLoc.values[ii])
-					+ f_m * Utils.checkSign(pfrLoc.values[ii]);
+			pfrLoc.values[ii] *= c_plus * f_p * Utils.checkSign(-pfrLoc.values[ii])
+					+ c_minus * f_m * Utils.checkSign(pfrLoc.values[ii]);
 		}
 	}
 
@@ -55,6 +57,10 @@ public class MHPFunctions {
 			return 1 + (Math.log(1 + alpha*(val/lowF - 1)))/alpha;
 		else
 			return val/lowF;
+	}
+
+	public static double mhpLTPTerm(double val, double beta, double lowF) {
+		return Math.exp(-val/(beta*lowF));
 	}
 
 	public static double getFp(long datum) {
