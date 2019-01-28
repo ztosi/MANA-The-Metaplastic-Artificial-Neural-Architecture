@@ -172,8 +172,18 @@ public class InputNeurons implements Neuron, Syncable {
 	}
 
 	@Override
-	public double[][] getCoordinates() {
-		return xyzCoors;
+	public double[][] getCoordinates(boolean trans) {
+		if (trans) {
+			double[][] xyzCpy = new double[3][getSize()];
+			for (int ii = 0; ii < getSize(); ++ii) {
+				xyzCpy[0][ii] = xyzCoors[ii][0];
+				xyzCpy[1][ii] = xyzCoors[ii][1];
+				xyzCpy[2][ii] = xyzCoors[ii][2];
+			}
+			return xyzCpy;
+		} else {
+			return  xyzCoors;
+		}
 	}
 
 	@Override

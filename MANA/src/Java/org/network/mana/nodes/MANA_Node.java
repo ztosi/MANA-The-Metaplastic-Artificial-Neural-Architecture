@@ -269,7 +269,9 @@ public class MANA_Node {
                 synMatrix.calcAndGetSums(localSums);
             }
 
-            if (!inputIsExternal && targData.mhpOn && !(targData.allInhSNon && targData.allExcSNon)) {
+            if (!inputIsExternal && targData.mhpOn
+                    && !(targData.allInhSNon && targData.allExcSNon)) {
+                   // && srcData.isExcitatory()) {
                 if((int)(time/dt) % (int)(1/dt) == 0) {
                     for (int ii = 0; ii < width; ++ii) {
                         if (!(targData.excSNon.get(ii) && targData.inhSNon.get(ii))) {

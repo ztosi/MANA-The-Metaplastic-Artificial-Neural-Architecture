@@ -19,15 +19,15 @@ public class MANANeurons implements Neuron {
 	public static final double default_v_l = -70;
 	public static final double default_r_m = 1.0;
 	public static final double default_i_bg = 18;
-	public static final double init_tau_HP = 1E-5;
-	public static final double final_tau_HP = 1E-5;
+	public static final double init_tau_HP = 1E-6;
+	public static final double final_tau_HP = 1E-6;
 	public static final double init_tau_MHP = 0.05;
 	public static final double final_tau_MHP = 1E-7;
 	public static final double hp_decay = 2.5E-6;
 	public static final double mhp_decay = 2.5E-6;
 	public static final double default_alpha = 2;
 	public static final double default_lowFR = 1.0;
-	public static final double default_beta = 15;
+	public static final double default_beta = 12;
 	public static final double default_noiseVar = 0.2;
 	public static final double mhpPressure = 2;
 	
@@ -229,7 +229,7 @@ public class MANANeurons implements Neuron {
 				//lwVal *= mhpPressure * MHPFunctions.mhpLTPTerm(prefFR[ii], default_beta, default_lowFR) / (inDegree[ii]+1);
 				//hgVal *= mhpPressure * MHPFunctions.mhpLTDTerm(prefFR[ii], default_alpha, default_lowFR) / (inDegree[ii]+1);
 
-				prefFR[ii] += (dt*eta/(double)(inDegree[ii]+1)) * pfrDts[ii] * ((1+ThreadLocalRandom.current().nextGaussian()) * 0.5); //* (pfrDts[ii] + lwVal + hgVal);
+				prefFR[ii] += (dt*eta/(double)(inDegree[ii]+1)) * pfrDts[ii] * ((1+ThreadLocalRandom.current().nextGaussian()) * noiseVar); //* (pfrDts[ii] + lwVal + hgVal);
 
 
 			}
@@ -430,11 +430,11 @@ public class MANANeurons implements Neuron {
 	 */
 	public void updateThreshold(double dt) {
 		for(int ii=0; ii<N; ++ii) {
-			double estISI = 1/(estFR.getData(ii)+0.001);
+			double estISI = 1/(estFR.getData(ii)+0.001) - ref_p/1000.0;
 			double estTerm = Math.exp(estISI/tau_m.get(ii));
 			double e_l_hat = v_reset.get(ii) - thresh[ii]*estTerm;
 			e_l_hat /= 1-estTerm;
-			double prefISI = 1/prefFR[ii];
+			double prefISI = 1/prefFR[ii] - ref_p/1000.0;
 			double prefThresh = e_l_hat - (e_l_hat-v_reset.get(ii))/Math.exp(prefISI/tau_m.get(ii));
 
 			double thDelta = dt * lambda * (prefThresh - thresh[ii]);
@@ -561,8 +561,18 @@ public class MANANeurons implements Neuron {
 
 
 	@Override
-	public double[][] getCoordinates() {
-		return xyzCoors;
+	public double[][] getCoordinates(boolean trans) {
+	    if (trans) {
+            double[][] xyzCpy = new double[3][getSize()];
+            for (int ii = 0; ii < N; ++ii) {
+                xyzCpy[0][ii] = xyzCoors[ii][0];
+                xyzCpy[1][ii] = xyzCoors[ii][1];
+                xyzCpy[2][ii] = xyzCoors[ii][2];
+            }
+            return xyzCpy;
+        } else {
+	        return  xyzCoors;
+        }
 	}
 
 	@Override

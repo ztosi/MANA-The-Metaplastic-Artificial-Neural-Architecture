@@ -14,7 +14,7 @@ public interface Neuron {
 	
 	boolean isExcitatory();
 	
-	double[][] getCoordinates();
+	double[][] getCoordinates(boolean trans);
 
 	int getID();
 

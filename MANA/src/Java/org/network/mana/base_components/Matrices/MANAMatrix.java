@@ -131,10 +131,15 @@ public class MANAMatrix {
                         continue;
                     }
                 } else if (cSpecs.rule == ConnectRule.Distance) {
-                    double dist = Utils.euclidean(src.getCoordinates()[ii], tar.xyzCoors[jj]);
+                    double dist = Utils.euclidean(src.getCoordinates(false)[ii], tar.xyzCoors[jj]);
                     double cProb = cSpecs.parms[0] * Math.exp(-((dist*dist)/(cSpecs.parms[1] * cSpecs.parms[1])));
                     if (ThreadLocalRandom.current().nextDouble() >= cProb) {
 //                        System.out.print(".");
+                        continue;
+                    }
+                } else if (cSpecs.rule == ConnectRule.Distance2) {
+                    double dist = Utils.euclidean(src.getCoordinates(false)[ii], tar.xyzCoors[jj]);
+                    if(dist > cSpecs.parms[0]) {
                         continue;
                     }
                 }
@@ -144,7 +149,7 @@ public class MANAMatrix {
                 SrcTarDataPack tarDatPack = new SrcTarDataPack(coo, tarData);
                 double[] srcData = new double[7];
                 SynType.setSourceDefaults(srcData, 0, type);
-                srcData[0] = MANA_Globals.dt * (int)(maxDly * Utils.euclidean(src.getCoordinates()[ii],
+                srcData[0] = MANA_Globals.dt * (int)(maxDly * Utils.euclidean(src.getCoordinates(false)[ii],
                         tar.xyzCoors[jj])/(maxDist*MANA_Globals.dt));
                 SrcTarDataPack srcDatPack = new SrcTarDataPack(coo, srcData);
 

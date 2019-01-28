@@ -58,8 +58,8 @@ public class StructuralPlasticity {
                     }
                 }
                // if (noAdded[ii] < maxAdd) { // We have not added the maximum number of allowed synapses from this source
-                    double newDly = growDecision(src.getCoordinates()[ii], tar.getCoordinates()[jj],
-                             0.1 * Math.exp(-inDegs[jj]/50.0) + DEF_CON_CONST, lambda, maxDist);
+                    double newDly = growDecision(src.getCoordinates(false)[ii], tar.getCoordinates(false)[jj],
+                             0.1 * Math.exp(-inDegs[jj]/5.0) + DEF_CON_CONST, lambda, maxDist);
                     if(newDly > 0) {
                         double[] data = new double[11];
                         data[0] = SynapseData.DEF_NEW_WEIGHT;

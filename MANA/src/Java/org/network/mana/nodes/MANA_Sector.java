@@ -147,6 +147,7 @@ public class MANA_Sector implements Syncable {
         countDown.set(childNodes.size());
     }
 
+
     public void update(final double time, final double dt) {
         if(!initialized) {
             throw  new IllegalStateException("Sector updates cannot be performed until initialization has been done.");

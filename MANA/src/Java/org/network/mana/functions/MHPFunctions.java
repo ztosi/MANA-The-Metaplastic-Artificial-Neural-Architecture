@@ -23,7 +23,7 @@ public class MHPFunctions {
 				pfrLoc.values[ii] = (efrsTar.getData(tarNo) - efrsSrc.getData(orderInds[ii])) / pfrsTar[tarNo];
 			}
 			for (int ii = start; ii < end; ii += pfrLoc.getInc()) {
-				pfrLoc.values[ii] = Utils.sign(pfrLoc.values[ii]) * Math.exp(pfrLoc.values[ii]);
+				pfrLoc.values[ii] = Utils.sign(pfrLoc.values[ii]) * Math.exp(-Math.abs(pfrLoc.values[ii]));
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

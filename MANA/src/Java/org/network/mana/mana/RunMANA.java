@@ -53,7 +53,7 @@ public class RunMANA {
             }
         }
 		final double time_f = time_f0;
-		final double p_shutOff_f = plastShutOff0;
+		final double p_shutOff_f = time_f;//plastShutOff0;
 		if(filename == null) {
 			throw new IllegalArgumentException("No filename for input "
 					+ "spikes was specified--exiting...");
