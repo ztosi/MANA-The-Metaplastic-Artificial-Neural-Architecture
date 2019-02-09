@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import Java.org.network.mana.base_components.InputNeurons;
@@ -26,6 +27,8 @@ public class MANA_Executor {
     //AtomicInteger ct = new AtomicInteger(0);
 
     private final ExecutorService pool;
+
+    private AtomicBoolean invocationComplete = new AtomicBoolean(false);
 
 	public MANA_Executor(final double pruneInterval) {
 		pool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
@@ -58,6 +61,7 @@ public class MANA_Executor {
 	 * @throws InterruptedException
 	 */
 	public void invoke() throws InterruptedException {
+		invocationComplete.set(false);
 	    if(time > 0 && (int)(time/dt) %  (int)(pruneInterval/dt) == 0 && pruneOn) {
 	    	int nnz = 0;
 			for(MANA_Unit unit : units) {
@@ -75,6 +79,7 @@ public class MANA_Executor {
         }
 		try {
 			pool.invokeAll(updateTasks);
+
 			pool.invokeAll(syncTasks);
 		} catch (Exception e) {
 	    	e.printStackTrace();
@@ -83,6 +88,7 @@ public class MANA_Executor {
 			t.node.updated.set(false);
 		}
 		time += dt;
+		invocationComplete.set(true);
 //		ct.set(0);
 	}
 

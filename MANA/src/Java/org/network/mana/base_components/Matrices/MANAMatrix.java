@@ -139,7 +139,22 @@ public class MANAMatrix {
                     }
                 } else if (cSpecs.rule == ConnectRule.Distance2) {
                     double dist = Utils.euclidean(src.getCoordinates(false)[ii], tar.xyzCoors[jj]);
-                    if(dist > cSpecs.parms[0]) {
+                    int loc;
+                    if(src.isExcitatory()) {
+                        if(tar.isExcitatory()) {
+                            loc = 0;
+                        } else {
+                            loc = 1;
+                        }
+                    } else {
+                        if(tar.isExcitatory()) {
+                            loc = 2;
+                        } else {
+                            loc = 3;
+                        }
+                    }
+                    if(dist > cSpecs.parms[loc] ||
+                            ThreadLocalRandom.current().nextDouble() > cSpecs.parms[cSpecs.parms.length-1]) {
                         continue;
                     }
                 }
@@ -284,14 +299,17 @@ public class MANAMatrix {
      * @param dt integration time step
      */
     public void processEvents(PriorityBlockingQueue<int[]> eventQ, double[] incCur, double time, double dt) {
-        while(eventQ.peek()[0]*dt <= time) {
-            int[] event = eventQ.poll();
-            incCur[event[3]] += weightsTOrd.getRawOrdIndices()[event[1]]
-                    * Float.intBitsToFloat(event[2]);
-            if(Float.intBitsToFloat(event[2]) < 0) {
-                throw new IllegalStateException("No negatives");
+        int [] event = null;
+        try {
+            while (!eventQ.isEmpty() && eventQ.peek()[0] * dt <= time) {
+                event = eventQ.poll();
+                incCur[event[3]] += weightsTOrd.getRawData()[event[1]]
+                        * Float.intBitsToFloat(event[2]);
+                // TODO: Fix the event thing to make it not dependent on increment in wts mat, so that callers can apply their own offsets without having to know wts
+                tOrdLastArrivals.setValue(event[1]/2, time, 0);
             }
-            tOrdLastArrivals.values[event[1]] = time;
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

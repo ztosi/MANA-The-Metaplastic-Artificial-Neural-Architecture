@@ -145,7 +145,7 @@ public class MANA_Unit {
 		for(MANA_Sector tar : unit.sectors.values()) {
 			// First node in each sector is always the node containing connections from the input
 			MANA_Node inpN = tar.add(inp, new ConnectSpecs(ConnectRule.Random,
-					new double[]{0.25}, Utils.ProbDistType.NORMAL, new double[]{2,1}, unit.defMaxDist, SynapseData.MAX_DELAY));
+					new double[]{0.25}, Utils.ProbDistType.NORMAL, new double[]{3, 1}, unit.defMaxDist, SynapseData.MAX_DELAY));
 			for(MANANeurons src : unit.targets) {
 				// Use default connection specs to connect Java.org.network.mana.mana Java.org.network.mana.nodes to each other (these are recurrent/reservoir synapses)
 				//ConnectSpecs cSpecs = new ConnectSpecs(ConnectRule.Random,
@@ -153,7 +153,7 @@ public class MANA_Unit {
 				//		unit.defMaxDist, SynapseData.MAX_DELAY);
 				ConnectSpecs cSpecs = new ConnectSpecs(ConnectRule.Distance2,
 						//new double[] {2, unit.defMaxDist/2},
-						new double[] {100},
+						new double[] {300, 300, 200, 200, 1},
 						//new double[]{8*SynType.getConProbBase(src.isExcitatory(), tar.target.isExcitatory()), unit.defMaxDist/3},
 						unit.defMaxDist, SynapseData.MAX_DELAY);
 				tar.add(src, cSpecs);
@@ -290,6 +290,9 @@ public class MANA_Unit {
 		data.put("Threshs", new double[size]);
 		data.put("NormBaseExc", new double[size]);
 		data.put("NormBaseInh", new double[size]);
+		data.put("excSF", new double[size]);
+		data.put("inhSF", new double[size]);
+
 		data.put("x", new double[size]);
 		data.put("y", new double[size]);
 		data.put("z", new double[size]);
@@ -306,6 +309,10 @@ public class MANA_Unit {
 			System.arraycopy(s.target.normValsExc, 0, data.get("NormBaseExc"),
 					i_offset, s.getWidth());
 			System.arraycopy(s.target.normValsInh, 0, data.get("NormBaseInh"),
+					i_offset, s.getWidth());
+			System.arraycopy(s.target.inh_sf, 0, data.get("inhSF"),
+					i_offset, s.getWidth());
+			System.arraycopy(s.target.exc_sf, 0, data.get("excSF"),
 					i_offset, s.getWidth());
 			System.arraycopy(s.target.getCoordinates(true)[0], 0, data.get("x"), i_offset, s.getWidth());
 			System.arraycopy(s.target.getCoordinates(true)[1], 0, data.get("y"), i_offset, s.getWidth());
@@ -324,13 +331,17 @@ public class MANA_Unit {
         mlData.add(new MLInt32("tarInds", wd.tarInds, 1));
 		mlData.add(new MLDouble("wtValues", wd.values, 1));
 
-        MLCell asdfCell = new MLCell("asdf", new int[]{fullSize+2, 1});
+        MLCell asdfCell = new MLCell("asdf", new int[]{fullSize+2-noInp, 1});
         collectSpikes(time, dt);
-        for(int ii=0; ii<fullSize; ++ii) {
+//        double[][] inpSpkTimes = externalInp.getSpk_times();
+//		for(int ii=0; ii<noInp; ++ii) {
+//			asdfCell.set(new MLDouble("", inpSpkTimes[ii], 1), ii);
+//		}
+        for(int ii=0; ii<fullSize-noInp; ++ii) {
             asdfCell.set(new MLDouble("", Utils.getDoubleArr(allSpikes.get(ii)), 1), ii);
         }
-        asdfCell.set(new MLDouble("", new double[]{dt}, 1), fullSize);
-        asdfCell.set(new MLDouble("", new double[] {fullSize, time/dt}, 1), fullSize+1);
+        asdfCell.set(new MLDouble("", new double[]{dt}, 1), fullSize-noInp);
+        asdfCell.set(new MLDouble("", new double[] {fullSize, time/dt}, 1), fullSize+1-noInp);
 
         mlData.add(asdfCell);
 		try {
@@ -365,6 +376,33 @@ public class MANA_Unit {
             node.normalizationOn = normalizationOn;
         }
     }
+
+    private double maxExc = 0;
+	private double maxInh = 0;
+    private double lastExcTime = 0;
+    private double lastInhTime = 0;
+
+    public synchronized double getMaxExcLazy(double time) {
+    	if(Math.abs(lastExcTime - time) > 10) {
+    		maxExc = nodes.stream()
+					.filter(node -> node.srcData.isExcitatory())
+					.mapToDouble(node->node.getWeightMatrix().getMax(0))
+					.max().getAsDouble();
+			lastExcTime = time;
+		}
+    	return maxExc;
+	}
+
+	public synchronized double getMaxInhLazy(double time) {
+		if(Math.abs(lastInhTime - time) > 10) {
+			maxInh = nodes.stream()
+					.filter(node -> !node.srcData.isExcitatory())
+					.mapToDouble(node->node.getWeightMatrix().getMax(0))
+					.max().getAsDouble();
+			lastInhTime = time;
+		}
+		return maxInh;
+	}
 
     public int getNumAllExc() {
         return numAllExc;

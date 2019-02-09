@@ -7,10 +7,13 @@ import Java.org.network.mana.base_components.Neuron;
 import Java.org.network.mana.base_components.SynapseData;
 import Java.org.network.mana.base_components.enums.Ordering;
 import Java.org.network.mana.base_components.enums.SynType;
+import Java.org.network.mana.nodes.MANA_Node;
 import Java.org.network.mana.utils.SrcTarDataPack;
 import Java.org.network.mana.utils.SrcTarPair;
 import Java.org.network.mana.utils.Utils;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ListIterator;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -20,24 +23,29 @@ public class StructuralPlasticity {
 
     //public static final double DEF_EXC_THRESH = 0.05;
     //public static final double DEF_INH_THRESH = 0.05;
-    public static final double DEF_CON_CONST = 0.01;
+    public static final double DEF_CON_CONST = 0.0025;
     public static final double P_ADD_MIN = 0.01;
     //public static final double RT_LOG_PA_MIN = Math.sqrt(-Math.log(P_ADD_MIN));
     //public static final double DEF_PG_INTERVAL = 2500; // ms
     public static final double MAX_ADD_RATIO = 0.01;
+    private static double thresh = DEF_Thresh;
 
-    public static MANAMatrix pruneGrow(MANAMatrix mat, Neuron src, MANANeurons tar,
+    public static MANAMatrix pruneGrow(MANA_Node node, Neuron src, MANANeurons tar,
                                        int noOutP, int noInP, double lambda, double c_x,
-                                       double maxDist, double time) {
-        COOManaMat coo = new COOManaMat(mat, Ordering.SOURCE);
+                                       double maxDist, double time, double maxWt) {
+        COOManaMat coo = new COOManaMat(node.getSynMatrix(), Ordering.SOURCE);
         boolean rec = src == tar;
         ListIterator<SrcTarDataPack> dataIter = coo.data.listIterator();
         int[] inDegs = tar.getProperInDegrees(src);
         int maxAdd = (int) (tar.N * MAX_ADD_RATIO) + 1;
         int [] noAdded = new int[src.getSize()];
-        double mx = mat.getMaxWeight();
+        double mx = maxWt;
         int noRemoved=0;
         int addcount = 0;
+        List<SrcTarDataPack> toRemove = new ArrayList<>();
+        List<SrcTarDataPack> toAdd = new ArrayList<>();
+
+       // thresh = exc ? thresh : thresh * 2;
         for(int ii=0; ii<src.getSize(); ++ii) { // TODO it makes more sense for this to be in the opposite order and iterated that way
             for(int jj=0; jj<tar.getSize(); ++jj) {
                 if(rec && ii==jj) {
@@ -46,12 +54,12 @@ public class StructuralPlasticity {
                 if (dataIter.hasNext()) {
                     SrcTarDataPack datum = coo.data.get(dataIter.nextIndex());
                     if (datum.coo.src == ii && datum.coo.tar == jj) {
-                        dataIter.next();
+                        SrcTarDataPack dat = dataIter.next();
                         if (pruneDecision(src.getOutDegree()[ii],
                                 noOutP, inDegs[jj],
                                 noInP, datum.values[0], mx)) {
-
                             dataIter.remove();
+                            //toRemove.add(dat);
                             noRemoved++;
                         }
                         continue;
@@ -59,7 +67,9 @@ public class StructuralPlasticity {
                 }
                // if (noAdded[ii] < maxAdd) { // We have not added the maximum number of allowed synapses from this source
                     double newDly = growDecision(src.getCoordinates(false)[ii], tar.getCoordinates(false)[jj],
-                             0.1 * Math.exp(-inDegs[jj]/5.0) + DEF_CON_CONST, lambda, maxDist);
+                            (0.1 * Math.exp(-inDegs[jj]/5.0))
+                                     * SynType.getConProbBase(src.isExcitatory(), tar.isExcitatory())  + DEF_CON_CONST,
+                            lambda, maxDist);
                     if(newDly > 0) {
                         double[] data = new double[11];
                         data[0] = SynapseData.DEF_NEW_WEIGHT;
@@ -101,7 +111,7 @@ public class StructuralPlasticity {
         } else if  (wVal > maxWt * DEF_Thresh) {
             return false;
         } else {
-            double p = (double) srcOutDegree/outPoss * tarInDegree/inPoss;
+            double p = (double) srcOutDegree/outPoss * Math.pow(tarInDegree/inPoss,2);
             return ThreadLocalRandom.current().nextDouble() < p;
         }
     }

@@ -95,11 +95,16 @@ public class MANA_Sector implements Syncable {
         Arrays.fill(target.inDegree, 0);
         for(MANA_Node node : childNodes.values()) {
             if(node.srcData.isExcitatory()) {
-                node.accumulateLocalWtSums(secExcSums);
+                node.calcAndAccumWtSums(secExcSums);
             }
         }
         recountInDegrees();
-        target.setSatC(secExcSums);
+        double[] dummy = new double[secExcSums.length];
+        System.arraycopy(secExcSums,0, dummy, 0, dummy.length);
+        for(int ii=0; ii<dummy.length; ++ii) {
+            dummy[ii] += MANANeurons.default_sat_c + 20;
+        }
+        target.setSatC(dummy);
         initialized = true;
     }
 

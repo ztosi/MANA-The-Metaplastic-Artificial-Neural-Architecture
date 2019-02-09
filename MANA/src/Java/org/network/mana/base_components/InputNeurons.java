@@ -132,13 +132,13 @@ public class InputNeurons implements Neuron, Syncable {
 
 
 	public void update(double dt, double time, BoolArray spkBuffer) {
-		double edge2 = time+dt;
+		double edge2 = time+1.5*dt;
 		for(int ii=0, n=spk_times.length; ii<n; ++ii) {
 			if(ptrs[ii] >= spk_times[ii].length) {
 				ptrs[ii] = 0;
 				offsets[ii] += time; // start the cycle over again
 			}
-			double nextSpkTime = spk_times[ii][ptrs[ii]];
+			double nextSpkTime = spk_times[ii][ptrs[ii]] + offsets[ii];
 			spkBuffer.set(ii, nextSpkTime >= time && nextSpkTime < edge2);
 			if(spkBuffer.get(ii)) {
 				++ptrs[ii];
@@ -150,6 +150,10 @@ public class InputNeurons implements Neuron, Syncable {
 	public void readInSpikeTimes(String _filename) {
 		this.filename = _filename;
 
+	}
+
+	public double[][] getSpk_times() {
+		return spk_times;
 	}
 
 	public BoolArray getSpikes() {

@@ -16,6 +16,7 @@ import Java.org.network.mana.utils.BoolArray;
 import Java.org.network.mana.utils.ConnectSpecs;
 import Java.org.network.mana.utils.Utils;
 
+import java.util.Iterator;
 import java.util.PriorityQueue;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.ThreadLocalRandom;
@@ -186,13 +187,29 @@ public class MANA_Node {
 
 
     public void structuralPlasticity(int maxInD, int maxOutD, double lambda, double maxDist, double time) {
-        synMatrix = StructuralPlasticity.pruneGrow(synMatrix, srcData, targData, maxOutD, maxInD,
+        double max = srcData.isExcitatory() ?
+                parent_sector.parent.getMaxExcLazy(time) :
+                parent_sector.parent.getMaxInhLazy(time);
+        synMatrix = StructuralPlasticity.pruneGrow(this, srcData, targData, maxOutD, maxInD,
                 lambda, SynType.getConProbBase(srcData.isExcitatory(),
-                        targData.isExcitatory())/2, maxDist, time);
+                        targData.isExcitatory())/2, maxDist, time, max);
         pfrLoc = new InterleavedSparseAddOn(synMatrix.getWeightsTOrd(), 1);
         evtQueue.clear(); // TODO: This is very bad! Figure out a better way!
         structureChanged = true;
     }
+
+    public MANAMatrix getSynMatrix() {
+        return  synMatrix;
+    }
+
+//    public void removeEvent(int absTarOrdIndex) {
+//        evtQueue.stream().
+//        Iterator<int[]> evtIterator = evtQueue.iterator();
+//        while(evtIterator.hasNext()) {
+//            int[] evt = evtIterator.next();
+//            if()
+//        }
+//    }
 
     public AtomicBoolean updated = new AtomicBoolean(false);
 
@@ -270,18 +287,19 @@ public class MANA_Node {
             }
 
             if (!inputIsExternal && targData.mhpOn
-                    && !(targData.allInhSNon && targData.allExcSNon)) {
+                    && !(targData.allInhSNon && targData.allExcSNon)) { //&& (srcData.isExcitatory()==targData.isExcitatory())) {
                    // && srcData.isExcitatory()) {
-                if((int)(time/dt) % (int)(1/dt) == 0) {
+            //    if((int)(time/dt) % (int)(1/dt) == 0) {
                     for (int ii = 0; ii < width; ++ii) {
-                        if (!(targData.excSNon.get(ii) && targData.inhSNon.get(ii))) {
-                            MHPFunctions.mhpStage1(targData.estFR, targData.prefFR, ((MANANeurons) srcData).estFR, ii,
-                                    pfrLoc);
-                            MHPFunctions.mhpStage2(ii, MHPFunctions.getFp(targData.fVals[ii]),
-                                    MHPFunctions.getFm(targData.fVals[ii]), pfrLoc);
+                        if(!(targData.excSNon.get(ii) && targData.inhSNon.get(ii)) ) {
+                            if (!(targData.excSNon.get(ii) && targData.inhSNon.get(ii))) {
+                                MHPFunctions.mhpStage1(targData.estFR, targData.prefFR, ((MANANeurons) srcData).estFR, ii,
+                                        pfrLoc, srcData.isExcitatory());
+                                MHPFunctions.mhpStage2(ii, MHPFunctions.getFp(targData.fVals[ii]),
+                                        MHPFunctions.getFm(targData.fVals[ii]), pfrLoc);
+                            }
                         }
-
-                    }
+              //      }
                 }
 //            for(int ii=0; ii<width; ++ii) {
 //                if(!(targData.excSNon.get(ii) && targData.inhSNon.get(ii)))

@@ -19,15 +19,15 @@ public class MANANeurons implements Neuron {
 	public static final double default_v_l = -70;
 	public static final double default_r_m = 1.0;
 	public static final double default_i_bg = 18;
-	public static final double init_tau_HP = 1E-6;
-	public static final double final_tau_HP = 1E-6;
+	public static final double init_tau_HP = 5E-5;
+	public static final double final_tau_HP = 1E-5;
 	public static final double init_tau_MHP = 0.05;
 	public static final double final_tau_MHP = 1E-7;
-	public static final double hp_decay = 2.5E-6;
-	public static final double mhp_decay = 2.5E-6;
+	public static final double hp_decay = 1E-6;
+	public static final double mhp_decay = 1E-6;
 	public static final double default_alpha = 2;
-	public static final double default_lowFR = 1.0;
-	public static final double default_beta = 12;
+	public static final double default_lowFR = 1;
+	public static final double default_beta = 15;
 	public static final double default_noiseVar = 0.2;
 	public static final double mhpPressure = 2;
 	
@@ -37,9 +37,9 @@ public class MANANeurons implements Neuron {
 	public static final double default_inh_ref_p = 2;
 	public static final double default_sat_a = 300;
 	public static final double default_sat_b = 0.1;
-	public static final double default_sat_c = -100;
-	public static final double default_exc_SF_tau = 5;
-    public static final double default_inh_SF_tau = 5;
+	public static final double default_sat_c = -150;
+	public static final double default_exc_SF_tau = 0.2;
+    public static final double default_inh_SF_tau = 0.2;
 
 
     public boolean mhpOn = true;
@@ -54,8 +54,8 @@ public class MANANeurons implements Neuron {
 	public double [] thresh;
 	public double [] i_e;
 	public double [] i_i;
-	public BufferedDoubleArray lastSpkTime;
-	public BoolArray spks;
+	public volatile BufferedDoubleArray lastSpkTime;
+	public volatile BoolArray spks;
 	
 	// Can be the same or different for all neurons
 	public DataWrapper r_m;
@@ -158,14 +158,14 @@ public class MANANeurons implements Neuron {
 		
 		if(exc) {
 			ref_p = default_exc_ref_p;
-//			tau_m = new DataWrapper(N, true, default_exc_tau_m);
-			tau_m = new DataWrapper(Utils.getRandomArray(Utils.ProbDistType.NORMAL, 23, 1.5, N));
-			//adaptJump = 15;
+			tau_m = new DataWrapper(N, true, default_exc_tau_m);
+//			tau_m = new DataWrapper(Utils.getRandomArray(Utils.ProbDistType.NORMAL, 23, 1.5, N));
+			adaptJump = 15;
 		} else {
 			ref_p = default_inh_ref_p;
-//			tau_m = new DataWrapper(N, true, default_inh_tau_m);
-			tau_m = new DataWrapper(Utils.getRandomArray(Utils.ProbDistType.NORMAL, 26, 2.5, N));
-			//adaptJump = 10;
+			tau_m = new DataWrapper(N, true, default_inh_tau_m);
+//			tau_m = new DataWrapper(Utils.getRandomArray(Utils.ProbDistType.NORMAL, 26, 2.5, N));
+			adaptJump = 10;
 		}
 
 
@@ -174,8 +174,8 @@ public class MANANeurons implements Neuron {
 		Arrays.fill(threshRA, init_thresh);
 		Arrays.fill(thresh, init_thresh);
 		Arrays.fill(v_m, init_v_m);
-		Arrays.fill(exc_sf, 1.0);
-		Arrays.fill(inh_sf, 1.0);
+		Arrays.fill(exc_sf, 1);
+		Arrays.fill(inh_sf, 1);
 		Arrays.fill(dummy, 0.001);
 		Arrays.fill(sat_c, default_sat_c);
 		for(int ii=0; ii < N; ++ii) {
@@ -229,11 +229,19 @@ public class MANANeurons implements Neuron {
 				//lwVal *= mhpPressure * MHPFunctions.mhpLTPTerm(prefFR[ii], default_beta, default_lowFR) / (inDegree[ii]+1);
 				//hgVal *= mhpPressure * MHPFunctions.mhpLTDTerm(prefFR[ii], default_alpha, default_lowFR) / (inDegree[ii]+1);
 
-				prefFR[ii] += (dt*eta/(double)(inDegree[ii]+1)) * pfrDts[ii] * ((1+ThreadLocalRandom.current().nextGaussian()) * noiseVar); //* (pfrDts[ii] + lwVal + hgVal);
+                if(excSNon.get(ii) && inhSNon.get(ii)) {
+                    prefFR[ii] += (dt*final_tau_MHP/(double)(inDegree[ii]+1)) * pfrDts[ii] * ((1+ThreadLocalRandom.current().nextGaussian()) * noiseVar); //* (pfrDts[ii] + lwVal + hgVal);
+                } else {
+                    prefFR[ii] += (dt*eta/(double)(inDegree[ii]+1)) * pfrDts[ii] * ((1+ThreadLocalRandom.current().nextGaussian()) * noiseVar); //* (pfrDts[ii] + lwVal + hgVal);
+                }
 
 
 			}
-			MHPFunctions.calcfTerm(prefFR, fVals, default_alpha, default_beta, default_lowFR);
+//			if(isExcitatory()) {
+				MHPFunctions.calcfTerm(prefFR, fVals, default_alpha, default_beta, default_lowFR);
+//			} else {
+//				MHPFunctions.calcfTerm(prefFR, fVals, default_alpha, default_beta, 2);
+//			}
 		}
 
 		calcNewNorms();
@@ -353,6 +361,8 @@ public class MANANeurons implements Neuron {
 
 		for(int ii=0; ii<N; ++ii) {
 			int sgn = Utils.checkSign((lastSpkTime.getData(ii)+ref_p)-time);
+//			dv_m[ii] += exc_sf[ii] * i_e[ii] + i_bg.get(ii) * sgn;
+//			dv_m[ii] -= inh_sf[ii] * i_i[ii] * sgn;
 			dv_m[ii] += i_e[ii] + i_bg.get(ii) * sgn;
 			dv_m[ii] -= i_i[ii] * sgn;
 		}
@@ -360,11 +370,11 @@ public class MANANeurons implements Neuron {
 			dv_m[ii] -= adapt[ii];
 		}
 		for(int ii=0; ii<N; ++ii) {
-			i_e[ii] -= dt*i_e[ii]/SynType.ExcTau;
+			i_e[ii] -= dt * i_e[ii]/SynType.ExcTau;
 
 		}
 		for(int ii=0; ii<N; ++ii) {
-			i_i[ii] -= dt*i_i[ii]/SynType.InhTau;
+			i_i[ii] -= dt * i_i[ii]/SynType.InhTau;
 		}
 		if(!(r_m.isCompressed() && r_m.get(0)==1)){
 			for(int ii=0; ii<N; ++ii) {
@@ -430,23 +440,23 @@ public class MANANeurons implements Neuron {
 	 */
 	public void updateThreshold(double dt) {
 		for(int ii=0; ii<N; ++ii) {
-			double estISI = 1/(estFR.getData(ii)+0.001) - ref_p/1000.0;
-			double estTerm = Math.exp(estISI/tau_m.get(ii));
-			double e_l_hat = v_reset.get(ii) - thresh[ii]*estTerm;
-			e_l_hat /= 1-estTerm;
-			double prefISI = 1/prefFR[ii] - ref_p/1000.0;
-			double prefThresh = e_l_hat - (e_l_hat-v_reset.get(ii))/Math.exp(prefISI/tau_m.get(ii));
+//			double estISI = 1/(estFR.getData(ii)+0.001) - ref_p/1000.0;
+//			double estTerm = Math.exp(estISI/tau_m.get(ii));
+//			double e_l_hat = v_reset.get(ii) - thresh[ii]*estTerm;
+//			e_l_hat /= 1-estTerm;
+//			double prefISI = 1/prefFR[ii] - ref_p/1000.0;
+//			double prefThresh = e_l_hat - (e_l_hat-v_reset.get(ii))/Math.exp(prefISI/tau_m.get(ii));
+//
+//			double thDelta = dt * lambda * (prefThresh - thresh[ii]);
+//
+//			if(Math.abs(thresh[ii]-init_thresh) < Math.abs(thresh[ii]+thDelta-init_thresh)) {
+//				double softBound = Math.exp(-Math.abs(init_thresh - thresh[ii])/4.0);
+//				thresh[ii] += thDelta * softBound;
+//			} else {
+//				thresh[ii] += thDelta;
+//			}
 
-			double thDelta = dt * lambda * (prefThresh - thresh[ii]);
-
-			if(Math.abs(thresh[ii]-init_thresh) < Math.abs(thresh[ii]+thDelta-init_thresh)) {
-				double softBound = Math.exp(-Math.abs(init_thresh - thresh[ii])/4.0);
-				thresh[ii] += thDelta * softBound;
-			} else {
-				thresh[ii] += thDelta;
-			}
-
-			//thresh[ii] += dt * lambda * Math.log((estFR.getData(ii)+0.0001)/(prefFR[ii]+0.0001));
+			thresh[ii] += dt * lambda * Math.log((estFR.getData(ii)+0.0001)/(prefFR[ii]+0.0001));
 			if (Double.isNaN(thresh[ii])) {
 				System.out.println("NaN th");
 				break;
@@ -456,13 +466,57 @@ public class MANANeurons implements Neuron {
 	}
 
 	public void calcScaleFacs() {
-	    for(int ii=0; ii<N; ++ii) {
-	        exc_sf[ii] = Math.exp((threshRA[ii] - thresh[ii])/default_exc_SF_tau);
-        }
+//		for(int ii=0; ii<N; ++ii){
+//			double logDiff = Math.log(estFR.getData(ii)) - Math.log(prefFR[ii]);
+//			exc_sf[ii] -= MANA_Globals.dt * logDiff * 5E-6;
+//			inh_sf[ii] += MANA_Globals.dt * logDiff * 5E-6;
+//
+//		}
+//
+//		for(int ii=0; ii<N; ++ii){
+//			if(exc_sf[ii] > 10) {
+//				exc_sf[ii] = 10;
+//			}
+//			if(exc_sf[ii] < 0.1) {
+//				exc_sf[ii] = 0.1;
+//			}
+//		}
+//
+//		for(int ii=0; ii<N; ++ii){
+//			if(inh_sf[ii] > 10) {
+//				inh_sf[ii] = 10;
+//			}
+//			if(inh_sf[ii] < 0.1) {
+//				inh_sf[ii] = 0.1;
+//			}
+//		}
+
+//
         for(int ii=0; ii<N; ++ii) {
-            inh_sf[ii] = Math.exp((thresh[ii] - threshRA[ii])/default_inh_SF_tau);
+            double rat = exc_sf[ii]/inh_sf[ii];
+            rat += MANA_Globals.dt*lambda * Math.log(prefFR[ii]/estFR.getData(ii));
+            rat /= rat+1;
+            if(rat > 0.9) {
+                rat = 0.9;
+            }
+            if(rat < 0.1){
+                rat = 0.1;
+            }
+            exc_sf[ii] = 2*(rat);
+            inh_sf[ii] = 2*(1-rat);
         }
+
+     //   Utils.retainBounds(exc_sf, 10, 0.1);
+     //   Utils.retainBounds(inh_sf, 10, 0.1);
+
+//	    for(int ii=0; ii<N; ++ii) {
+//	        exc_sf[ii] = 0.5+1.5/(1+Math.exp(-(prefFR[ii])/default_exc_SF_tau) + ln2);
+//        }
+//        for(int ii=0; ii<N; ++ii) {
+//            inh_sf[ii] = 0.5+1.5/(1+Math.exp(-(thresh[ii] - threshRA[ii])/default_inh_SF_tau) + ln2);
+//        }
     }
+    public static final double ln2 = Math.log(2);
 
     /**
      * For all total excitatory sums that haven't been set by normalization, checks if they

@@ -13,7 +13,7 @@ public class MHPFunctions {
 	public static double c_minus = 1;
 
 	public static void mhpStage1(final BufferedFloatArray efrsTar, final double[] pfrsTar,
-								 final BufferedFloatArray efrsSrc, int tarNo, InterleavedSparseAddOn pfrLoc) {
+								 final BufferedFloatArray efrsSrc, int tarNo, InterleavedSparseAddOn pfrLoc, boolean exc) {
 		int start = pfrLoc.getStartIndex(tarNo);
 		int end = pfrLoc.getEndIndex(tarNo);
 		int[] orderInds = pfrLoc.getRawOrdIndices();

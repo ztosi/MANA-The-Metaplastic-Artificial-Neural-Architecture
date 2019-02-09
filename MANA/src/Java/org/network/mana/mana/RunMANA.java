@@ -53,7 +53,7 @@ public class RunMANA {
             }
         }
 		final double time_f = time_f0;
-		final double p_shutOff_f = time_f;//plastShutOff0;
+		final double p_shutOff_f = plastShutOff0;
 		if(filename == null) {
 			throw new IllegalArgumentException("No filename for input "
 					+ "spikes was specified--exiting...");
@@ -97,14 +97,16 @@ public class RunMANA {
 				if(iters%((int)(1/dt)) == 0) {
                     System.out.println((int)(iters*dt));
                 }
+
+				exec.invoke();
+
 				if((iters)%(1000/ dt) == 0 && time != 0) {
 					System.out.println("------------- " + time + "------------- " );
-					if ((iters)%(100000/ dt) == 0 || first || iters == (int)(10000/dt)) {
+					if ((iters)%(50000/ dt) == 0 || first || iters == (int)(10000/dt)) {
 						unit.printData(mainOut.toString(), prefix, time, dt);
 						first = false;
 					}
 				}
-				exec.invoke();
 
 				time = exec.getTime(); // get time from the executor
 				iters++;

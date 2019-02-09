@@ -286,6 +286,20 @@ public class Utils {
 		return dest;
 	}
 
+	public static void retainBounds(double[] arr, double ceil, double floor) {
+		for(int ii=0, n=arr.length; ii<n; ++ii) {
+			if(arr[ii] > ceil)
+				arr[ii] = ceil;
+			if(arr[ii] < floor)
+				arr[ii] = floor;
+		}
+	}
+
+	/**
+	 * 0 if positive, 1 otherwise
+	 * @param value
+	 * @return
+	 */
 	public static int checkSign(double value) {
 		return (int)(Double.doubleToLongBits(value) >>> 63);
 	}

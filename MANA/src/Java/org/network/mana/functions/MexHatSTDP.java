@@ -19,7 +19,7 @@ public final class MexHatSTDP implements  STDP {
 
     public double lRate = 1E-3;
 
-    public static double a = 10;
+    public static double a = 8;
 
     public static final double twentRt = Math.pow(20, 1.0/4.0);
 

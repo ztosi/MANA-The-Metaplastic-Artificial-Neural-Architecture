@@ -58,6 +58,9 @@ public final class HebSTDP implements STDP {
     public void preTriggered(InterleavedSparseMatrix wts, int[] dataPack, BufferedDoubleArray lastSpkTimes, double dt) {
         wts.getRawData()[dataPack[1]+1] = -lRate * wMinus
                 * Math.exp((lastSpkTimes.getData(dataPack[3])-(double)dataPack[0]*dt)/tauMinus);
+//        if(wts.getRawData()[dataPack[1]]+1 < (-lRate * wMinus)) {
+//            System.out.println("problem");
+//        }
             if(wts.getRawData()[dataPack[1]] < 0) {
                 wts.getRawData()[dataPack[1]] = 0;
             }
