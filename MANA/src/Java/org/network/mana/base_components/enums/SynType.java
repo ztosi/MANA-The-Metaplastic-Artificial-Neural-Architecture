@@ -175,11 +175,11 @@ public enum SynType {
     public static final double ieSigma = 22;
     public static final double iiSigma = 12;
 
-    public static final double eeWPlus = 5.5;
+    public static final double eeWPlus = 5;
     public static final double eeWMinus = 1.0;
-    public static final double eiWPlus = 5.5;
+    public static final double eiWPlus = 5;
     public static final double eiWMinus = 1.0;
-    public static final double ieWPlus = 1.8;
+    public static final double ieWPlus = 1;
     public static final double ieWMinus = 1.8;
     public static final double iiWPlus = 1.2;
     public static final double iiWMinus = 2.2;

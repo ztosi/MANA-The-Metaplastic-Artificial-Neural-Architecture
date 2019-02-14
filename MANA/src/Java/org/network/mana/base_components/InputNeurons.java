@@ -86,8 +86,16 @@ public class InputNeurons implements Neuron, Syncable {
 				for(int ii=0; ii<noNeu; ++ii) {
 					spk_times[ii] = new double[((MLDouble) mlSpkT.get(ii)).getSize()];
 					double[][] temp = ((MLDouble) mlSpkT.get(ii)).getArray();
-					for (int jj = 0; jj < spk_times[ii].length; ++jj){
-						spk_times[ii][jj] = temp[0][jj];
+					int sz1 = temp.length;
+					int sz2 = temp[0].length;
+					if (sz2>sz1) {
+						for (int jj = 0; jj < spk_times[ii].length; ++jj) {
+							spk_times[ii][jj] = temp[0][jj];
+						}
+					} else {
+						for (int jj = 0; jj < spk_times[ii].length; ++jj) {
+							spk_times[ii][jj] = temp[jj][0];
+						}
 					}
 				}
 			} else {
