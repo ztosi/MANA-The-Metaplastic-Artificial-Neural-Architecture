@@ -1,15 +1,14 @@
 package Java.org.network.mana.functions;
 
-import Java.org.network.mana.base_components.MANANeurons;
-import Java.org.network.mana.base_components.Matrices.COOManaMat;
-import Java.org.network.mana.base_components.Matrices.MANAMatrix;
-import Java.org.network.mana.base_components.Neuron;
-import Java.org.network.mana.base_components.SynapseData;
-import Java.org.network.mana.base_components.enums.Ordering;
-import Java.org.network.mana.base_components.enums.SynType;
-import Java.org.network.mana.nodes.MANA_Node;
-import Java.org.network.mana.utils.SrcTarDataPack;
-import Java.org.network.mana.utils.SrcTarPair;
+import Java.org.network.mana.mana_components.MANANeurons;
+import Java.org.network.mana.mana_components.COOManaMat;
+import Java.org.network.mana.mana_components.MANAMatrix;
+import Java.org.network.mana.base_components.neurons.Neuron;
+import Java.org.network.mana.enums.Ordering;
+import Java.org.network.mana.base_components.synapses.SynapseProperties;
+import Java.org.network.mana.mana_components.MANA_Node;
+import Java.org.network.mana.base_components.sparse.SrcTarDataPack;
+import Java.org.network.mana.base_components.sparse.SrcTarPair;
 import Java.org.network.mana.utils.Utils;
 
 import java.util.ArrayList;
@@ -68,13 +67,13 @@ public class StructuralPlasticity {
                // if (noAdded[ii] < maxAdd) { // We have not added the maximum number of allowed synapses from this source
                     double newDly = growDecision(src.getCoordinates(false)[ii], tar.getCoordinates(false)[jj],
                             (0.1 * Math.exp(-inDegs[jj]/5.0))
-                                     * SynType.getConProbBase(src.isExcitatory(), tar.isExcitatory())  + DEF_CON_CONST,
+                                     * SynapseProperties.getConProbBase(src.isExcitatory(), tar.isExcitatory())  + DEF_CON_CONST,
                             lambda, maxDist);
                     if(newDly > 0) {
                         double[] data = new double[11];
-                        data[0] = SynapseData.DEF_NEW_WEIGHT;
-                        data[1] = SynapseData.DEF_INIT_WDERIV * SynapseData.E_LR;
-                        SynType.setSourceDefaults(data, 2, SynType.getSynType(src.isExcitatory(),
+                        data[0] = SynapseProperties.DEF_NEW_WEIGHT;
+                        data[1] = SynapseProperties.DEF_INIT_WDERIV * SynapseProperties.E_LR;
+                        SynapseProperties.setSourceDefaults(data, 2, SynapseProperties.getSynType(src.isExcitatory(),
                                 tar.isExcitatory()));
                         data[2] = newDly;
                         data[3] = 0; // as far as UDF is concerned this has never spiked, redundant, but important
@@ -106,7 +105,7 @@ public class StructuralPlasticity {
     public static boolean pruneDecision(int srcOutDegree,
                                         int outPoss, int tarInDegree,
                                         int inPoss, double wVal, double maxWt) {
-        if(wVal < SynapseData.MIN_WEIGHT){
+        if(wVal < SynapseProperties.MIN_WEIGHT){
             return true;
         } else if  (wVal > maxWt * DEF_Thresh) {
             return false;
@@ -120,7 +119,7 @@ public class StructuralPlasticity {
         double dist = Utils.euclidean(xyz1, xyz2);
         double prob = c_x * Math.exp(-(dist*dist)/(lambda*lambda));
         if (ThreadLocalRandom.current().nextDouble() < prob) {
-            return (dist/maxDist)*SynapseData.MAX_DELAY;
+            return (dist/maxDist)*SynapseProperties.MAX_DELAY;
         }
         return -1;
     }

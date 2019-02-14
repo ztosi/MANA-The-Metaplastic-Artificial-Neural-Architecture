@@ -3,8 +3,6 @@ package Java.org.network.mana.utils;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
-import Java.org.network.mana.base_components.SynapseData;
-
 public class Utils {
 
 	public enum ProbDistType {
@@ -36,18 +34,6 @@ public class Utils {
 		return randArr;
 	}
 	
-	public static double expLT0Approx(final double x) {
-//		if (x<-5) {
-//			return 0;
-//		}
-//		if(x==0) {
-//			return 1;
-//		}
-//		return (0.3877*x+1.959)/(x*x - 1.332 * x + 1.981);
-		return Math.exp(x);
-	}
-	
-	
 	public static void sortByKey (final int[] key, final int[] arr) {
 		if(key.length != arr.length) {
 			throw new IllegalArgumentException("Key length does not match array length.");
@@ -67,18 +53,6 @@ public class Utils {
 		double[] temp = new double[arr.length];
 		for(int ii=0, n=arr.length; ii<n; ++ii) {
 			temp[ii] = arr[key[ii]];
-		}
-		System.arraycopy(temp, 0, arr, 0, arr.length);
-	}
-	
-	public static void sortByKey (final int[] key, final SynapseData[] arr) {
-		if(key.length != arr.length) {
-			throw new IllegalArgumentException("Key length does not match array length.");
-		}
-		SynapseData[] temp = new SynapseData[arr.length];
-		for(int ii=0, n=arr.length; ii<n; ++ii) {
-			temp[ii] = arr[key[ii]];
-			temp[ii].index = ii;
 		}
 		System.arraycopy(temp, 0, arr, 0, arr.length);
 	}

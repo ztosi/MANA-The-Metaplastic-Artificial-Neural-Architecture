@@ -2,6 +2,7 @@ package Java.org.network.mana.utils;
 
 import java.util.Arrays;
 
+//TODO: Refactor this out -- forgot that bitwise storage is a dumb idea w/ concurrency, d'oh
 public class BoolArray {
 
     private final long ONE_MASK = 0x0000000000000001;
