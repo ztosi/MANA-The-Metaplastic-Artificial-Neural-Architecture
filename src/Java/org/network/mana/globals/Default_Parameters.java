@@ -65,7 +65,7 @@ public class Default_Parameters {
     public static final double ExcTau = 3.0;
     public static final double InhTau = 6.0;
     public static final double STDP_TIME_CONST = 1E-6;
-    public static final double DEF_INIT_WDERIV = -STDP_TIME_CONST;
+    public static final double DEF_INIT_WDERIV = 0;
 
 
     // -------------------------------------SHORT TERM PLASTICITY
@@ -81,7 +81,7 @@ public class Default_Parameters {
     public static final double DEF_IE_C = 0.4;
     public static final double DEF_II_C = 0.1;
 
-    // -------------------------------------STDP PARAMTERS
+    // -------------------------------------STDP PARAMETERS
     public static final double eeTauPlus = 25;
     public static final double eeTauMinus = 100;
     public static final double eiTauPlus = 25;
@@ -89,16 +89,16 @@ public class Default_Parameters {
     public static final double ieSigma = 22;
     public static final double iiSigma = 12;
 
-    public static final double eeWPlus = 5.1;
-    public static final double eeWMinus = .9;
-    public static final double eiWPlus = 5;
-    public static final double eiWMinus = 4.25;
+    public static final double eeWPlus = 10;
+    public static final double eeWMinus = 2;
+    public static final double eiWPlus = 10;
+    public static final double eiWMinus = 8;
     public static final double ieWPlus = 0.5;
-    public static final double ieWMinus = 2;
+    public static final double ieWMinus = 6;
     public static final double iiWPlus = 3;
     public static final double iiWMinus = 6;
 
-    // -------------------------------------STRUCTRAL PLASTICITY PARAMTERS
+    // -------------------------------------STRUCTURAL PLASTICITY PARAMETERS
     public static final double DEF_CON_CONST = 0;
     public static final double NEW_SYN_CONST = 0.02;
     public static double DEF_Thresh = 0.05;

@@ -57,7 +57,7 @@ public class StructuralPlasticity {
                             if (pruneDecision(src.getOutDegree()[ii],
                                     noOutP, inDegs[jj],
                                     noInP, datum.values[0], pruneTechnique == SPTechnique.LOCAL_MAX ? 0//DEF_Thresh*(1-Math.sqrt(datum.values[0]/val))
-                                            : maxWt * (time >4000 && time < 11000 ? 0.5 : Default_Parameters.DEF_Thresh))) {
+                                            : maxWt * (time >4000 && time < 11000 ? 0.6 : Default_Parameters.DEF_Thresh))) {
                                 dataIter.remove();
                                 //toRemove.add(dat);
                                 noRemoved++;

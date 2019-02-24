@@ -308,9 +308,8 @@ public class MANA_Node implements Updatable {
      * @param time - simulation time
      */
     public void structuralPlasticity(int maxInD, int maxOutD, double lambda, double maxDist, double time) {
-        double max = StructuralPlasticity.pruneTechnique == StructuralPlasticity.SPTechnique.GLOBAL_MAX ? srcData.isExcitatory() ?
-                parent_sector.parent.getMaxExcLazy(time) :
-                parent_sector.parent.getMaxInhLazy(time) : 0; // TODO: Lol at this convoluted nonsense
+        double max = StructuralPlasticity.pruneTechnique == StructuralPlasticity.SPTechnique.GLOBAL_MAX ?
+        parent_sector.parent.getMaxofType(time, srcData.isExcitatory(), targData.isExcitatory()): 0; // TODO: Lol at this convoluted nonsense
         synMatrix = StructuralPlasticity.pruneGrow(this, srcData, targData, maxOutD, maxInD,
                 lambda, ConnectRule.getConProbBase(srcData.isExcitatory(),
                         targData.isExcitatory())/2, maxDist, time, max);
