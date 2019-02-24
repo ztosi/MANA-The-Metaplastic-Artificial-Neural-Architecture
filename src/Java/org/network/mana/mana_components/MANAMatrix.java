@@ -8,10 +8,10 @@ import Java.org.network.mana.base_components.sparse.SrcTarPair;
 import Java.org.network.mana.base_components.synapses.ConnectSpecs;
 import Java.org.network.mana.base_components.synapses.STDP;
 import Java.org.network.mana.base_components.synapses.ShortTermPlasticity;
-import Java.org.network.mana.base_components.synapses.SynapseProperties;
 import Java.org.network.mana.enums.ConnectRule;
 import Java.org.network.mana.enums.Ordering;
-import Java.org.network.mana.exec.mana.MANA_Globals;
+import Java.org.network.mana.enums.SynapseType;
+import Java.org.network.mana.globals.Default_Parameters;
 import Java.org.network.mana.utils.BufferedDoubleArray;
 import Java.org.network.mana.utils.Utils;
 
@@ -47,7 +47,7 @@ public class MANAMatrix {
      */
     protected int[] srcToTargLookup;
 
-    public final SynapseProperties type;
+    public final SynapseType type;
 
     private int nnz;
 
@@ -72,7 +72,7 @@ public class MANAMatrix {
         noTar = tar.getSize();
         this.src = src;
         this.tar = tar;
-        type = SynapseProperties.getSynType(src.isExcitatory(), tar.isExcitatory());
+        type = SynapseType.getSynType(src.isExcitatory(), tar.isExcitatory());
         int [] targRange = {0, cooMat.tarILF};
         weightsTOrd = new InterleavedSparseMatrix(cooMat.data, targRange, noTar, noSrc,
                 //offsetTar, offsetSrc,
@@ -116,7 +116,7 @@ public class MANAMatrix {
         this.tar = tar;
         List<SrcTarDataPack> targCOOTup = new LinkedList<>();
         List<SrcTarDataPack> srcCOOTup = new LinkedList<>();
-        type = SynapseProperties.getSynType(src.isExcitatory(), tar.isExcitatory());
+        type = SynapseType.getSynType(src.isExcitatory(), tar.isExcitatory());
         this.noSrc = src.getSize();
         this.noTar = tar.N;
         System.out.println();
@@ -171,10 +171,10 @@ public class MANAMatrix {
                 double[] srcData = new double[7];
                 // Outbound values... delay, lastArr, U, D, F, u, R
                 // Set Short term plasticity/UDF parameters -- occupies indices 2-6
-                SynapseProperties.setSourceDefaults(srcData, 0, type);
+                ShortTermPlasticity.setSourceDefaults(srcData, 0, type);
                 // Calculate delay from distance
-                srcData[0] = MANA_Globals.dt * (int)(maxDly * Utils.euclidean(src.getCoordinates(false)[ii],
-                         tar.getCoordinates(false)[jj])/(maxDist*MANA_Globals.dt));
+                srcData[0] = Default_Parameters.dt * (int)(maxDly * Utils.euclidean(src.getCoordinates(false)[ii],
+                         tar.getCoordinates(false)[jj])/(maxDist* Default_Parameters.dt));
                 SrcTarDataPack srcDatPack = new SrcTarDataPack(coo, srcData);
 
                 targCOOTup.add(tarDatPack);

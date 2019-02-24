@@ -1,11 +1,10 @@
 package Java.org.network.mana.base_components.synapses;
 
-public class ShortTermPlasticity {
+import Java.org.network.mana.enums.SynapseType;
 
-    static final double[] EEUDF = new double[]{0.5, 1100, 50};
-    static final double[] EIUDF = new double[]{0.05, 125, 1200};
-    static final double[] IEUDF = new double[]{0.25, 700, 20};
-    static final double[] IIUDF = new double[]{0.32, 144, 60};
+import java.util.concurrent.ThreadLocalRandom;
+
+public class ShortTermPlasticity {
 
     public static void getPSR_UDF(int index, double time, double [] data) {
         double isi = -((time + data[index]) - data[index+1]); // time + delay - lastArrival
@@ -20,4 +19,13 @@ public class ShortTermPlasticity {
 
     }
 
+    // Outbound values... delay, lastArr, U, D, F, u, R
+    public static void setSourceDefaults(final double [] sData, int start, SynapseType type) {
+        ThreadLocalRandom localRand = ThreadLocalRandom.current();
+        double [] meanVals = type.getDefaultUDFMeans();
+        sData[2+start] = Math.abs(localRand.nextGaussian()*meanVals[0]/2 + meanVals[0]);
+        sData[3+start] = Math.abs(localRand.nextGaussian()*meanVals[1]/2 + meanVals[1]);
+        sData[4+start] = Math.abs(localRand.nextGaussian()*meanVals[2]/2 + meanVals[2]);
+        sData[6+start] = 1;
+    }
 }

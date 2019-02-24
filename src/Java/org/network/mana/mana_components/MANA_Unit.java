@@ -4,8 +4,8 @@ import Java.org.network.mana.base_components.neurons.InputNeurons;
 import Java.org.network.mana.base_components.neurons.Neuron;
 import Java.org.network.mana.base_components.sparse.WeightData;
 import Java.org.network.mana.base_components.synapses.ConnectSpecs;
-import Java.org.network.mana.base_components.synapses.SynapseProperties;
 import Java.org.network.mana.enums.ConnectRule;
+import Java.org.network.mana.globals.Default_Parameters;
 import Java.org.network.mana.utils.Utils;
 
 import java.util.ArrayList;
@@ -51,10 +51,10 @@ public class MANA_Unit {
 
 	private ConnectSpecs recConSpecs = new ConnectSpecs(ConnectRule.Distance2,
 			new double[] {300, 300, 200, 200, 1},
-			defMaxDist, SynapseProperties.MAX_DELAY);
+			defMaxDist, Default_Parameters.MAX_DELAY);
 
 	private ConnectSpecs inpConSpecs = new ConnectSpecs(ConnectRule.Random,
-			new double[]{0.25}, Utils.ProbDistType.NORMAL, new double[]{3, 1},defMaxDist, SynapseProperties.MAX_DELAY);
+			new double[]{0.25}, Utils.ProbDistType.NORMAL, new double[]{3, 1},defMaxDist, Default_Parameters.MAX_DELAY);
 
 
 	private int fullSize, size, numExc, numAllExc, numInh, noSecs, nodesPerSec, noInp;
@@ -182,9 +182,9 @@ public class MANA_Unit {
 		for(MANA_Sector sec : sectors.values()) {
 			sec.init();
 			for(MANA_Node node : sec.childNodes.values()) {
-				if(node.srcData instanceof MANANeurons) {
+//				if(node.srcData instanceof MANANeurons) {
 					node.accumOutDegrees((node.srcData).getOutDegree());
-				}
+//				}
 			}
 		}
 	}
@@ -193,9 +193,9 @@ public class MANA_Unit {
 		for(MANA_Sector sec : sectors.values()) {
 			sec.recountInDegrees();
 			for(MANA_Node node : sec.childNodes.values()) {
-				if(node.srcData instanceof MANANeurons) {
+		//		if(node.srcData instanceof MANANeurons) {
 					node.accumOutDegrees((node.srcData).getOutDegree());
-				}
+		//	}
 			}
 		}
 	}
@@ -274,15 +274,16 @@ public class MANA_Unit {
 		}
 	}
 
-	private double maxExc = 0;
-	private double maxInh = 0;
-	private double lastExcTime = 0;
-	private double lastInhTime = 0;
+	private volatile double maxExc = 0;
+	private volatile double maxInh = 0;
+	private volatile double lastExcTime = 0;
+	private volatile double lastInhTime = 0;
 
 	public synchronized double getMaxExcLazy(double time) {
 		if(Math.abs(lastExcTime - time) > 10) {
 			maxExc = nodes.stream()
 					.filter(node -> node.srcData.isExcitatory())
+					.filter(node -> !node.inputIsExternal)
 					.mapToDouble(node->node.getWeightMatrix().getMax(0))
 					.max().getAsDouble();
 			lastExcTime = time;
@@ -300,6 +301,8 @@ public class MANA_Unit {
 		}
 		return maxInh;
 	}
+
+
 
 	public int getNumAllExc() {
 		return numAllExc;

@@ -264,6 +264,17 @@ public class InterleavedSparseMatrix {
         return max;
     }
 
+    public void getMaxMajors(int offset, double [] mxs) {
+        for(int ii=0; ii<noMajor; ++ii) {
+            for(int jj = ptrs[ii]; jj < ptrs[ii+1]; ++jj) {
+                double val = values[jj*nILFac + offset];
+                if(val > mxs[ii]) {
+                    mxs[ii] = val;
+                }
+            }
+        }
+    }
+
     public double getMin(int offset) {
         double min = Double.MAX_VALUE;
         for(int ii=offset; ii<values.length; ii+=nILFac) {
@@ -382,6 +393,18 @@ public class InterleavedSparseMatrix {
         for(int ii=absShift, n=absShift+nnz; ii<n; ++ii) {
             inds[ii] += relativeShift;
         }
+    }
+
+    public int getDataForMajorInd(int majorInd, int offset, double [] ret, int start) {
+        int jj = 0;
+        try {
+            for (int ii = ptrs[majorInd], n = ptrs[majorInd + 1]; ii < n; ++ii) {
+                ret[start + jj++] = values[nILFac * ii + offset];
+            }
+        } catch (ArrayIndexOutOfBoundsException e) {
+            e.printStackTrace();
+        }
+        return ptrs[majorInd+1] - ptrs[majorInd];
     }
 
     public int getStartIndex(int neuronNo) {

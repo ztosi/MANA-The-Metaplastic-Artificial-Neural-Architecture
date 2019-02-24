@@ -1,7 +1,7 @@
 package Java.org.network.mana.base_components.synapses;
 
 import Java.org.network.mana.enums.ConnectRule;
-import Java.org.network.mana.exec.mana.MANA_Globals;
+import Java.org.network.mana.globals.Default_Parameters;
 import Java.org.network.mana.utils.Utils;
 
 public final class ConnectSpecs {
@@ -33,7 +33,7 @@ public final class ConnectSpecs {
 
     public double getNewWt() {
         if(randDist == null) {
-            return MANA_Globals.DEF_INIT_WT;
+            return Default_Parameters.DEF_INIT_WT;
         } else {
             return Math.abs(randDist.getRandom(randParms[0], randParms[1]));
         }

@@ -6,7 +6,8 @@ import Java.org.network.mana.base_components.sparse.InterleavedSparseAddOn;
 import Java.org.network.mana.base_components.sparse.InterleavedSparseMatrix;
 import Java.org.network.mana.base_components.synapses.ConnectSpecs;
 import Java.org.network.mana.base_components.synapses.STDP;
-import Java.org.network.mana.base_components.synapses.SynapseProperties;
+import Java.org.network.mana.enums.ConnectRule;
+import Java.org.network.mana.enums.SynapseType;
 import Java.org.network.mana.exec.Updatable;
 import Java.org.network.mana.functions.MHPFunctions;
 import Java.org.network.mana.functions.StructuralPlasticity;
@@ -89,7 +90,7 @@ public class MANA_Node implements Updatable {
      *   neurons or inhibitory neurons to excitatory neurons,
      *   and so on.
      */
-    public final SynapseProperties type;
+    public final SynapseType type;
 
     /** The sum of all synaptic weights impinging on each target in this node (locally).*/
     private final double [] localSums;
@@ -172,7 +173,7 @@ public class MANA_Node implements Updatable {
                                              COOManaMat cooMat, STDP stdpRule,
                                              boolean isTransUnit) {
         MANA_Node tmp = new MANA_Node(srcNeu, tarNeu, parent, isTransUnit,
-                SynapseProperties.getSynType(srcNeu.isExcitatory(), tarNeu.isExcitatory()));
+                SynapseType.getSynType(srcNeu.isExcitatory(), tarNeu.isExcitatory()));
         tmp.synMatrix = new MANAMatrix(cooMat, srcNeu, tarNeu);
         tmp.stdpRule = stdpRule;
         tmp.pfrLoc = new InterleavedSparseAddOn(tmp.synMatrix.getWeightsTOrd(), 1);
@@ -190,7 +191,7 @@ public class MANA_Node implements Updatable {
     }
 
     private MANA_Node(Neuron srcNeu, MANANeurons tarNeu, MANA_Sector parent, boolean isTransUnit,
-                      SynapseProperties type)  {
+                      SynapseType type)  {
         this.parent_sector = parent;
         this.srcData = srcNeu;
         this.targData = tarNeu;
@@ -258,7 +259,7 @@ public class MANA_Node implements Updatable {
             for (int ii = 0; ii < width; ++ii) {
                 if (targData.getSpikes().get(ii)) {
                     stdpRule.postTriggered(synMatrix.getWeightsTOrd(),
-                            synMatrix.gettOrdLastArrivals(), ii, time);
+                            synMatrix.gettOrdLastArrivals(), ii, time, dt);
                 }
             }
         } else {
@@ -307,11 +308,11 @@ public class MANA_Node implements Updatable {
      * @param time - simulation time
      */
     public void structuralPlasticity(int maxInD, int maxOutD, double lambda, double maxDist, double time) {
-        double max = srcData.isExcitatory() ?
+        double max = StructuralPlasticity.pruneTechnique == StructuralPlasticity.SPTechnique.GLOBAL_MAX ? srcData.isExcitatory() ?
                 parent_sector.parent.getMaxExcLazy(time) :
-                parent_sector.parent.getMaxInhLazy(time);
+                parent_sector.parent.getMaxInhLazy(time) : 0; // TODO: Lol at this convoluted nonsense
         synMatrix = StructuralPlasticity.pruneGrow(this, srcData, targData, maxOutD, maxInD,
-                lambda, SynapseProperties.getConProbBase(srcData.isExcitatory(),
+                lambda, ConnectRule.getConProbBase(srcData.isExcitatory(),
                         targData.isExcitatory())/2, maxDist, time, max);
         pfrLoc = new InterleavedSparseAddOn(synMatrix.getWeightsTOrd(), 1);
         evtQueue.clear(); // TODO: This is very bad! Figure out a better way!

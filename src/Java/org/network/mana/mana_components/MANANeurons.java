@@ -2,7 +2,7 @@ package Java.org.network.mana.mana_components;
 
 import Java.org.network.mana.base_components.neurons.LeakyIFwAdapt;
 import Java.org.network.mana.base_components.neurons.Neuron;
-import Java.org.network.mana.exec.mana.MANA_Globals;
+import Java.org.network.mana.globals.Default_Parameters;
 import Java.org.network.mana.functions.MHPFunctions;
 import Java.org.network.mana.utils.*;
 
@@ -13,31 +13,12 @@ public class MANANeurons implements Neuron {
 
 	public final int id;
 
-	// TODO: Make separately settable, i.e. not static and not final
-	// as well as put some code somewhere to read in values from file.
-	public static final double init_tau_HP = 5E-5;
-	public static final double final_tau_HP = 1E-5;
-	public static final double init_tau_MHP = 0.05;
-	public static final double final_tau_MHP = 1E-7;
-	public static final double hp_decay = 1E-6;
-	public static final double mhp_decay = 1E-6;
-	public static final double default_alpha = 2;
-	public static final double default_lowFR = 1;
-	public static final double default_beta = 15;
-	public static final double default_noiseVar = 0.2;
 
-	public static final double default_sat_a = 300;
-	public static final double default_sat_b = 0.1;
-	public static final double default_sat_c = -150;
-	public static final double default_exc_SF_tau = 0.2;
-	public static final double default_inh_SF_tau = 0.2;
+    public boolean mhpOn = true;
 
-
-	public boolean mhpOn = true;
-
-	public double lambda = init_tau_HP;
-	public double eta = init_tau_MHP;
-	public double noiseVar = default_noiseVar;
+	public double lambda = Default_Parameters.init_tau_HP;
+	public double eta = Default_Parameters.init_tau_MHP;
+	public double noiseVar = Default_Parameters.default_noiseVar;
 
 
 	public DataWrapper alpha;
@@ -60,8 +41,8 @@ public class MANANeurons implements Neuron {
 	public double [] exc_sf;
 	public double [] inh_sf;
 	public double [] sat_c;
-	public double sat_a = default_sat_a;
-	public double sat_b = default_sat_b;
+	public double sat_a = Default_Parameters.default_sat_a;
+	public double sat_b = Default_Parameters.default_sat_b;
 	public int[] inDegree;
 	public int[] excInDegree;
 	public int[] inhInDegree;
@@ -88,7 +69,7 @@ public class MANANeurons implements Neuron {
 	 */
 	public MANANeurons(int _N, boolean _exc, double[] xCoor, double[] yCoor, double[] zCoor) {
 		neus = new LeakyIFwAdapt( _N, _exc, xCoor, yCoor, zCoor);
-		id = MANA_Globals.getID();
+		id = Default_Parameters.getID();
 		this.N = _N;
 		this.exc = _exc;
 		dummy = new double[N];
@@ -109,16 +90,16 @@ public class MANANeurons implements Neuron {
 		inhSNon = new BoolArray(N);
 		excSNon = new BoolArray(N);
 		fVals = new long[N];
-		alpha = new DataWrapper(N, true, default_alpha);
-		beta = new DataWrapper(N, true, default_beta);
-		lowFRBound = new DataWrapper(N, true, default_lowFR);
+		alpha = new DataWrapper(N, true, Default_Parameters.default_alpha);
+		beta = new DataWrapper(N, true, Default_Parameters.default_beta);
+		lowFRBound = new DataWrapper(N, true, Default_Parameters.default_lowFR);
 
 		Arrays.fill(prefFR, 1.0);
 		Arrays.fill(ef, 0.001);
 		Arrays.fill(exc_sf, 1);
 		Arrays.fill(inh_sf, 1);
 		Arrays.fill(dummy, 0.001);
-		Arrays.fill(sat_c, default_sat_c);
+		Arrays.fill(sat_c, Default_Parameters.default_sat_c);
 		for(int ii=0; ii < N; ++ii) {
 			estFR.setData(ii, 1.0f);
 			estFR.setBuffer(ii, 1.0f);
@@ -154,15 +135,15 @@ public class MANANeurons implements Neuron {
 		if (mhpOn && !(allExcSNon && allInhSNon)) {
 
 			for(int ii=0; ii<N; ++ii) {
-				if(prefFR[ii] < MANA_Globals.MIN_PFR) {
-					prefFR[ii] = MANA_Globals.MIN_PFR + (1+ThreadLocalRandom.current().nextGaussian() * 0.1);
+				if(prefFR[ii] < Default_Parameters.MIN_PFR) {
+					prefFR[ii] = Default_Parameters.MIN_PFR + (1+ThreadLocalRandom.current().nextGaussian() * 0.1);
 				}
-				if(prefFR[ii] > MANA_Globals.MAX_PFR) {
-					prefFR[ii] = MANA_Globals.MAX_PFR;
+				if(prefFR[ii] > Default_Parameters.MAX_PFR) {
+					prefFR[ii] = Default_Parameters.MAX_PFR;
 				}
 
 				if(excSNon.get(ii) && inhSNon.get(ii)) {
-					prefFR[ii] += (dt*final_tau_MHP/(double)(inDegree[ii]+1))
+					prefFR[ii] += (dt* Default_Parameters.final_tau_MHP/(double)(inDegree[ii]+1))
 							* pfrDts[ii] * ((1+ThreadLocalRandom.current().nextGaussian()) * noiseVar);
 				} else {
 					prefFR[ii] += (dt*eta/(double)(inDegree[ii]+1)) * pfrDts[ii]
@@ -170,15 +151,15 @@ public class MANANeurons implements Neuron {
 				}
 			}
 //			if(isExcitatory()) {
-			MHPFunctions.calcfTerm(prefFR, fVals, default_alpha, default_beta, default_lowFR);
+			MHPFunctions.calcfTerm(prefFR, fVals, Default_Parameters.default_alpha, Default_Parameters.default_beta, Default_Parameters.default_lowFR);
 //			} else {
 //				MHPFunctions.calcfTerm(prefFR, fVals, default_alpha, default_beta, 2);
 //			}
 		}
 		calcNewNorms();
 		scaleNormVals();
-		lambda += dt * (final_tau_HP-lambda) * hp_decay;
-		eta += dt  * (final_tau_MHP-eta) * mhp_decay;
+		lambda += dt * (Default_Parameters.final_tau_HP-lambda) * Default_Parameters.hp_decay;
+		eta += dt  * (Default_Parameters.final_tau_MHP-eta) * Default_Parameters.mhp_decay;
 	}
 
 	/**
@@ -279,6 +260,20 @@ public class MANANeurons implements Neuron {
 
 	}
 
+
+	private void calcNewNorms2() {
+		for(int ii=0; ii<N; ++ii) {
+			normValsExc[ii] = excInDegree[ii];
+			normValsInh[ii] = 5 * inhInDegree[ii];
+			neus.r_m_e[ii] = Math.exp(estFR.getData(ii)/(beta.get(ii) * lowFRBound.get(ii)));
+			if(estFR.getData(ii) <= lowFRBound.get(ii)) {
+				neus.r_m_i[ii] = estFR.getData(ii)/lowFRBound.get(ii);
+			} else {
+
+			}
+		}
+	}
+
 	/**
 	 * Updates the equations governing the neurons' memberane potentials
 	 * and adaptations and determines which neurons calcSpikeResponses on the next time-step
@@ -353,7 +348,7 @@ public class MANANeurons implements Neuron {
 	public void calcScaleFacs() {
 		for(int ii=0; ii<N; ++ii) {
 			double rat = exc_sf[ii]/inh_sf[ii];
-			rat += MANA_Globals.dt*lambda * Math.log(prefFR[ii]/estFR.getData(ii));
+			rat += 0.1 * Default_Parameters.dt*lambda * Math.log(prefFR[ii]/estFR.getData(ii));
 			rat /= rat+1;
 			if(rat > 0.9) {
 				rat = 0.9;
@@ -445,6 +440,14 @@ public class MANANeurons implements Neuron {
 		} else {
 			return inhInDegree;
 		}
+	}
+
+	public int[] getExcInDegree() {
+		return  excInDegree;
+	}
+
+	public int [] getInhInDegree() {
+		return  inhInDegree;
 	}
 
 	public boolean getAllNrmOn(boolean exc) {

@@ -4,6 +4,8 @@ import Java.org.network.mana.base_components.sparse.InterleavedSparseAddOn;
 import Java.org.network.mana.base_components.sparse.InterleavedSparseMatrix;
 import Java.org.network.mana.utils.BufferedDoubleArray;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 public final class HebSTDP implements STDP {
 
     public double tauPlus = 20;
@@ -31,7 +33,7 @@ public final class HebSTDP implements STDP {
     }
 
     @Override
-    public void postTriggered(InterleavedSparseMatrix wts, InterleavedSparseAddOn lastArrs, int neuNo, double time) {
+    public void postTriggered(InterleavedSparseMatrix wts, InterleavedSparseAddOn lastArrs, int neuNo, double time, double dt) {
         int start = wts.getStartIndex(neuNo);
         int laLoc = wts.getStartIndex(neuNo, lastArrs.getInc());
         int end = wts.getEndIndex(neuNo);
@@ -43,10 +45,11 @@ public final class HebSTDP implements STDP {
         }
 
         for(int ii = start; ii<end; ii+=wts.getInc()) {
-            wts.getRawData()[ii+1] = lRate* wPlus * Math.pow(-wts.getRawData()[ii]+20, 0.25)/twentRt;
+            wts.getRawData()[ii+1] = lRate * dt* wPlus * Math.pow(-wts.getRawData()[ii]+20, 0.25)/twentRt;
         }
         for(int ii = start; ii<end; ii+=wts.getInc()) {
             wts.getRawData()[ii+1] *= Math.exp((lastArrs.values[laLoc]-time)/tauPlus);
+                  //  * ( 0.1 * ThreadLocalRandom.current().nextGaussian() + 1);
             laLoc += lastArrs.getInc();
         }
 
@@ -56,8 +59,9 @@ public final class HebSTDP implements STDP {
 
     @Override
     public void preTriggered(InterleavedSparseMatrix wts, int[] dataPack, BufferedDoubleArray lastSpkTimes, double dt) {
-        wts.getRawData()[dataPack[1]+1] = -lRate * wMinus
+        wts.getRawData()[dataPack[1]+1] = -lRate * wMinus * dt
                 * Math.exp((lastSpkTimes.getData(dataPack[3])-(double)dataPack[0]*dt)/tauMinus);
+       //         * ( 0.1 * ThreadLocalRandom.current().nextGaussian() + 1);
 //        if(wts.getRawData()[dataPack[1]]+1 < (-lRate * wMinus)) {
 //            System.out.println("problem");
 //        }

@@ -4,6 +4,8 @@ import Java.org.network.mana.base_components.sparse.InterleavedSparseAddOn;
 import Java.org.network.mana.base_components.sparse.InterleavedSparseMatrix;
 import Java.org.network.mana.utils.BufferedDoubleArray;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 public final class MexHatSTDP implements  STDP {
 
     public double wPlus = 1.8;
@@ -18,7 +20,7 @@ public final class MexHatSTDP implements  STDP {
 
     public double lRate = 1E-3;
 
-    public static double a = 8;
+    public static double a = 5;
 
     public static final double twentRt = Math.pow(20, 1.0/4.0);
 
@@ -35,7 +37,7 @@ public final class MexHatSTDP implements  STDP {
     }
 
     // TODO: Break this up...
-    public void postTriggered(InterleavedSparseMatrix wts, InterleavedSparseAddOn lastArrs, int neuNo, double time){
+    public void postTriggered(InterleavedSparseMatrix wts, InterleavedSparseAddOn lastArrs, int neuNo, double time, double dt){
         int start = wts.getStartIndex(neuNo);
         int laLoc = wts.getStartIndex(neuNo, lastArrs.getInc());
         int end = wts.getEndIndex(neuNo);
@@ -45,9 +47,10 @@ public final class MexHatSTDP implements  STDP {
             }
         }
         for (int ii = start; ii < end; ii += wts.getInc()) {
-            wts.getRawData()[ii + 1] = mexicanHatWindow(sigSq, nrmTerm,
+            wts.getRawData()[ii + 1] = dt * mexicanHatWindow(sigSq, nrmTerm,
                     wPlus, wMinus,
                     time - lastArrs.values[laLoc], lRate, wts.getRawData()[ii]);
+                   // * ( 0.1 * ThreadLocalRandom.current().nextGaussian() + 1);
             laLoc += lastArrs.getInc();
         }
     }
@@ -58,9 +61,10 @@ public final class MexHatSTDP implements  STDP {
         if(wts.getRawData()[dataPack[1]] > 20) {
             wts.getRawData()[dataPack[1]] = 20;
         }
-        wts.getRawData()[dataPack[1] + 1] = mexicanHatWindow(sigSq, nrmTerm,
+        wts.getRawData()[dataPack[1] + 1] = dt * mexicanHatWindow(sigSq, nrmTerm,
                 wPlus, wMinus,
                 (dataPack[0]*dt) - lastSpkTimes.getData(dataPack[3]), lRate, wts.getRawData()[dataPack[1]]);
+               // * ( 0.1 * ThreadLocalRandom.current().nextGaussian() + 1);
     }
 
     public static double mexicanHatWindow(double sigmaSq, double normTerm, double wplus,

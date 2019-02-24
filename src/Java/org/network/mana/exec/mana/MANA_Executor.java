@@ -2,6 +2,7 @@ package Java.org.network.mana.exec.mana;
 
 import Java.org.network.mana.base_components.neurons.InputNeurons;
 import Java.org.network.mana.exec.Syncable;
+import Java.org.network.mana.globals.Default_Parameters;
 import Java.org.network.mana.mana_components.MANA_Node;
 import Java.org.network.mana.mana_components.MANA_Sector;
 import Java.org.network.mana.mana_components.MANA_Unit;
@@ -23,7 +24,7 @@ public class MANA_Executor {
 	/** Amount of simulated time that has elapsed. */
 	private double time = 0;
 	/** Integration time step .*/
-	private double dt = MANA_Globals.dt;
+	private double dt = Default_Parameters.dt;
     /** Hoe often to invoke strucutural plasticity code. */
 	private double spInterval;
 	/** Whether or not structural plasticity is active. */

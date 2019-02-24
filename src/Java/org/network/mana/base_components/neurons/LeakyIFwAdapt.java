@@ -1,7 +1,6 @@
 package Java.org.network.mana.base_components.neurons;
 
-import Java.org.network.mana.base_components.synapses.SynapseProperties;
-import Java.org.network.mana.exec.mana.MANA_Globals;
+import Java.org.network.mana.globals.Default_Parameters;
 import Java.org.network.mana.utils.BoolArray;
 import Java.org.network.mana.utils.BufferedDoubleArray;
 import Java.org.network.mana.utils.DataWrapper;
@@ -10,18 +9,6 @@ import Java.org.network.mana.utils.Utils;
 import java.util.Arrays;
 
 public class LeakyIFwAdapt implements  Neuron{
-
-    public static final double init_v_m = -55;
-    public static final double init_thresh = -50;
-    public static final double default_v_l = -70;
-    public static final double default_r_m = 1.0;
-    public static final double default_i_bg = 18;
-    public static final double default_exc_tau_m = 30;
-    public static final double default_inh_tau_m = 20;
-    public static final double default_exc_ref_p = 3;
-    public static final double default_inh_ref_p = 2;
-    public static final double default_inh_adatpJ = 10;
-    public static final double default_exc_adaptJ = 15;
 
     /* Neuron Properties */
     public double [] v_m;
@@ -33,13 +20,12 @@ public class LeakyIFwAdapt implements  Neuron{
     public volatile BoolArray spks;
 
     // Can be the same or different for all neurons
-    public DataWrapper r_m;
+    public double [] r_m_i;
+    public double [] r_m_e;
+    //public DataWrapper r_m;
     public DataWrapper tau_m;
     public DataWrapper v_l;
     public DataWrapper i_bg;
-    public DataWrapper alpha;
-    public DataWrapper beta;
-    public DataWrapper lowFRBound;
     public double ref_p;
     public DataWrapper v_reset;
 
@@ -64,7 +50,7 @@ public class LeakyIFwAdapt implements  Neuron{
      * @param _exc polarity (excitatory: true, inhibitory: false)
      */
     public LeakyIFwAdapt(int _N, boolean _exc, double[] xCoor, double[] yCoor, double[] zCoor) {
-        id = MANA_Globals.getID();
+        id = Default_Parameters.getID();
         this.N = _N;
         this.exc = _exc;
 
@@ -79,27 +65,31 @@ public class LeakyIFwAdapt implements  Neuron{
         i_e = new double[N];
         i_i = new double[N];
         adapt = new double[N];
-        r_m = new DataWrapper(N, true, default_r_m);
-        v_l = new DataWrapper(N, true, default_v_l);
-        i_bg = new DataWrapper(N, true, default_i_bg);
-        v_reset = new DataWrapper(N, true, init_v_m);
+        r_m_e = new double[N];
+        r_m_i = new double[N];
+        Arrays.fill(r_m_e, 1);
+        Arrays.fill(r_m_i, 1);
+        //r_m = new DataWrapper(N, true, default_r_m);
+        v_l = new DataWrapper(N, true, Default_Parameters.default_v_l);
+        i_bg = new DataWrapper(N, true, Default_Parameters.default_i_bg);
+        v_reset = new DataWrapper(N, true, Default_Parameters.init_v_m);
         tau_w = new DataWrapper(N, true, 144);
 
         if(exc) {
-            ref_p = default_exc_ref_p;
-            tau_m = new DataWrapper(N, true, default_exc_tau_m);
+            ref_p = Default_Parameters.default_exc_ref_p;
+            tau_m = new DataWrapper(N, true, Default_Parameters.default_exc_tau_m);
 //			tau_m = new DataWrapper(Utils.getRandomArray(Utils.ProbDistType.NORMAL, 23, 1.5, N));
-            adaptJump = 15;
+            adaptJump = Default_Parameters.default_exc_adaptJ;
         } else {
-            ref_p = default_inh_ref_p;
-            tau_m = new DataWrapper(N, true, default_inh_tau_m);
+            ref_p = Default_Parameters.default_inh_ref_p;
+            tau_m = new DataWrapper(N, true, Default_Parameters.default_inh_tau_m);
 //			tau_m = new DataWrapper(Utils.getRandomArray(Utils.ProbDistType.NORMAL, 26, 2.5, N));
-            adaptJump = 10;
+            adaptJump = Default_Parameters.default_inh_adatpJ;
         }
 
 
-        Arrays.fill(thresh, init_thresh);
-        Arrays.fill(v_m, init_v_m);
+        Arrays.fill(thresh, Default_Parameters.init_thresh);
+        Arrays.fill(v_m, Default_Parameters.init_v_m);
         xyzCoors=new double[_N][3];
         for(int ii=0; ii< _N; ++ii) {
             xyzCoors[ii][0] = xCoor[ii];
@@ -120,24 +110,24 @@ public class LeakyIFwAdapt implements  Neuron{
     public void update(double dt, double time, BoolArray spkBuffer) {
         for(int ii=0; ii<N; ++ii) {
             int sgn = Utils.checkSign((lastSpkTime.getData(ii)+ref_p)-time);
-            dv_m[ii] += i_e[ii] + i_bg.get(ii) * sgn;
-            dv_m[ii] -= i_i[ii] * sgn;
+            dv_m[ii] += r_m_e[ii] * i_e[ii] + i_bg.get(ii) * sgn;
+            dv_m[ii] -= r_m_i[ii] * i_i[ii] * sgn;
         }
         for(int ii=0; ii<N; ++ii) {
             dv_m[ii] -= adapt[ii];
         }
         for(int ii=0; ii<N; ++ii) {
-            i_e[ii] -= dt * i_e[ii]/ SynapseProperties.ExcTau;
+            i_e[ii] -= dt * i_e[ii]/ Default_Parameters.ExcTau;
 
         }
         for(int ii=0; ii<N; ++ii) {
-            i_i[ii] -= dt * i_i[ii]/ SynapseProperties.InhTau;
+            i_i[ii] -= dt * i_i[ii]/ Default_Parameters.InhTau;
         }
-        if(!(r_m.isCompressed() && r_m.get(0)==1)){
-            for(int ii=0; ii<N; ++ii) {
-                dv_m[ii] *= r_m.get(ii);
-            }
-        }
+//        if(!(r_m.isCompressed() && r_m.get(0)==1)){
+//            for(int ii=0; ii<N; ++ii) {
+//                dv_m[ii] *= r_m.get(ii);
+//            }
+//        }
         for(int ii=0; ii<N; ++ii) {
             dv_m[ii] += (v_l.get(ii)-v_m[ii]);
         }

@@ -4,10 +4,11 @@ import Java.org.network.mana.base_components.SpikeTimeData;
 import Java.org.network.mana.base_components.neurons.Neuron;
 import Java.org.network.mana.base_components.synapses.ConnectSpecs;
 import Java.org.network.mana.base_components.synapses.STDP;
-import Java.org.network.mana.base_components.synapses.SynapseProperties;
 import Java.org.network.mana.exec.Syncable;
 import Java.org.network.mana.exec.Updatable;
+import Java.org.network.mana.globals.Default_Parameters;
 import Java.org.network.mana.utils.BoolArray;
+import Java.org.network.mana.utils.Utils;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -102,7 +103,7 @@ public class MANA_Sector implements Syncable, Updatable {
         double[] dummy = new double[secExcSums.length];
         System.arraycopy(secExcSums,0, dummy, 0, dummy.length);
         for(int ii=0; ii<dummy.length; ++ii) {
-            dummy[ii] += MANANeurons.default_sat_c + 20;
+            dummy[ii] += Default_Parameters.default_sat_c + 10;
         }
         target.setSatC(dummy);
         initialized = true;
@@ -118,7 +119,7 @@ public class MANA_Sector implements Syncable, Updatable {
     public MANA_Node add(Neuron src, ConnectSpecs specs) {
         MANA_Node newEntry = MANA_Node.buildNodeAndConnections(
                 this, src, target, specs,
-                SynapseProperties.getDefaultSTDP(src.isExcitatory(), target.isExcitatory()),
+                STDP.getDefaultSTDP(src.isExcitatory(), target.isExcitatory()),
                 !parent.targets.contains(src));
         childNodes.put(src, newEntry);
         countDown.set(childNodes.size());
@@ -193,7 +194,7 @@ public class MANA_Sector implements Syncable, Updatable {
 
         if (target.mhpOn && !(target.allExcSNon && target.allInhSNon)) {
             for (MANA_Node node : childNodes.values()) {
-               node.accumulatePFRSums(pfrAccum);
+                node.accumulatePFRSums(pfrAccum);
             }
         }
 
@@ -206,13 +207,13 @@ public class MANA_Sector implements Syncable, Updatable {
 //        }
 //        System.out.println();
         //if(!(target.allExcSNon && target.allInhSNon))
-            Arrays.fill(pfrAccum, 0);
+        Arrays.fill(pfrAccum, 0);
 
     }
 
     public void recountInDegrees() {
-       Arrays.fill(target.excInDegree, 0);
-       Arrays.fill(target.inhInDegree, 0);
+        Arrays.fill(target.excInDegree, 0);
+        Arrays.fill(target.inhInDegree, 0);
 
         for(MANA_Node node : childNodes.values()) {
             if(node.srcData.isExcitatory()) {
@@ -232,14 +233,96 @@ public class MANA_Sector implements Syncable, Updatable {
         }
         target.getSpikes().copyInto(spkBuffer);
         spkBuffer.clear();
-        target.estFR.pushBufferShallow();
-        target.getLastSpkTimes().pushBufferShallow();
+        target.estFR.pushBufferDeep();
+        target.getLastSpkTimes().pushBufferDeep();
         spkDat.pushSpks(target.getSpks()); // record spiking data
 
         if (!countDown.compareAndSet(0, childNodes.size())) {
             throw new IllegalStateException("Synchronization cannot be called unless the count-down timer is zero indicating that all child mana_components have been updated.");
         }
     }
+
+    private volatile double lastInhTime2 = 0;
+    private volatile double lastExcTime2 = 0;
+    private volatile double [] excThetas;
+    private volatile double [] inhThetas;
+
+
+    public synchronized double [] getThreshWeight(double theta, double time, boolean exc) {
+        try {
+            double lastTime = exc ? lastExcTime2 : lastInhTime2;
+            if(Math.abs(lastTime - time) > 10) {
+                if (exc)
+                    excThetas = new double[getWidth()];
+                else
+                    inhThetas = new double[getWidth()];
+                for (MANA_Node node : childNodes.values()) {
+                    if (node.srcData.isExcitatory() != exc || node.inputIsExternal) continue;
+                    if(exc) {
+                        node.getWeightMatrix().getMaxMajors(0, excThetas);
+                    } else {
+                        node.getWeightMatrix().getMaxMajors(0, inhThetas);
+                    }
+                }
+                if(exc)
+                    Utils.scalarMulti(excThetas, theta);
+                else
+                    Utils.scalarMulti(inhThetas, theta);
+
+                if (exc)
+                    lastExcTime2 = time;
+                else
+                    lastInhTime2 = time;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("OUT OF BOUNDS HAPPENS IN SECTOR");
+        }
+
+        return  exc ? excThetas : inhThetas;
+    }
+//
+//    public synchronized double [] getThreshWeight(double theta, double time, boolean exc) {
+//        try {
+//            int [] ptrs = new int[getWidth()];
+//            double[][] vals = new double[getWidth()][];
+//            int [] indegs = exc ? target.getExcInDegree() : target.getInhInDegree();
+//            for(int ii=0; ii<getWidth(); ++ii) {
+//                vals[ii] = new double[indegs[ii]];
+//            }
+//
+//            double lastTime = exc ? lastExcTime2 : lastInhTime2;
+//            if(Math.abs(lastTime - time) > 10) {
+//                if (exc)
+//                    excThetas = new double[getWidth()];
+//                else
+//                    inhThetas = new double[getWidth()];
+//                for (MANA_Node node : childNodes.values()) {
+//                    if (node.srcData.isExcitatory() != exc || node.inputIsExternal) continue;
+//                    for (int ii = 0; ii < getWidth(); ++ii) {
+//                        ptrs[ii] = node.getWeightMatrix().getDataForMajorInd(ii, 0, vals[ii], ptrs[ii]);
+//                    }
+//                }
+//                for (int ii = 0; ii < getWidth(); ++ii) {
+//                    Arrays.sort(vals[ii]);
+//                    if (exc)
+//                        excThetas[ii] = vals[ii][(int) (vals.length * theta)];
+//                    else
+//                        inhThetas[ii] = vals[ii][(int) (vals.length * theta)];
+//                }
+//
+//                if (exc)
+//                    lastExcTime2 = time;
+//                else
+//                    lastInhTime2 = time;
+//            }
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            System.out.println("OUT OF BOUNDS HAPPENS IN SECTOR");
+//        }
+//
+//        return  exc ? excThetas : inhThetas;
+//    }
 
     public int getWidth() {
         return target.N;

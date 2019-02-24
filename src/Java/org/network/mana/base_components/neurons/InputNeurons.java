@@ -1,7 +1,7 @@
 package Java.org.network.mana.base_components.neurons;
 
 import Java.org.network.mana.exec.Syncable;
-import Java.org.network.mana.exec.mana.MANA_Globals;
+import Java.org.network.mana.globals.Default_Parameters;
 import Java.org.network.mana.io.InputReader;
 import Java.org.network.mana.utils.BoolArray;
 import Java.org.network.mana.utils.BufferedDoubleArray;
@@ -80,7 +80,7 @@ public class InputNeurons implements Neuron, Syncable {
 	}
 
 	private InputNeurons() {
-		id = MANA_Globals.getID();
+		id = Default_Parameters.getID();
 	}
 
 	public void init(int noNeu) {
@@ -89,6 +89,7 @@ public class InputNeurons implements Neuron, Syncable {
 		offsets = new double[noNeu];
 		lastSpkTime = new BufferedDoubleArray(noNeu);
 		spks = new BoolArray(noNeu);
+		outDegree = new int[noNeu];
 	}
 
 	public void update(double dt, double time, BoolArray spkBuffer) {

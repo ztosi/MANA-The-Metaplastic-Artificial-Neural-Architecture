@@ -1,11 +1,13 @@
 package Java.org.network.mana.exec.mana;
 
+import Java.org.network.mana.functions.StructuralPlasticity;
+import Java.org.network.mana.globals.Default_Parameters;
 import Java.org.network.mana.io.MANAWriter;
 import Java.org.network.mana.mana_components.MANA_Unit;
 
 import java.io.File;
 
-import static Java.org.network.mana.exec.mana.MANA_Globals.dt;
+import static Java.org.network.mana.globals.Default_Parameters.dt;
 
 public class RunMANA {
 
@@ -49,6 +51,19 @@ public class RunMANA {
                 case "-spInterval":
                     spInterval = Double.parseDouble(args[++ii]);
                     break;
+				case "-prune" :
+					String val = args[++ii];
+					if (val.equalsIgnoreCase("local")) {
+						StructuralPlasticity.pruneTechnique = StructuralPlasticity.SPTechnique.LOCAL_MAX;
+					} else if (val.equalsIgnoreCase("global")) {
+						StructuralPlasticity.pruneTechnique = StructuralPlasticity.SPTechnique.GLOBAL_MAX;
+					} else {
+						throw new IllegalArgumentException("Unknown input.");
+					}
+					break;
+				case "-pthresh":
+					Default_Parameters.DEF_Thresh = Double.parseDouble(args[++ii]);
+					break;
                 default:
                     throw new IllegalArgumentException("Unknown input.");
             }
