@@ -97,6 +97,7 @@ public class MANAMatrix {
         for(SrcTarDataPack tup : cooMat.data) {
             srcToTargLookup[cnt++] = (int) tup.values[tup.values.length-1];
         }
+        nnz = weightsTOrd.getNnz();
     }
 
     /**
@@ -235,7 +236,7 @@ public class MANAMatrix {
         double [] vals = outDataSOrd.getRawData();
         try {
             for (int ii = start; ii < end; ii += inc) {
-                int[] evt = new int[4];
+                int[] evt = new int[6];
                 evt[0] = (int) ((time + vals[ii]) / dt);
                 evt[1] = srcToTargLookup[ii/inc] * weightsTOrd.getInc();
                 evt[2] = Float.floatToIntBits((float) (10 * vals[ii + inc - 1] * vals[ii + inc - 2]));
@@ -243,6 +244,8 @@ public class MANAMatrix {
                     throw new IllegalStateException("Unusual UDF Response");
                 }
                 evt[3] = outDataSOrd.getRawOrdIndices()[ii / inc];
+                evt[4] = noSrc;
+                evt[5] = SrcTarPair.hashCodeGen(noSrc, evt[3]);
                 eventQ.add(evt);
             }
         } catch (Exception e) {
@@ -269,11 +272,20 @@ public class MANAMatrix {
         try {
             while (!eventQ.isEmpty() && eventQ.peek()[0] * dt <= time) {
                 event = eventQ.poll();
-                incCur[event[3]] += weightsTOrd.getRawData()[event[1]]
+                int ind;
+                if(event[event.length-1] == -1) { // invalidated
+                    ind = weightsTOrd.find(event[3], event[4]);
+                } else {
+                    ind = event[1];
+                }
+                if(ind==-1) {
+                    System.out.println("Apparently there's no synapse?");
+                }
+                incCur[event[3]] += weightsTOrd.getRawData()[ind]
                         * Float.intBitsToFloat(event[2]);
                 stdpRule.preTriggered(weightsTOrd, event, lastSpkTimes, dt);
                 // TODO: Fix the event thing to make it not dependent on increment in wts mat, so that callers can apply their own offsets without having to know wts
-                tOrdLastArrivals.setValue(event[1]/2, time, 0);
+                tOrdLastArrivals.setValue(ind/2, time, 0);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -380,7 +392,7 @@ public class MANAMatrix {
                 Math.sqrt(30000), 20, cSpecs);
         double[] rawVals = mm.weightsTOrd.getRawData();
         for(int ii=0; ii<rawVals.length; ++ii) {
-            rawVals[ii] =Math.ceil( Math.random() * 10);
+            rawVals[ii] = Math.ceil( Math.random() * 10);
         }
 
         System.out.println(Arrays.toString(mm.weightsTOrd.getPtrs()));
@@ -481,7 +493,34 @@ public class MANAMatrix {
         for(int ii=0; ii<numN; ++ii) {
             System.out.println(Arrays.toString(mat[ii]));
         }
+        coomana.data.removeFirst();
+        coomana.data.remove(4);
 
+        convMana = new MANAMatrix(coomana, src, tar);
+        System.out.println();
+        System.out.println(Arrays.toString(convMana.weightsTOrd.getPtrs()));
+        System.out.println();
+        System.out.println(Arrays.toString(convMana.weightsTOrd.getOrdIndices()));
+        System.out.println();
+        System.out.println(Arrays.toString(convMana.weightsTOrd.getValues()));
+        System.out.println();
+        srcInd = new int[convMana.nnz];
+        tarInd = new int[convMana.nnz];
+        vals = new double[convMana.nnz];
+
+        convMana.weightsTOrd.getInCOO(srcInd, tarInd, vals, 0);
+
+        mat = new double[numN][numN];
+        matC = new int[numN][numN];
+
+        for(int ii=0; ii<convMana.nnz; ++ii) {
+            mat[srcInd[ii]][tarInd[ii]] = vals[ii];
+            matC[srcInd[ii]][tarInd[ii]]++;
+        }
+
+        for(int ii=0; ii<numN; ++ii) {
+            System.out.println(Arrays.toString(mat[ii]));
+        }
 
         // TODO: Actually use JUnit instead of being lazy... so lazy!
         System.out.println("Dummy. It's a place for a breakpoint! :D");

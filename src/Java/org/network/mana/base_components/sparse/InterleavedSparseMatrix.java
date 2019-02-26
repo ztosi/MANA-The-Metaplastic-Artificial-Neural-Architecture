@@ -155,14 +155,19 @@ public class InterleavedSparseMatrix {
 
     public void getInCOO(int[] src, int[] tar, double[] wt, int offset) {
         // TODO: Add checks... and options for ranges in args...
-        int kk = 0;
-        for(int ii=0; ii<noMajor; ++ii) {
-            for(int jj=ptrs[ii]; jj<ptrs[ii+1]; ++jj) {
-                tar[kk] = ii;
-                src[kk] = ordIndices[jj];
-                wt[kk++] = values[jj*nILFac+offset];
-            }
+        try {
+            int kk = 0;
+            for(int ii=0; ii<noMajor; ++ii) {
+                for(int jj=ptrs[ii]; jj<ptrs[ii+1]; ++jj) {
+                    tar[kk] = ii;
+                    src[kk] = ordIndices[jj];
+                    wt[kk++] = values[jj*nILFac+offset];
+                }
 
+            }
+        } catch (ArrayIndexOutOfBoundsException aeio) {
+            System.out.println("aergh");
+            aeio.printStackTrace();
         }
     }
 
@@ -212,6 +217,14 @@ public class InterleavedSparseMatrix {
         }
     }
 
+    public final int find(int major, int minor) {
+        if(ptrs[major+1]-ptrs[major] == 0) {
+            return  -1;
+        }
+
+        return Utils.findInSegment(minor, ordIndices, ptrs[major], ptrs[major+1]-1);
+
+    }
 
     public void divMultFanIn(double [] divVal, double [] mulVal, int inc) {
         for(int ii = 0; ii< noMajor; ++ii) {

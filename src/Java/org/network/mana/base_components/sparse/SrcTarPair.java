@@ -19,9 +19,13 @@ public final class SrcTarPair {
 	
 	@Override
 	public int hashCode() {
+		return hashCodeGen(src, tar);
+	}
+
+	public static  int hashCodeGen(int src, int tar) {
 		return 100003 * src + 777743 * tar;
 	}
-	
+
 	@Override
 	public boolean equals(final Object p) {
 		if(!this.getClass().equals(p.getClass())) {

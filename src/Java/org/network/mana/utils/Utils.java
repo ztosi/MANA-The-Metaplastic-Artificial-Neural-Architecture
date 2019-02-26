@@ -236,7 +236,26 @@ public class Utils {
 		}
 		return out;
 	}
-	
+
+	public static int findInSegment(int val, int[] arr, int start, int stop) {
+		if(start-stop==0 || start == -1 || start > stop) {
+			if(arr[start] != val) {
+				return -1;
+			} else {
+				return start;
+			}
+		}
+		int split = (stop-start)/2;
+		if(arr[split+start] > val) {
+			return findInSegment(val, arr, start, start+split-1);
+		} else if(arr[split+start] < val) {
+			return findInSegment(val, arr, split+start+1, stop);
+		} else {
+			return start+split;
+		}
+
+	}
+
 	public static double sum(double [] arr) {
 		double su = 0;
 		for(int ii=0, n=arr.length; ii<n; ++ii) {
@@ -280,19 +299,35 @@ public class Utils {
 
 
 	public static void main(String [] args ) {
-		double b = -5;
-		double d = 5;
+//		double b = -5;
+//		double d = 5;
+//
+//		System.out.println(Long.toBinaryString(Double.doubleToLongBits(b)));
+//
+//		System.out.println(checkSign(b));
+//		System.out.println(checkSign(d));
+//		System.out.println(sign(-12.0));
+//		System.out.println(sign(12.0));
+//		System.out.println(sign(1E20));
+//		System.out.println(sign(0));
+//		System.out.println(sign(-0));
+//		System.out.println(sign(-10));
 
-		System.out.println(Long.toBinaryString(Double.doubleToLongBits(b)));
+		int[] poco = new int[]{1, 3, 6, 8, 9, 22, 23, 34};
 
-		System.out.println(checkSign(b));
-		System.out.println(checkSign(d));
-		System.out.println(sign(-12.0));
-		System.out.println(sign(12.0));
-		System.out.println(sign(1E20));
-		System.out.println(sign(0));
-		System.out.println(sign(-0));
-		System.out.println(sign(-10));
+		System.out.println(findInSegment(23, poco, 0, poco.length-1));
+		System.out.println(findInSegment(3, poco, 0, poco.length-1));
+		System.out.println(findInSegment(6, poco, 0, poco.length-1));
+		System.out.println(findInSegment(1, poco, 0, poco.length-1));
+		System.out.println(findInSegment(34, poco, 0, poco.length-1));
+		System.out.println(findInSegment(20, poco, 0, poco.length-1));
+		System.out.println(findInSegment(10, poco, 0, poco.length-1));
+		System.out.println(findInSegment(1024, poco, 0, poco.length-1));
+		System.out.println(findInSegment(0, poco, 0, poco.length-1));
+
+
+
+
 	}
 
 }

@@ -7,6 +7,8 @@ import Java.org.network.mana.utils.DataWrapper;
 import Java.org.network.mana.utils.Utils;
 
 import java.util.Arrays;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.ThreadPoolExecutor;
 
 public class LeakyIFwAdapt implements  Neuron{
 
@@ -77,13 +79,13 @@ public class LeakyIFwAdapt implements  Neuron{
 
         if(exc) {
             ref_p = Default_Parameters.default_exc_ref_p;
-            tau_m = new DataWrapper(N, true, Default_Parameters.default_exc_tau_m);
-//			tau_m = new DataWrapper(Utils.getRandomArray(Utils.ProbDistType.NORMAL, 23, 1.5, N));
+           // tau_m = new DataWrapper(N, true, Default_Parameters.default_exc_tau_m);
+			tau_m = new DataWrapper(Utils.getRandomArray(Utils.ProbDistType.NORMAL, 23, 1.5, N));
             adaptJump = Default_Parameters.default_exc_adaptJ;
         } else {
             ref_p = Default_Parameters.default_inh_ref_p;
-            tau_m = new DataWrapper(N, true, Default_Parameters.default_inh_tau_m);
-//			tau_m = new DataWrapper(Utils.getRandomArray(Utils.ProbDistType.NORMAL, 26, 2.5, N));
+      //      tau_m = new DataWrapper(N, true, Default_Parameters.default_inh_tau_m);
+			tau_m = new DataWrapper(Utils.getRandomArray(Utils.ProbDistType.NORMAL, 26, 2.5, N));
             adaptJump = Default_Parameters.default_inh_adatpJ;
         }
 
@@ -110,7 +112,7 @@ public class LeakyIFwAdapt implements  Neuron{
     public void update(double dt, double time, BoolArray spkBuffer) {
         for(int ii=0; ii<N; ++ii) {
             int sgn = Utils.checkSign((lastSpkTime.getData(ii)+ref_p)-time);
-            dv_m[ii] += r_m_e[ii] * i_e[ii] + i_bg.get(ii) * sgn;
+            dv_m[ii] += r_m_e[ii] * i_e[ii] + i_bg.get(ii) * sgn + ThreadLocalRandom.current().nextGaussian() * 0.05;
             dv_m[ii] -= r_m_i[ii] * i_i[ii] * sgn;
         }
         for(int ii=0; ii<N; ++ii) {

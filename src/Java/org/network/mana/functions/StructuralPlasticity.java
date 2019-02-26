@@ -57,8 +57,9 @@ public class StructuralPlasticity {
                             if (pruneDecision(src.getOutDegree()[ii],
                                     noOutP, inDegs[jj],
                                     noInP, datum.values[0], pruneTechnique == SPTechnique.LOCAL_MAX ? 0//DEF_Thresh*(1-Math.sqrt(datum.values[0]/val))
-                                            : maxWt * (time >4000 && time < 11000 ? 0.6 : Default_Parameters.DEF_Thresh))) {
+                                            : maxWt * Default_Parameters.DEF_Thresh)) {
                                 dataIter.remove();
+                            //    node.removeEvent(dat.coo.hashCode());
                                 //toRemove.add(dat);
                                 noRemoved++;
                             }
@@ -113,7 +114,7 @@ public class StructuralPlasticity {
         } else if  (wVal > thresh) {
             return false;
         } else {
-            double p = (double)srcOutDegree/outPoss * Math.pow((double)tarInDegree/inPoss,2);
+            double p = Math.pow((double)srcOutDegree/outPoss,2) * (double)tarInDegree/inPoss + 0.001;
             return ThreadLocalRandom.current().nextDouble() < p;
         }
     }

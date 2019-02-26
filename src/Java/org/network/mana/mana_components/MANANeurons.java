@@ -132,7 +132,7 @@ public class MANANeurons implements Neuron {
 		homeostaticPlasticity(neus, estFR, prefFR, lambda, dt);
 		descaleNormVals();
 		calcScaleFacs();
-		if (mhpOn && !(allExcSNon && allInhSNon)) {
+		if (mhpOn && !(allExcSNon && allInhSNon) && time > 20000) {
 
 			for(int ii=0; ii<N; ++ii) {
 				if(prefFR[ii] < Default_Parameters.MIN_PFR) {
@@ -155,6 +155,10 @@ public class MANANeurons implements Neuron {
 //			} else {
 //				MHPFunctions.calcfTerm(prefFR, fVals, default_alpha, default_beta, 2);
 //			}
+		} else {
+			for(int ii=0; ii<N; ++ii) {
+				prefFR[ii] = estFR.getData(ii);
+			}
 		}
 		calcNewNorms();
 		scaleNormVals();
@@ -348,7 +352,7 @@ public class MANANeurons implements Neuron {
 	public void calcScaleFacs() {
 		for(int ii=0; ii<N; ++ii) {
 			double rat = exc_sf[ii]/inh_sf[ii];
-			rat += 0.1 * Default_Parameters.dt*lambda * Math.log(prefFR[ii]/estFR.getData(ii));
+			rat += Default_Parameters.dt*lambda * Math.log(prefFR[ii]/estFR.getData(ii));
 			rat /= rat+1;
 			if(rat > 0.9) {
 				rat = 0.9;

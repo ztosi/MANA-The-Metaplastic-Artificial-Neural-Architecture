@@ -45,10 +45,14 @@ public final class HebSTDP implements STDP {
         }
 
         for(int ii = start; ii<end; ii+=wts.getInc()) {
-            wts.getRawData()[ii+1] = lRate * dt* wPlus * Math.pow(-wts.getRawData()[ii]+20, 0.25)/twentRt;
+            wts.getRawData()[ii+1] = dt*lRate * wPlus;// * Math.pow(-wts.getRawData()[ii]+20, 0.25)/twentRt;
         }
         for(int ii = start; ii<end; ii+=wts.getInc()) {
+            if((lastArrs.values[laLoc]-time) > 0) {
+                System.out.println("Bad time");
+            }
             wts.getRawData()[ii+1] *= Math.exp((lastArrs.values[laLoc]-time)/tauPlus);
+
                   //  * ( 0.1 * ThreadLocalRandom.current().nextGaussian() + 1);
             laLoc += lastArrs.getInc();
         }
@@ -59,14 +63,27 @@ public final class HebSTDP implements STDP {
 
     @Override
     public void preTriggered(InterleavedSparseMatrix wts, int[] dataPack, BufferedDoubleArray lastSpkTimes, double dt) {
-        wts.getRawData()[dataPack[1]+1] = -lRate * wMinus * dt
-                * Math.exp((lastSpkTimes.getData(dataPack[3])-(double)dataPack[0]*dt)/tauMinus);
+        int ind;
+        if(dataPack[dataPack.length-1] == -1) {
+            ind = wts.find(dataPack[3], dataPack[4]);
+        } else {
+            ind=dataPack[1];
+        }
+        if((lastSpkTimes.getData(dataPack[3])-(double)dataPack[0]*dt == 0)){
+            wts.getRawData()[ind + 1] = lRate * wPlus * dt;
+        } else {
+            wts.getRawData()[ind + 1] = -lRate * wMinus * dt
+                    * Math.exp((lastSpkTimes.getData(dataPack[3]) - (double) dataPack[0] * dt) / tauMinus);
+        }
+        if((lastSpkTimes.getData(dataPack[3])-(double)dataPack[0]*dt) > 0) {
+            System.out.println("Bad time 2");
+        }
        //         * ( 0.1 * ThreadLocalRandom.current().nextGaussian() + 1);
 //        if(wts.getRawData()[dataPack[1]]+1 < (-lRate * wMinus)) {
 //            System.out.println("problem");
 //        }
-            if(wts.getRawData()[dataPack[1]] < 0) {
-                wts.getRawData()[dataPack[1]] = 0;
+            if(wts.getRawData()[ind] < 0) {
+                wts.getRawData()[ind] = 0;
             }
     }
 

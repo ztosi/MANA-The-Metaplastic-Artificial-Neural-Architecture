@@ -14,6 +14,7 @@ import Java.org.network.mana.functions.StructuralPlasticity;
 import Java.org.network.mana.utils.BoolArray;
 import Java.org.network.mana.utils.Utils;
 
+import java.util.Iterator;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -309,24 +310,30 @@ public class MANA_Node implements Updatable {
      */
     public void structuralPlasticity(int maxInD, int maxOutD, double lambda, double maxDist, double time) {
         double max = StructuralPlasticity.pruneTechnique == StructuralPlasticity.SPTechnique.GLOBAL_MAX ?
-        parent_sector.parent.getMaxofType(time, srcData.isExcitatory(), targData.isExcitatory()): 0; // TODO: Lol at this convoluted nonsense
+        parent_sector.parent.getMaxofType(time, srcData.isExcitatory(), targData.isExcitatory(), inputIsExternal): 0; // TODO: Lol at this convoluted nonsense
         synMatrix = StructuralPlasticity.pruneGrow(this, srcData, targData, maxOutD, maxInD,
                 lambda, ConnectRule.getConProbBase(srcData.isExcitatory(),
                         targData.isExcitatory())/2, maxDist, time, max);
         pfrLoc = new InterleavedSparseAddOn(synMatrix.getWeightsTOrd(), 1);
-        evtQueue.clear(); // TODO: This is very bad! Figure out a better way!
         structureChanged = true;
+        evtQueue.clear();
+        //invalidatEvents();
     }
 
-// TODO
-//    public void removeEvent(int absTarOrdIndex) {
-//        evtQueue.stream().
-//        Iterator<int[]> evtIterator = evtQueue.iterator();
-//        while(evtIterator.hasNext()) {
-//            int[] evt = evtIterator.next();
-//            if()
-//        }
-//    }
+    public void removeEvent(int hashCode) {
+        Iterator<int[]> iter = evtQueue.iterator();
+        while(iter.hasNext()) {
+            if (iter.next()[5] == hashCode) {
+                iter.remove();
+            }
+        }
+    }
+
+    private void invalidatEvents() {
+        for(int [] evt : evtQueue) {
+            evt[evt.length-1] = -1;
+        }
+    }
 
 
     public int[] getLocalInDegrees() {

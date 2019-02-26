@@ -50,7 +50,7 @@ public class MANA_Unit {
 					Math.pow(z0-zf, 2));
 
 	private ConnectSpecs recConSpecs = new ConnectSpecs(ConnectRule.Distance2,
-			new double[] {200, 200, 200, 200, 1},
+			new double[] {300, 300, 300, 300, 1},
 			defMaxDist, Default_Parameters.MAX_DELAY);
 
 	private ConnectSpecs inpConSpecs = new ConnectSpecs(ConnectRule.Random,
@@ -111,10 +111,12 @@ public class MANA_Unit {
 		unit.numAllExc = unit.numExc + unit.noInp;
 		unit.numInh = (int)Math.ceil((1-DEFAULT_EXC_RATIO)*unit.size);
 
-		int numInhSecs = (int) Math.ceil(unit.numInh/DEFAULT_NODE_DIM);
+		int nodeDim = unit.numInh < DEFAULT_NODE_DIM ? unit.numInh : DEFAULT_NODE_DIM;
+
+		int numInhSecs = (int) Math.ceil(unit.numInh/nodeDim);
 		int [] inhSecSizes = new int[] {unit.numInh/numInhSecs,  unit.numInh%numInhSecs};
 
-		int numExcSecs = (int) Math.ceil(unit.numExc/DEFAULT_NODE_DIM);
+		int numExcSecs = (int) Math.ceil(unit.numExc/nodeDim);
 		int [] excSecSizes = new int[] {unit.numExc/numExcSecs,  unit.numInh%numExcSecs};
 
 		for(int ii=0; ii<unit.fullSize; ++ii) {
@@ -283,6 +285,8 @@ public class MANA_Unit {
 	private volatile double lastExcInhTime = 0;
 	private volatile double lastInhTime = 0;
 	private volatile double lastInhExcTime = 0;
+	private volatile double maxInp = 0;
+	private volatile double lastInpTime = 0;
 
 	public synchronized double getMaxExcLazy(double time) {
 		if(Math.abs(lastExcTime - time) > 10) {
@@ -307,34 +311,46 @@ public class MANA_Unit {
 		return maxInh;
 	}
 
-	public synchronized double getMaxofType(final double time, final boolean srcType, final boolean tarType) {
+	public synchronized double getMaxofType(final double time, final boolean srcType,  final boolean tarType, final boolean isInp) {
 		double oldTime = srcType ? tarType ? lastExcTime : lastExcInhTime :  tarType ? lastInhExcTime : lastInhTime;
+		if(isInp) {
+			oldTime = lastInpTime;
+		}
 		if(Math.abs(oldTime - time) > 10) {
 			double mx = nodes.stream()
 					.filter(node -> srcType == node.srcData.isExcitatory())
-					.filter(nodes -> tarType == nodes.targData.isExcitatory())
-					.filter(node -> !node.inputIsExternal)
+					//.filter(nodes -> tarType == nodes.targData.isExcitatory())
+					.filter(node -> isInp == node.inputIsExternal)
 					.mapToDouble(node->node.getSynMatrix().getMaxWeight())
 					.max().getAsDouble();
-			if(srcType) {
-				if(tarType) {
+			if(!isInp) {
+				if(srcType) {
 					maxExc = mx;
 					lastExcTime =  time;
-				} else {
-					maxExcInh = mx;
-					lastExcInhTime = time;
-				}
-			} else {
-				if(tarType) {
-					maxInhExc = mx;
-					lastInhExcTime = time;
+//					if(tarType) {
+//						maxExc = mx;
+//						lastExcTime =  time;
+//					} else {
+//						maxExcInh = mx;
+//						lastExcInhTime = time;
+//					}
 				} else {
 					maxInh = mx;
-					lastInhTime = time;
+					lastInhTime =  time;
+//					if(tarType) {
+//						maxInhExc = mx;
+//						lastInhExcTime = time;
+//					} else {
+//						maxInh = mx;
+//						lastInhTime = time;
+//					}
 				}
+			} else {
+				maxInp = mx;
+				lastInpTime = time;
 			}
 		}
-		return srcType ? tarType ? maxExc : maxExcInh :  tarType ? maxInhExc : maxInh;
+		return srcType ? isInp ? maxInp : maxExc : maxInh;
 	}
 
 

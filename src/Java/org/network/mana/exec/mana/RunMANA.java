@@ -109,7 +109,7 @@ public class RunMANA {
 					unit.setSynPlasticOn(false);
 				}
 
-				if(iters%((int)(1/dt)) == 0) {
+				if(iters%((int)(1000/dt)) == 0) {
                     System.out.println((int)(iters*dt));
                 }
 
@@ -117,7 +117,7 @@ public class RunMANA {
 
 				if((iters)%(1000/ dt) == 0 && time != 0) {
 					System.out.println("------------- " + time + "------------- " );
-					if ((iters)%(50000/ dt) == 0 || first || iters == (int)(10000/dt)) {
+					if ((iters)%(50000/ dt) == 0 || first || iters == (int)(10000/dt) || iters == (int)(9000/dt)) {
 						MANAWriter.printData2Matlab(unit, mainOut.toString(), prefix, time, dt);
 						first = false;
 					}

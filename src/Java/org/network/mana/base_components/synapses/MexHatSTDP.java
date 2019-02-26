@@ -20,7 +20,7 @@ public final class MexHatSTDP implements  STDP {
 
     public double lRate = 1E-3;
 
-    public static double a = 5;
+    public static double a = 25;
 
     public static final double twentRt = Math.pow(20, 1.0/4.0);
 
@@ -58,13 +58,18 @@ public final class MexHatSTDP implements  STDP {
     // data pack is {arrTime, rel tar ind, udfMultiplier}
 
     public void preTriggered(InterleavedSparseMatrix wts, int[] dataPack, BufferedDoubleArray lastSpkTimes, double dt) {
-        if(wts.getRawData()[dataPack[1]] > 20) {
-            wts.getRawData()[dataPack[1]] = 20;
+
+        int ind;
+        if(dataPack[dataPack.length-1] == -1) {
+            ind = wts.find(dataPack[3], dataPack[4]);
+        } else {
+            ind=dataPack[1];
         }
-        wts.getRawData()[dataPack[1] + 1] = dt * mexicanHatWindow(sigSq, nrmTerm,
-                wPlus, wMinus,
-                (dataPack[0]*dt) - lastSpkTimes.getData(dataPack[3]), lRate, wts.getRawData()[dataPack[1]]);
-               // * ( 0.1 * ThreadLocalRandom.current().nextGaussian() + 1);
+        if(wts.getRawData()[ind] > 20) {
+            wts.getRawData()[ind] = 20;
+        }
+        wts.getRawData()[ind + 1] = dt * mexicanHatWindow(sigSq, nrmTerm,
+                wPlus, wMinus, (dataPack[0] * dt) - lastSpkTimes.getData(dataPack[3]), lRate, wts.getRawData()[ind]);
     }
 
     public static double mexicanHatWindow(double sigmaSq, double normTerm, double wplus,
@@ -73,7 +78,7 @@ public final class MexHatSTDP implements  STDP {
         if (dw < 0) {
             dw *= -wminus;
         } else {
-            dw *= wplus * Math.pow(-wt+20, 0.25)/twentRt;
+            dw *= wplus;// * Math.pow(-wt+20, 0.25)/twentRt;
         }
         return dw * lrate;
     }
@@ -91,6 +96,26 @@ public final class MexHatSTDP implements  STDP {
 
     public double getSigma() {
         return sig;
+    }
+
+
+    public static void main(String [] args) {
+        double[] vals = new double[5000];
+
+        vals[0] = -30;
+        double sig = 22;
+        double sigSq = sig * sig;
+        double nrmTerm = 2 / (Math.sqrt(3 * sig) * Math.pow(Math.PI, 0.25));
+
+        for (int ii = 1; ii < 5000; ++ii) {
+            vals[ii] = vals[ii - 1] + 60.0 / 5000;
+            System.out.print(vals[ii] + " ");
+        }
+        System.out.println();
+        for (int ii = 1; ii < 5000; ++ii) {
+            System.out.print(25 * mexicanHatFunction(vals[ii], sigSq, nrmTerm) + " ");
+
+        }
     }
 
 }
