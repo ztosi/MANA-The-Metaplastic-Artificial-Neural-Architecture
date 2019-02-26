@@ -213,7 +213,7 @@ public class MANANeurons implements Neuron {
 	    updateThreshold(dt);
         descaleNormVals();
 	    calcScaleFacs();
-		if (mhpOn && !(allExcSNon && allInhSNon)) {
+		if (mhpOn && !(allExcSNon && allInhSNon) && time > 20000) {
 
 			for(int ii=0; ii<N; ++ii) {
 				if(prefFR[ii] < MANA_Globals.MIN_PFR) {
@@ -242,6 +242,11 @@ public class MANANeurons implements Neuron {
 //			} else {
 //				MHPFunctions.calcfTerm(prefFR, fVals, default_alpha, default_beta, 2);
 //			}
+		}
+		if(time <= 20000) {
+			for(int ii=0; ii<N; ++ii) {
+				prefFR[ii] = estFR.getData(ii);
+			}
 		}
 
 		calcNewNorms();

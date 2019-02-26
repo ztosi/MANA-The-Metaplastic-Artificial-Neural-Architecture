@@ -287,7 +287,7 @@ public class MANA_Node {
             }
 
             if (!inputIsExternal && targData.mhpOn
-                    && !(targData.allInhSNon && targData.allExcSNon)) { //&& (srcData.isExcitatory()==targData.isExcitatory())) {
+                    && !(targData.allInhSNon && targData.allExcSNon) && time > 20000) { //&& (srcData.isExcitatory()==targData.isExcitatory())) {
                    // && srcData.isExcitatory()) {
             //    if((int)(time/dt) % (int)(1/dt) == 0) {
                     for (int ii = 0; ii < width; ++ii) {
