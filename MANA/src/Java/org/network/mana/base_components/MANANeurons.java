@@ -20,17 +20,17 @@ public class MANANeurons implements Neuron {
 	public static final double default_r_m = 1.0;
 	public static final double default_i_bg = 18;
 	public static final double init_tau_HP = 5E-5;
-	public static final double final_tau_HP = 1E-5;
-	public static final double init_tau_MHP = 0.05;
-	public static final double final_tau_MHP = 1E-7;
-	public static final double hp_decay = 1E-6;
-	public static final double mhp_decay = 1E-6;
+	public static final double final_tau_HP = 5E-5;
+	public static final double init_tau_MHP = 1E-4;
+	public static final double final_tau_MHP = 1E-4;
+	public static final double hp_decay = 1E-5;
+	public static final double mhp_decay = 1E-5;
 	public static final double default_alpha = 2;
 	public static final double default_lowFR = 1;
 	public static final double default_beta = 15;
 	public static final double default_noiseVar = 0.2;
 	public static final double mhpPressure = 2;
-	
+
 	public static final double default_exc_tau_m = 30;
 	public static final double default_inh_tau_m = 20;
 	public static final double default_exc_ref_p = 3;
@@ -78,7 +78,7 @@ public class MANANeurons implements Neuron {
 	public double [] ef;
 	public double [] dummy; // here to test if my math is right....
 	public double [] prefFR;
-	public double [] threshRA;
+	//public double [] threshRA;
 	
 	// Afferent Synapse properties
 	public final BoolArray excSNon;
@@ -99,6 +99,7 @@ public class MANANeurons implements Neuron {
     public boolean allExcSNon = false;
     public boolean allInhSNon = false;
 	public double [][] xyzCoors;
+	public final boolean [] fullTrip;
 	/* Misc. Important */
 	public final int N;
 	public final boolean exc;
@@ -120,11 +121,12 @@ public class MANANeurons implements Neuron {
 		id = MANA_Globals.getID();
 		this.N = _N;
 		this.exc = _exc;
+		fullTrip = new boolean[_N];
 		dummy = new double[N];
 		v_m = new double[N];
 		dv_m = new double[N];
 		thresh = new double[N];
-		threshRA = new double[N];
+		//threshRA = new double[N];
 		estFR = new BufferedFloatArray(N);
 		prefFR = new double[N];
 		ef = new double[N];
@@ -171,7 +173,7 @@ public class MANANeurons implements Neuron {
 
 		Arrays.fill(prefFR, 1.0);
 		Arrays.fill(ef, 0.001);
-		Arrays.fill(threshRA, init_thresh);
+		//Arrays.fill(threshRA, init_thresh);
 		Arrays.fill(thresh, init_thresh);
 		Arrays.fill(v_m, init_v_m);
 		Arrays.fill(exc_sf, 1);
@@ -207,43 +209,61 @@ public class MANANeurons implements Neuron {
 	 * @param time
 	 * @param dt
 	 */
-	public void performFullUpdate(BoolArray spkBuffer, double[] pfrDts, final double time, final double dt) {
+	public void performFullUpdate(BoolArray spkBuffer, double[] pfrDts, double[] mnDiffs, final double time, final double dt) {
 	    update(dt, time, spkBuffer);
 	    updateEstFR(dt);
 	    updateThreshold(dt);
         descaleNormVals();
 	    calcScaleFacs();
-		if (mhpOn && !(allExcSNon && allInhSNon) && time > 20000) {
+		if (mhpOn && !(allExcSNon && allInhSNon) && time > MANA_Globals.MHP_ON_TIME) {
 
 			for(int ii=0; ii<N; ++ii) {
 				if(prefFR[ii] < MANA_Globals.MIN_PFR) {
-					prefFR[ii] = MANA_Globals.MIN_PFR + (1+ThreadLocalRandom.current().nextGaussian() * 0.1);
+					prefFR[ii] = MANA_Globals.MIN_PFR;// + (1+ThreadLocalRandom.current().nextGaussian() * 0.1);
 				}
 				if(prefFR[ii] > MANA_Globals.MAX_PFR) {
 					prefFR[ii] = MANA_Globals.MAX_PFR;
 				}
 
-				//double lwVal = Math.exp((MANA_Globals.MIN_PFR - estFR.getData(ii))/prefFR[ii]);
+//				for(int jj=0; jj<N; ++jj) {
+//					if(prefFR[ii] < MANA_Globals.MIN_PFR || prefFR[ii] > MANA_Globals.MAX_PFR) {
+//						System.out.println("Huh?");
+//					}
+//				}
+					//double lwVal = Math.exp((MANA_Globals.MIN_PFR - estFR.getData(ii))/prefFR[ii]);
 				//double hgVal = -Math.exp((estFR.getData(ii)-MANA_Globals.MAX_PFR)/prefFR[ii]);
 
 				//lwVal *= mhpPressure * MHPFunctions.mhpLTPTerm(prefFR[ii], default_beta, default_lowFR) / (inDegree[ii]+1);
 				//hgVal *= mhpPressure * MHPFunctions.mhpLTDTerm(prefFR[ii], default_alpha, default_lowFR) / (inDegree[ii]+1);
 
-                if(excSNon.get(ii) && inhSNon.get(ii)) {
-                    prefFR[ii] += (dt*final_tau_MHP/(double)(inDegree[ii]+1)) * pfrDts[ii] * ((1+ThreadLocalRandom.current().nextGaussian()) * noiseVar); //* (pfrDts[ii] + lwVal + hgVal);
-                } else {
-                    prefFR[ii] += (dt*eta/(double)(inDegree[ii]+1)) * pfrDts[ii] * ((1+ThreadLocalRandom.current().nextGaussian()) * noiseVar); //* (pfrDts[ii] + lwVal + hgVal);
-                }
+//                if(excSNon.get(ii) && inhSNon.get(ii)) {
+//                    prefFR[ii] += (dt*final_tau_MHP/(double)(inDegree[ii]+1)) * pfrDts[ii] * ((1+ThreadLocalRandom.current().nextGaussian()) * noiseVar); //* (pfrDts[ii] + lwVal + hgVal);
+//                } else {
+//                    prefFR[ii] += (dt*eta/(double)(inDegree[ii]+1)) * pfrDts[ii] * ((1+ThreadLocalRandom.current().nextGaussian()) * noiseVar); //* (pfrDts[ii] + lwVal + hgVal);
+//                }
+
 
 
 			}
+//			for(int ii=0; ii<N; ++ii) {
+//				if(!fullTrip[ii]) {
+//					//double lgPfr = Math.log(prefFR[ii]);
+//					//double lgPfr = Math.log(prefFR[ii]);
+//					prefFR[ii]  += MANA_Globals.dt * eta * pfrDts[ii];
+//					//prefFR[ii] = Math.exp(lgPfr);
+//					double tau = tau_m.get(ii);
+//					tau = (100-prefFR[ii]) / 100 *10 + 20;
+//					tau_m.setAt(tau, ii);
+//				}
+//			}
+			MHPFunctions.mhpStage2_new(prefFR, pfrDts, inDegree, mnDiffs, fullTrip, eta, 0.01, 5, 5, 1000);
 //			if(isExcitatory()) {
-				MHPFunctions.calcfTerm(prefFR, fVals, default_alpha, default_beta, default_lowFR);
+			//	MHPFunctions.calcfTerm(prefFR, fVals, default_alpha, default_beta, default_lowFR);
 //			} else {
 //				MHPFunctions.calcfTerm(prefFR, fVals, default_alpha, default_beta, 2);
 //			}
 		}
-		if(time <= 20000) {
+		if(time <= MANA_Globals.MHP_ON_TIME) {
 			for(int ii=0; ii<N; ++ii) {
 				prefFR[ii] = estFR.getData(ii);
 			}
@@ -294,6 +314,7 @@ public class MANANeurons implements Neuron {
 
     }
 
+
     /**
      * Checks to see if synaptic sums have exceeded their scaled norm vals. If they all have
      * sets allExcSNon and/or allInhSNon to true.
@@ -307,7 +328,10 @@ public class MANANeurons implements Neuron {
 				if((excSums[ii] >= normValsExc[ii]) && !excSNon.get(ii)) {
 					excSNon.set(ii, true);
 					System.out.println();
-					System.out.println(id + " " + ii + " EXCIT TRIPPED");
+					System.out.println(id + " " + ii + " Exc. tripped");
+					fullTrip[ii] = inhSNon.get(ii);
+					if(fullTrip[ii])
+						System.out.println("FULL TRIP");
 				}
 
 				allOn &= excSNon.get(ii);
@@ -320,8 +344,11 @@ public class MANANeurons implements Neuron {
             	if((inhSums[ii] >= normValsInh[ii]) && !inhSNon.get(ii)) {
 					inhSNon.set(ii, true);
 					System.out.println();
-					System.out.println(id + " " + ii + " INHIB TRIPPED");
-				}
+					System.out.println(id + " " + ii + " Inh. Tripped");
+					fullTrip[ii] = excSNon.get(ii);
+					if(fullTrip[ii])
+						System.out.println("FULL TRIP");
+            	}
 
                 allOn &= inhSNon.get(ii);
             }
@@ -417,7 +444,10 @@ public class MANANeurons implements Neuron {
 				v_m[ii] = v_reset.get(ii);
 				adapt[ii] += adaptJump;
 				ef[ii] += 1;
+
+
 			}
+			//spks.set(ii, spkBuffer.get(ii));
 		}
 	}
 	
@@ -428,6 +458,8 @@ public class MANANeurons implements Neuron {
 	 */
 	public void updateEstFR(double dt) {
 		for(int ii=0; ii<N; ++ii) {
+//			ef[ii] = (0.001*dt * ( (spks.get(ii) ? 1.0/dt:0.0)) ) + 0.99975 * ef[ii];
+//			estFR.setBuffer(ii, (float)ef[ii] * 1000);
 			double tauA = 10000 / Math.sqrt(prefFR[ii]);
 			ef[ii] -= dt * ef[ii]/tauA;
 			if (Double.isNaN(ef[ii])) {
@@ -461,12 +493,12 @@ public class MANANeurons implements Neuron {
 //				thresh[ii] += thDelta;
 //			}
 
-			thresh[ii] += dt * lambda * Math.log((estFR.getData(ii)+0.0001)/(prefFR[ii]+0.0001));
+			thresh[ii] += dt * lambda * Math.log((estFR.getData(ii)+1E-6)/(prefFR[ii]+1E-6));
 			if (Double.isNaN(thresh[ii])) {
 				System.out.println("NaN th");
 				break;
 			}
-			threshRA[ii] = thresh[ii] * (lambda*dt) + threshRA[ii]*(1-(lambda*dt));
+	//		threshRA[ii] = thresh[ii] * (lambda*dt) + threshRA[ii]*(1-(lambda*dt));
 		}
 	}
 

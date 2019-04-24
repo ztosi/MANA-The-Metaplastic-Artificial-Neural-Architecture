@@ -102,17 +102,6 @@ public class MANA_Unit {
 				unit.defXBounds, unit.defYBounds, unit.defZBounds);
 		unit.inputs.add(inp);
 		unit.externalInp = inp;
-		if(_N%200 != 0 || _N < 1000) {
-			System.out.println("The number you entered is... "
-					+ "annoying... and I'm too lazy to deal with it. "
-					+ "Rounding up to an easy number. ..."
-					+ " I promise in a future release not to be lazy... maybe.");
-			if(_N<1000) {
-				_N=1000;
-			}
-			_N = (int)(_N/200 * Math.ceil(_N/200));
-			System.out.println("New number is: "+_N);
-		}
 		// Figure out how much of everything thre needs to be...
 		unit.noInp = inp.getSize();
 		unit.size=_N;
@@ -120,6 +109,7 @@ public class MANA_Unit {
 		unit.numExc = (int)(0.8*unit.size);
 		unit.numAllExc = unit.numExc + unit.noInp;
 		unit.numInh = (int)(0.2*unit.size);
+		unit.size = unit.numExc + unit.numInh;
 		unit.noSecs = 5;
 		int secSize = _N/unit.noSecs;
 		unit.nodesPerSec = unit.noSecs+1; // input

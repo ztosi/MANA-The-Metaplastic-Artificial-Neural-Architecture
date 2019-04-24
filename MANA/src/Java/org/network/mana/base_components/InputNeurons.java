@@ -38,7 +38,7 @@ public class InputNeurons implements Neuron, Syncable {
 
 	public static InputNeurons buildInpNeuronsRandLocation (final String _filename,
 															   double[] xlims,
-															   double[] ylims,
+															double[] ylims,
 															   double [] zlims) {
 		InputNeurons inNeu = new InputNeurons(_filename);
 		double[] xCoors = Utils.getRandomArray(ProbDistType.UNIFORM, xlims[0], xlims[1], inNeu.getSize());

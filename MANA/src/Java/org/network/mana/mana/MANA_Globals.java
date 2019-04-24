@@ -14,6 +14,8 @@ public class MANA_Globals {
 
     public static final double MAX_PFR = 100;
 
+    public static final double MHP_ON_TIME = 20000;
+
     public static int getID() {
         return ID.getAndIncrement();
     }

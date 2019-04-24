@@ -6,7 +6,7 @@ import Java.org.network.mana.utils.BufferedDoubleArray;
 
 public interface STDP {
 
-    double DEF_LEARNING_RATE = 1E-6;
+    double DEF_LEARNING_RATE = 2E-6;
 
     void postTriggered(InterleavedSparseMatrix wts, InterleavedSparseAddOn lastArrs, int neuNo, double time);
 

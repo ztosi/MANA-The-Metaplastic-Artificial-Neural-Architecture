@@ -171,19 +171,24 @@ public enum SynType {
     public static final double eeTauPlus = 25;
     public static final double eeTauMinus = 100;
     public static final double eiTauPlus = 25;
-    public static final double eiTauMinus = 80;
+    public static final double eiTauMinus = 100;
+
+    public static final double ieTauPlus = 25;
+    public static final double ieTauMinus = 25;
+    public static final double iiTauPlus = 25;
+    public static final double iiTauMinus = 25;
+
     public static final double ieSigma = 22;
     public static final double iiSigma = 12;
 
-    public static final double eeWPlus = 5;
-    public static final double eeWMinus = 1.0;
-    public static final double eiWPlus = 5;
-    public static final double eiWMinus = 1.0;
-    public static final double ieWPlus = 1;
-    public static final double ieWMinus = 1.8;
-    public static final double iiWPlus = 1.2;
-    public static final double iiWMinus = 2.2;
-
+    public static final double eeWPlus = 6;
+    public static final double eeWMinus = 1;
+    public static final double eiWPlus = 6;
+    public static final double eiWMinus = 1;
+    public static final double ieWPlus = 2.1;
+    public static final double ieWMinus = 1;
+    public static final double iiWPlus = 0.5;
+    public static final double iiWMinus = 1;
     public static final double ieNrmSq = 2.0/(Math.sqrt(3*ieSigma)*PI_4TH_RT);
     public static final double ieSigSq = ieSigma * ieSigma;
     public static final double iiNrmSq = 2.0/(Math.sqrt(3*iiSigma)*PI_4TH_RT);
@@ -227,6 +232,10 @@ public enum SynType {
             else
                 return new HebSTDP(eiTauPlus, eiTauMinus, eiWPlus, eiWMinus, STDP.DEF_LEARNING_RATE);
         } else {
+//            if (tarExc)
+//                return new HebSTDP(ieTauPlus, ieTauMinus, ieWPlus, ieWMinus, STDP.DEF_LEARNING_RATE);
+//            else
+//                return new HebSTDP(iiTauPlus, iiTauMinus, iiWPlus, iiWMinus, STDP.DEF_LEARNING_RATE);
             if (tarExc)
                 return new MexHatSTDP(ieWPlus, ieWMinus, ieSigma, STDP.DEF_LEARNING_RATE);
             else

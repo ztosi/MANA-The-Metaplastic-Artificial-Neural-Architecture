@@ -102,7 +102,7 @@ public class MANA_Executor {
 
 		@Override
 		public MANA_Sector call() throws Exception {
-//			sector.update(time, dt);
+			sector.update(time, dt);
 			sector.synchronize();
 //			System.out.println(time + " " +  ct.incrementAndGet());
 			return sector;

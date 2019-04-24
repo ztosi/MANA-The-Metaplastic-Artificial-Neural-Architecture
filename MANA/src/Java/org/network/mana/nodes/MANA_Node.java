@@ -12,6 +12,7 @@ import Java.org.network.mana.base_components.enums.SynType;
 import Java.org.network.mana.functions.MHPFunctions;
 import Java.org.network.mana.functions.STDP;
 import Java.org.network.mana.functions.StructuralPlasticity;
+import Java.org.network.mana.mana.MANA_Globals;
 import Java.org.network.mana.utils.BoolArray;
 import Java.org.network.mana.utils.ConnectSpecs;
 import Java.org.network.mana.utils.Utils;
@@ -106,6 +107,10 @@ public class MANA_Node {
 
     private final double [] sectorSums;
 
+    public final double [] mnLg;
+
+    public final int[] nodeIndD;
+
     private final BoolArray normFlags;
 
     public boolean synPlasticityOn = true;
@@ -142,6 +147,7 @@ public class MANA_Node {
         tmp.dampener = dampener;
         tmp.stdpRule = stdpRule;
         tmp.pfrLoc = new InterleavedSparseAddOn(tmp.synMatrix.getWeightsTOrd(), 1);
+        tmp.calcLocalInDegrees();
         return tmp;
     }
 
@@ -154,6 +160,7 @@ public class MANA_Node {
         tmp.dampener = dampener;
         tmp.stdpRule = stdpRule;
         tmp.pfrLoc = new InterleavedSparseAddOn(tmp.synMatrix.getWeightsTOrd(), 1);
+        tmp.calcLocalInDegrees();
         return tmp;
     }
 
@@ -165,6 +172,7 @@ public class MANA_Node {
         tmp.dampener = dampener;
         tmp.stdpRule = stdpRule;
         tmp.pfrLoc = new InterleavedSparseAddOn(synMatrix.getWeightsTOrd(), 1);
+        tmp.calcLocalInDegrees();
         return tmp;
     }
 
@@ -183,6 +191,8 @@ public class MANA_Node {
         inputIsExternal = srcData instanceof InputNeurons;
         locCurrents = new double[width];
         localSums = new double[width];
+        mnLg = new double[width];
+        nodeIndD = new int[width];
     }
 
 
@@ -194,6 +204,7 @@ public class MANA_Node {
                 lambda, SynType.getConProbBase(srcData.isExcitatory(),
                         targData.isExcitatory())/2, maxDist, time, max);
         pfrLoc = new InterleavedSparseAddOn(synMatrix.getWeightsTOrd(), 1);
+        calcLocalInDegrees();
         evtQueue.clear(); // TODO: This is very bad! Figure out a better way!
         structureChanged = true;
     }
@@ -287,20 +298,23 @@ public class MANA_Node {
             }
 
             if (!inputIsExternal && targData.mhpOn
-                    && !(targData.allInhSNon && targData.allExcSNon) && time > 20000) { //&& (srcData.isExcitatory()==targData.isExcitatory())) {
+                    && !(targData.allInhSNon && targData.allExcSNon) && time > MANA_Globals.MHP_ON_TIME) { //&& (srcData.isExcitatory()==targData.isExcitatory())) {
                    // && srcData.isExcitatory()) {
             //    if((int)(time/dt) % (int)(1/dt) == 0) {
                     for (int ii = 0; ii < width; ++ii) {
-                        if(!(targData.excSNon.get(ii) && targData.inhSNon.get(ii)) ) {
-                            if (!(targData.excSNon.get(ii) && targData.inhSNon.get(ii))) {
-                                MHPFunctions.mhpStage1(targData.estFR, targData.prefFR, ((MANANeurons) srcData).estFR, ii,
-                                        pfrLoc, srcData.isExcitatory());
-                                MHPFunctions.mhpStage2(ii, MHPFunctions.getFp(targData.fVals[ii]),
-                                        MHPFunctions.getFm(targData.fVals[ii]), pfrLoc);
-                            }
-                        }
+                        if(targData.fullTrip[ii]) continue;
+//                        if(!(targData.excSNon.get(ii) && targData.inhSNon.get(ii)) ) {
+//                            if (!(targData.excSNon.get(ii) && targData.inhSNon.get(ii))) {
+//                                MHPFunctions.mhpStage1(targData.estFR, targData.prefFR, ((MANANeurons) srcData).estFR, ii,
+//                                        pfrLoc, srcData.isExcitatory());
+//                                MHPFunctions.mhpStage2(ii, MHPFunctions.getFp(targData.fVals[ii]),
+//                                        MHPFunctions.getFm(targData.fVals[ii]), pfrLoc);
+//                            }
+//                        }
+                        MHPFunctions.mhpStage1_new(targData.estFR, ((MANANeurons)srcData).estFR, mnLg, ii,
+                                pfrLoc, 0.3);
               //      }
-                }
+                    }
 //            for(int ii=0; ii<width; ++ii) {
 //                if(!(targData.excSNon.get(ii) && targData.inhSNon.get(ii)))
 //                    MHPFunctions.mhpStage1(ii, pfrLoc);
@@ -314,11 +328,11 @@ public class MANA_Node {
 
             // Last thread working on a node in the sector has to update the sector...
     //            System.out.println(parent_sector.countDown.get());
-                if (parent_sector.countDown.decrementAndGet() == 0) {
-                    parent_sector.update(time, dt);
-                } else if (parent_sector.countDown.get() < 0) {
-                    throw new IllegalStateException("Sector countdown can never be less than 0.");
-                }
+//                if (parent_sector.countDown.decrementAndGet() == 0) {
+//                    parent_sector.update(time, dt);
+//                } else if (parent_sector.countDown.get() < 0) {
+//                    throw new IllegalStateException("Sector countdown can never be less than 0.");
+//                }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -328,6 +342,11 @@ public class MANA_Node {
         int [] inD = new int[width];
         synMatrix.inDegrees(inD);
         return inD;
+    }
+
+    public int[] calcLocalInDegrees() {
+        synMatrix.inDegrees(nodeIndD);
+        return nodeIndD;
     }
 
     public void randomizeWeights(Utils.ProbDistType pdist, double[] params) {

@@ -1,6 +1,7 @@
 package Java.org.network.mana.mana;
 
 import java.io.File;
+import java.util.Date;
 
 import Java.org.network.mana.nodes.MANA_Unit;
 
@@ -19,7 +20,7 @@ public class RunMANA {
 		double plastShutOff0 = time_f0/2;
 		double spInterval = 10000;
 		String filename = null;
-		String odir = DEF_ODIR;
+		String odir = DEF_ODIR  + new Date().toString();
 		String prefix = DEF_PREFIX;
         double printInterval = 1000;
         for (int ii = 0; ii < args.length; ++ii) {
@@ -94,7 +95,7 @@ public class RunMANA {
 					unit.setSynPlasticOn(false);
 				}
 
-				if(iters%((int)(1/dt)) == 0) {
+				if(iters%((int)(1000/dt)) == 0) {
                     System.out.println((int)(iters*dt));
                 }
 
@@ -102,7 +103,11 @@ public class RunMANA {
 
 				if((iters)%(1000/ dt) == 0 && time != 0) {
 					System.out.println("------------- " + time + "------------- " );
-					if ((iters)%(50000/ dt) == 0 || first || iters == (int)(10000/dt)) {
+					if ((iters)%(500000/ dt) == 0 || first || iters == (int)(10000/dt)
+							|| iters == (int) (60000/dt)
+							|| iters == (int)(30000/dt) || iters == (int)(100000/dt)
+							|| iters == (int)(200000/dt) || iters == (int)(300000/dt)
+							|| iters == (int)(400000/dt)) {
 						unit.printData(mainOut.toString(), prefix, time, dt);
 						first = false;
 					}

@@ -29,6 +29,8 @@ public class MANA_Sector implements Syncable {
 
     public double [] secExcSums;
     public double [] secInhSums;
+    public double [] totalWtCh;
+    public double [] mnDiffs;
     public BoolArray snExcOn;
     public BoolArray snInhOn;
     public double [] pfrAccum;
@@ -84,6 +86,8 @@ public class MANA_Sector implements Syncable {
         spkBuffer = new BoolArray(target.N);
         pfrAccum = new double[target.N];
         spkDat = new SpikeTimeData(target.N);
+        totalWtCh = new double[target.N];
+        mnDiffs = new double[target.N];
         id = "s"+target.id;
     }
 
@@ -160,6 +164,8 @@ public class MANA_Sector implements Syncable {
 
         // Determine incoming currents & check for structural changes
         boolean structChanged = false;
+        Arrays.fill(totalWtCh, 0);
+        Arrays.fill(mnDiffs, 0);
         for(MANA_Node node : childNodes.values()) {
             if(!node.updated.get()) {
                 throw new IllegalStateException("Not all child nodes were updated.");
@@ -171,6 +177,15 @@ public class MANA_Sector implements Syncable {
             } else {
                 node.addAndClearLocCurrent(target.i_i);
             }
+            for(int ii=0; ii<getWidth(); ++ii) {
+                mnDiffs[ii] += node.mnLg[ii] * (double)node.nodeIndD[ii]/target.inDegree[ii];
+            }
+//            double mlt = node.srcData.isExcitatory() ? -1.0:1.0;
+//            if(node.srcData.isExcitatory() && !node.inputIsExternal) {
+//                for (int jj = 0; jj < target.N; jj++) {
+//                    totalWtCh[jj] += node.getWeightMatrix().getMajorSum(jj, 1) * mlt; // Sums weight changes
+//                }
+//            }
         }
 
         // If the structure changed recalculate relevant values like in-degree, etc.
@@ -201,7 +216,7 @@ public class MANA_Sector implements Syncable {
             }
         }
 
-        target.performFullUpdate(spkBuffer, pfrAccum, time, dt);
+        target.performFullUpdate(spkBuffer, pfrAccum, mnDiffs, time, dt);
 //        System.out.println("Spikes for: " + id);
 //        for(int ii=0; ii<this.getWidth(); ++ii) {
 //            if(spkBuffer.get(ii)) {

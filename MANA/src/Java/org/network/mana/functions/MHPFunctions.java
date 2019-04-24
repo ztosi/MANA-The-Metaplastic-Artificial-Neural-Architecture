@@ -4,6 +4,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import Java.org.network.mana.base_components.MANANeurons;
 import Java.org.network.mana.base_components.Matrices.InterleavedSparseAddOn;
+import Java.org.network.mana.mana.MANA_Globals;
 import Java.org.network.mana.utils.BufferedFloatArray;
 import Java.org.network.mana.utils.Utils;
 
@@ -30,12 +31,62 @@ public class MHPFunctions {
 		}
 	}
 
+	public static void mhpStage1_new(final BufferedFloatArray efrsTar,
+									 final BufferedFloatArray efrsSrc, final double[] mnLg, int tarNo, InterleavedSparseAddOn pfrLoc, double b) {
+		int start = pfrLoc.getStartIndex(tarNo);
+		int end = pfrLoc.getEndIndex(tarNo);
+		int[] orderInds = pfrLoc.getRawOrdIndices();
+		mnLg[tarNo] = 0;
+		for(int ii=start; ii<end; ii += pfrLoc.getInc()) {
+			pfrLoc.values[ii] = Math.log((efrsTar.getData(tarNo)+1E-6)/(efrsSrc.getData(orderInds[ii])+1E-6));
+			mnLg[tarNo] += pfrLoc.values[ii];
+		}
+		for(int ii=start; ii<end; ii += pfrLoc.getInc()) {
+			pfrLoc.values[ii] = 2.0 / (b*b) * pfrLoc.values[ii]  *
+					Math.exp(-Math.pow(pfrLoc.values[ii]/b,2));
+		}
+	}
+
 	public static void mhpStage2(int tarNo, double f_p, double f_m, InterleavedSparseAddOn pfrLoc) {
 		int start = pfrLoc.getStartIndex(tarNo);
 		int end = pfrLoc.getEndIndex(tarNo);
 		for(int ii=start; ii<end; ii+=pfrLoc.getInc()) {
 			pfrLoc.values[ii] *= c_plus * f_p * Utils.checkSign(-pfrLoc.values[ii])
 					+ c_minus * f_m * Utils.checkSign(pfrLoc.values[ii]);
+		}
+	}
+
+
+
+	public static void mhpStage2_new(double [] tarPFRs, double [] pfrAccum, int[] inDegree, double[] mnDiffs, boolean [] mask,
+									 double eta, double b, double lgLow, double lgHigh, int N) {
+
+		for(int ii=0,n=tarPFRs.length; ii<n; ++ii) {
+			pfrAccum[ii] += (double) inDegree[ii]/10 *(2.0/(1+Math.exp(mnDiffs[ii])) -1);
+						// -2.0 / (1) * mnDiffs[ii] *
+					//Math.exp(-Math.pow(mnDiffs[ii]/1,2)) * (double) inDegree[ii]/10;
+		}
+
+		for(int ii=0,n=tarPFRs.length; ii<n; ++ii) {
+			if(mask[ii]) continue;
+			if(pfrAccum[ii] > inDegree[ii])
+				pfrAccum[ii] = inDegree[ii];
+			if(pfrAccum[ii] < -inDegree[ii])
+				pfrAccum[ii] = -inDegree[ii];
+		}
+		for (int ii = 0, n = tarPFRs.length; ii < n; ++ii) {
+			if(mask[ii]) continue;
+			pfrAccum[ii] /= inDegree[ii];
+		}
+		for (int ii = 0, n = tarPFRs.length; ii < n; ++ii) {
+			if(mask[ii]) continue;
+			double lgPf = Math.log(tarPFRs[ii]);
+			tarPFRs[ii] = lgPf + MANA_Globals.dt * eta * (pfrAccum[ii]);
+					//- b * Math.pow(lgPf - lgHigh, -2) + b * Math.pow(lgPf + lgLow, -2));
+		}
+		for(int ii=0,n=tarPFRs.length; ii<n; ++ii) {
+			if(mask[ii]) continue;
+			tarPFRs[ii] = Math.exp(tarPFRs[ii]);
 		}
 	}
 

@@ -7,6 +7,7 @@ import Java.org.network.mana.base_components.Neuron;
 import Java.org.network.mana.base_components.SynapseData;
 import Java.org.network.mana.base_components.enums.Ordering;
 import Java.org.network.mana.base_components.enums.SynType;
+import Java.org.network.mana.mana.MANA_Globals;
 import Java.org.network.mana.nodes.MANA_Node;
 import Java.org.network.mana.utils.SrcTarDataPack;
 import Java.org.network.mana.utils.SrcTarPair;
@@ -57,7 +58,7 @@ public class StructuralPlasticity {
                         SrcTarDataPack dat = dataIter.next();
                         if (pruneDecision(src.getOutDegree()[ii],
                                 noOutP, inDegs[jj],
-                                noInP, datum.values[0], mx)) {
+                                noInP, datum.values[0], mx, time)) {
                             dataIter.remove();
                             //toRemove.add(dat);
                             noRemoved++;
@@ -105,10 +106,12 @@ public class StructuralPlasticity {
 
     public static boolean pruneDecision(int srcOutDegree,
                                         int outPoss, int tarInDegree,
-                                        int inPoss, double wVal, double maxWt) {
-        if(wVal < SynapseData.MIN_WEIGHT){
+                                        int inPoss, double wVal, double maxWt, double time) {
+        double cut = time >= MANA_Globals.MHP_ON_TIME ? SynapseData.MIN_WEIGHT : SynapseData.MIN_WEIGHT * 2.5;
+        double val = time >= MANA_Globals.MHP_ON_TIME ? DEF_Thresh : DEF_Thresh * 2.5;
+        if(wVal < cut){
             return true;
-        } else if  (wVal > maxWt * DEF_Thresh) {
+        } else if  (wVal > val*maxWt) {
             return false;
         } else {
             double p = (double) srcOutDegree/outPoss * Math.pow(tarInDegree/inPoss,2);
