@@ -3,6 +3,8 @@ package Java.org.network.mana.utils;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
+import Java.org.network.mana.base_components.SynapseData;
+
 public class Utils {
 
 	public enum ProbDistType {
@@ -33,6 +35,25 @@ public class Utils {
 		}
 		return randArr;
 	}
+
+	public static int getIntFromByteArr(byte[] arr, int offset) {
+		return (arr[offset] << 24)
+				| (arr[offset+1] << 16)
+				| (arr[offset+2] << 8)
+				| arr[offset];
+	}
+
+	public static double expLT0Approx(final double x) {
+//		if (x<-5) {
+//			return 0;
+//		}
+//		if(x==0) {
+//			return 1;
+//		}
+//		return (0.3877*x+1.959)/(x*x - 1.332 * x + 1.981);
+		return Math.exp(x);
+	}
+	
 	
 	public static void sortByKey (final int[] key, final int[] arr) {
 		if(key.length != arr.length) {
@@ -53,6 +74,18 @@ public class Utils {
 		double[] temp = new double[arr.length];
 		for(int ii=0, n=arr.length; ii<n; ++ii) {
 			temp[ii] = arr[key[ii]];
+		}
+		System.arraycopy(temp, 0, arr, 0, arr.length);
+	}
+	
+	public static void sortByKey (final int[] key, final SynapseData[] arr) {
+		if(key.length != arr.length) {
+			throw new IllegalArgumentException("Key length does not match array length.");
+		}
+		SynapseData[] temp = new SynapseData[arr.length];
+		for(int ii=0, n=arr.length; ii<n; ++ii) {
+			temp[ii] = arr[key[ii]];
+			temp[ii].index = ii;
 		}
 		System.arraycopy(temp, 0, arr, 0, arr.length);
 	}
@@ -236,26 +269,7 @@ public class Utils {
 		}
 		return out;
 	}
-
-	public static int findInSegment(int val, int[] arr, int start, int stop) {
-		if(start-stop==0 || start == -1 || start > stop) {
-			if(arr[start] != val) {
-				return -1;
-			} else {
-				return start;
-			}
-		}
-		int split = (stop-start)/2;
-		if(arr[split+start] > val) {
-			return findInSegment(val, arr, start, start+split-1);
-		} else if(arr[split+start] < val) {
-			return findInSegment(val, arr, split+start+1, stop);
-		} else {
-			return start+split;
-		}
-
-	}
-
+	
 	public static double sum(double [] arr) {
 		double su = 0;
 		for(int ii=0, n=arr.length; ii<n; ++ii) {
@@ -299,35 +313,19 @@ public class Utils {
 
 
 	public static void main(String [] args ) {
-//		double b = -5;
-//		double d = 5;
-//
-//		System.out.println(Long.toBinaryString(Double.doubleToLongBits(b)));
-//
-//		System.out.println(checkSign(b));
-//		System.out.println(checkSign(d));
-//		System.out.println(sign(-12.0));
-//		System.out.println(sign(12.0));
-//		System.out.println(sign(1E20));
-//		System.out.println(sign(0));
-//		System.out.println(sign(-0));
-//		System.out.println(sign(-10));
+		double b = -5;
+		double d = 5;
 
-		int[] poco = new int[]{1, 3, 6, 8, 9, 22, 23, 34};
+		System.out.println(Long.toBinaryString(Double.doubleToLongBits(b)));
 
-		System.out.println(findInSegment(23, poco, 0, poco.length-1));
-		System.out.println(findInSegment(3, poco, 0, poco.length-1));
-		System.out.println(findInSegment(6, poco, 0, poco.length-1));
-		System.out.println(findInSegment(1, poco, 0, poco.length-1));
-		System.out.println(findInSegment(34, poco, 0, poco.length-1));
-		System.out.println(findInSegment(20, poco, 0, poco.length-1));
-		System.out.println(findInSegment(10, poco, 0, poco.length-1));
-		System.out.println(findInSegment(1024, poco, 0, poco.length-1));
-		System.out.println(findInSegment(0, poco, 0, poco.length-1));
-
-
-
-
+		System.out.println(checkSign(b));
+		System.out.println(checkSign(d));
+		System.out.println(sign(-12.0));
+		System.out.println(sign(12.0));
+		System.out.println(sign(1E20));
+		System.out.println(sign(0));
+		System.out.println(sign(-0));
+		System.out.println(sign(-10));
 	}
 
 }
