@@ -15,8 +15,8 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public final class SynapseData {
 
-	public static final double E_LR = 2E-6;
-	public static final double I_LR = 2E-6;
+	public static final double E_LR = 1E-5;
+	public static final double I_LR = 1E-5;
 	
 	
 	public static final double MAX_WEIGHT= 20;

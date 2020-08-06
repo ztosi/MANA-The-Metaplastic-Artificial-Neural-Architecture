@@ -1,12 +1,14 @@
 package Java.org.network.mana.base_components;
 
-import java.util.Arrays;
-import java.util.concurrent.ThreadLocalRandom;
-
-import Java.org.network.mana.base_components.enums.SynType;
 import Java.org.network.mana.functions.MHPFunctions;
 import Java.org.network.mana.mana.MANA_Globals;
-import Java.org.network.mana.utils.*;
+import Java.org.network.mana.utils.BoolArray;
+import Java.org.network.mana.utils.BufferedFloatArray;
+import Java.org.network.mana.utils.DataWrapper;
+import Java.org.network.mana.utils.Utils;
+
+import java.util.Arrays;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class MANANeurons extends LIFNeurons {
 
@@ -18,18 +20,18 @@ public class MANANeurons extends LIFNeurons {
 	public static final double init_tau_HP = 1E-4;
 	public static final double final_tau_HP = 1E-5;
 	public static final double init_tau_MHP = 0.05;
-	public static final double final_tau_MHP = 1E-7;
-	public static final double hp_decay = 1E-6;
-	public static final double mhp_decay = 1E-6;
+	public static final double final_tau_MHP = 1E-6;
+	public static final double hp_decay = 5E-6;
+	public static final double mhp_decay = 5E-6;
 	public static final double default_alpha = 2;
-	public static final double default_lowFR = 1;
-	public static final double default_beta = 15;
-	public static final double default_noiseVar = 0.2;
+	public static final double default_lowFR = 2;
+	public static final double default_beta = 10;
+	public static final double default_noiseVar = 0.7;
 	public static final double mhpPressure = 2;
 
 	public static final double default_sat_a = 300;
 	public static final double default_sat_b = 0.1;
-	public static final double default_sat_c = -150;
+	public static final double default_sat_c = -100;
 	public static final double default_exc_SF_tau = 0.2;
     public static final double default_inh_SF_tau = 0.2;
 
@@ -160,7 +162,6 @@ public class MANANeurons extends LIFNeurons {
 	    updateThreshold(dt);
         descaleNormVals();
 	    calcScaleFacs();
-	    calcScaleFacs();
 		if (mhpOn && !(allExcSNon && allInhSNon) && time > 20000) {
 
 			for(int ii=0; ii<N; ++ii) {
@@ -177,11 +178,11 @@ public class MANANeurons extends LIFNeurons {
 				//lwVal *= mhpPressure * MHPFunctions.mhpLTPTerm(prefFR[ii], default_beta, default_lowFR) / (inDegree[ii]+1);
 				//hgVal *= mhpPressure * MHPFunctions.mhpLTDTerm(prefFR[ii], default_alpha, default_lowFR) / (inDegree[ii]+1);
 
-                if(excSNon.get(ii) && inhSNon.get(ii)) {
-                    prefFR[ii] += (dt*final_tau_MHP/(double)(inDegree[ii]+1)) * pfrDts[ii] * ((1+ThreadLocalRandom.current().nextGaussian()) * noiseVar); //* (pfrDts[ii] + lwVal + hgVal);
-                } else {
+//                if(excSNon.get(ii) && inhSNon.get(ii)) {
+//                    prefFR[ii] += (dt*final_tau_MHP/(double)(inDegree[ii]+1)) * pfrDts[ii] * ((1+ThreadLocalRandom.current().nextGaussian()) * noiseVar); //* (pfrDts[ii] + lwVal + hgVal);
+//                } else {
                     prefFR[ii] += (dt*eta/(double)(inDegree[ii]+1)) * pfrDts[ii] * ((1+ThreadLocalRandom.current().nextGaussian()) * noiseVar); //* (pfrDts[ii] + lwVal + hgVal);
-                }
+//                }
 
 
 			}
@@ -303,7 +304,7 @@ public class MANANeurons extends LIFNeurons {
     	if(!allInhSNon) {
     		for(int ii=0; ii<N; ++ii) {
     			if(!inhSNon.get(ii)) {
-    				normValsInh[ii] = newNormVal(ii);
+    				normValsInh[ii] = newNormVal(ii)/5;
 				}
 			}
 		}
@@ -391,29 +392,29 @@ public class MANANeurons extends LIFNeurons {
 //		}
 
 //
-        for(int ii=0; ii<N; ++ii) {
-            double rat = exc_sf[ii]/inh_sf[ii];
-            rat += MANA_Globals.dt*lambda * Math.log(prefFR[ii]/estFR.getData(ii));
-            rat /= rat+1;
-            if(rat > 0.9) {
-                rat = 0.9;
-            }
-            if(rat < 0.1){
-                rat = 0.1;
-            }
-            exc_sf[ii] = 2*(rat);
-            inh_sf[ii] = 2*(1-rat);
-        }
+//        for(int ii=0; ii<N; ++ii) {
+//            double rat = exc_sf[ii]/inh_sf[ii];
+//            rat += MANA_Globals.dt*lambda* Math.log(prefFR[ii]/estFR.getData(ii));
+//            rat /= rat+1;
+//            if(rat > 0.9) {
+//                rat = 0.9;
+//            }
+//            if(rat < 0.1){
+//                rat = 0.1;
+//            }
+//            exc_sf[ii] = 2*(rat);
+//            inh_sf[ii] = 2*(1-rat);
+//        }
 
      //   Utils.retainBounds(exc_sf, 10, 0.1);
      //   Utils.retainBounds(inh_sf, 10, 0.1);
 
-//	    for(int ii=0; ii<N; ++ii) {
-//	        exc_sf[ii] = 0.5+1.5/(1+Math.exp(-(prefFR[ii])/default_exc_SF_tau) + ln2);
-//        }
-//        for(int ii=0; ii<N; ++ii) {
-//            inh_sf[ii] = 0.5+1.5/(1+Math.exp(-(thresh[ii] - threshRA[ii])/default_inh_SF_tau) + ln2);
-//        }
+	    for(int ii=0; ii<N; ++ii) {
+	        exc_sf[ii] = 0.5+1.5/(1+Math.exp(-(prefFR[ii])/default_exc_SF_tau) + ln2);
+        }
+        for(int ii=0; ii<N; ++ii) {
+            inh_sf[ii] = 0.5+1.5/(1+Math.exp(-(thresh.get(ii) - threshRA[ii])/default_inh_SF_tau) + ln2);
+        }
     }
 
 
@@ -460,13 +461,14 @@ public class MANANeurons extends LIFNeurons {
 	 * @param sat_c
 	 */
 	public void setSatC(double [] sat_c) {
-    	this.sat_c = new double[N];
-    	System.arraycopy(sat_c, 0, this.sat_c, 0, N);
-    	for(int ii=0; ii<N; ++ii) {
-    		double nnv = newNormVal(ii);
-    		normValsExc[ii] = nnv; //* exc_sf[ii];
-    		normValsInh[ii] = nnv; //* inh_sf[ii];
-		}
+		return;
+//    	this.sat_c = new double[N];
+//    	System.arraycopy(sat_c, 0, this.sat_c, 0, N);
+//    	for(int ii=0; ii<N; ++ii) {
+//    		double nnv = newNormVal(ii);
+//    		normValsExc[ii] = nnv; //* exc_sf[ii];
+//    		normValsInh[ii] = nnv; //* inh_sf[ii];
+//		}
 	}
 
 	/**

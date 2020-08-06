@@ -31,9 +31,9 @@ import java.util.*;
 public class MANA_Unit {
 
 	public static final double START_TIME = 20000;
-	public static final int DEFAULT_NODE_DIM = 200;
+	public static final int DEFAULT_NODE_DIM = 100;
 	public static final double DEFAULT_BOUND_START = 50;
-	public static final double DEFAULT_BOUND_END = 150;
+	public static final double DEFAULT_BOUND_END = 250;
 	public static final double DEFAULT_INP_WITDTH = 200;
 	private static final int DEFAULT_INP_WIDTH = 0;
 
@@ -63,7 +63,7 @@ public class MANA_Unit {
 			new double[]{0.25}, Utils.ProbDistType.NORMAL, new double[]{2, 1}, 2000, SynapseData.MAX_DELAY);
 
 	public ConnectSpecs defRecCS = new ConnectSpecs(ConnectRule.Distance2,
-			new double[] {300, 300, 150, 150, 1}, Utils.ProbDistType.NORMAL, new double[]{0.1, 0.01}, defMaxDist, SynapseData.MAX_DELAY);
+			new double[] {300, 300, 150, 100, 1}, Utils.ProbDistType.NORMAL, new double[]{0.1, 0.01}, defMaxDist, SynapseData.MAX_DELAY);
 
 	private int fullSize, size, numExc, numAllExc, numInh, noSecs, nodesPerSec, noInp;
 
@@ -108,17 +108,17 @@ public class MANA_Unit {
 				unit.defXBounds, unit.defYBounds, unit.defZBounds);
 		unit.inputs.add(inp);
 		unit.externalInp = inp;
-		if(_N%200 != 0 || _N < 1000) {
-			System.out.println("The number you entered is... "
-					+ "annoying... and I'm too lazy to deal with it. "
-					+ "Rounding up to an easy number. ..."
-					+ " I promise in a future release not to be lazy... maybe.");
-			if(_N<1000) {
-				_N=1000;
-			}
-			_N = (int)(_N/200 * Math.ceil(_N/200));
-			System.out.println("New number is: "+_N);
-		}
+//		if(_N%200 != 0 || _N < 1000) {
+//			System.out.println("The number you entered is... "
+//					+ "annoying... and I'm too lazy to deal with it. "
+//					+ "Rounding up to an easy number. ..."
+//					+ " I promise in a future release not to be lazy... maybe.");
+//			if(_N<1000) {
+//				_N=1000;
+//			}
+//			_N = (int)(_N/200 * Math.ceil(_N/200));
+//			System.out.println("New number is: "+_N);
+//		}
 		// Figure out how much of everything thre needs to be...
 		unit.noInp = inp.getSize();
 		unit.size=_N;
@@ -151,7 +151,7 @@ public class MANA_Unit {
 		for(MANA_Sector tar : unit.sectors.values()) {
 			// First node in each sector is always the node containing connections from the input
 			MANA_Node inpN = tar.add(inp, new ConnectSpecs(ConnectRule.Random,
-					new double[]{0.25}, Utils.ProbDistType.NORMAL, new double[]{3, 1}, unit.defMaxDist, SynapseData.MAX_DELAY));
+					new double[]{0.25}, Utils.ProbDistType.NORMAL, new double[]{2.5, 1}, unit.defMaxDist, SynapseData.MAX_DELAY));
 			for(MANANeurons src : unit.targets) {
 				// Use default connection specs to connect Java.org.network.mana.mana Java.org.network.mana.nodes to each other (these are recurrent/reservoir synapses)
 				//ConnectSpecs cSpecs = new ConnectSpecs(ConnectRule.Random,
@@ -159,7 +159,7 @@ public class MANA_Unit {
 				//		unit.defMaxDist, SynapseData.MAX_DELAY);
 				ConnectSpecs cSpecs = new ConnectSpecs(ConnectRule.Distance2,
 						//new double[] {2, unit.defMaxDist/2},
-						new double[] {300, 300, 200, 200, 1},
+						new double[] {400, 400, 400, 400, 1},
 						//new double[]{8*SynType.getConProbBase(src.isExcitatory(), tar.target.isExcitatory()), unit.defMaxDist/3},
 						unit.defMaxDist, SynapseData.MAX_DELAY);
 				tar.add(src, cSpecs);
@@ -558,7 +558,7 @@ public class MANA_Unit {
     public synchronized double getMaxExcLazy(double time) {
     	if(Math.abs(lastExcTime - time) > 10) {
     		maxExc = nodes.stream()
-					.filter(node -> node.srcData.isExcitatory() && node.srcData instanceof MANANeurons)
+					.filter(node -> node.srcData.isExcitatory()) //&& node.srcData instanceof MANANeurons)
 					.mapToDouble(node->node.getWeightMatrix().getMax(0))
 					.max().getAsDouble();
 			lastExcTime = time;

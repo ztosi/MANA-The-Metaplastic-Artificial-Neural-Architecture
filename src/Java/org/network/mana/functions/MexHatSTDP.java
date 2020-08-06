@@ -19,7 +19,7 @@ public final class MexHatSTDP implements  STDP {
 
     public double lRate = 1E-3;
 
-    public static double a = 8;
+    public static double a = 25;
 
     public static final double twentRt = Math.pow(20, 1.0/4.0);
 
@@ -56,6 +56,9 @@ public final class MexHatSTDP implements  STDP {
     // data pack is {arrTime, rel tar ind, udfMultiplier}
 
     public void preTriggered(InterleavedSparseMatrix wts, int[] dataPack, BufferedDoubleArray lastSpkTimes, double dt) {
+        if(dataPack[1]==-1) {
+            return;
+        }
         if(wts.getRawData()[dataPack[1]] > 20) {
             wts.getRawData()[dataPack[1]] = 20;
         }

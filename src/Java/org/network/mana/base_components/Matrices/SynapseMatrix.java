@@ -216,7 +216,7 @@ public class SynapseMatrix {
      * Based on their arrival times, adds event data (what is necessary
      * to know when and where a spike will arrive and how much of a contribution it'll make). Performs
      * this for all local outgoing synapses from a given neuron. This function directly populates
-     * the event queue and therefor performs all the necessary event encoding.
+     * the event queue and therefore performs all the necessary event encoding.
      * Order for events is: {arrTime, rel tar ind, udfMultiplier, abs tar ind} with udfMultiplier being
      * a float represented as int bits.
      * @param noSrc index of the source neuron
@@ -234,9 +234,9 @@ public class SynapseMatrix {
                 int[] evt = new int[4];
                 evt[0] = (int) ((time + vals[ii]) / dt);
                 evt[1] = srcToTargLookup[ii/inc] * weightsTOrd.getInc();
-                evt[2] = Float.floatToIntBits((float) (10 * vals[ii + inc - 1] * vals[ii + inc - 2]));
+                evt[2] = Float.floatToIntBits((float)  (weightsTOrd.getRawData()[evt[1]] *
+                        10 * vals[ii + inc - 1] * vals[ii + inc - 2]));
                 if(Float.intBitsToFloat(evt[2]) > 200) {
-
                     throw new IllegalStateException("Unusual UDF Response");
                 }
                 evt[3] = outDataSOrd.getRawOrdIndices()[ii / inc];
@@ -275,8 +275,8 @@ public class SynapseMatrix {
         try {
             while (!eventQ.isEmpty() && eventQ.peek()[0] * dt <= time) {
                 event = eventQ.poll();
-                incCur[event[3]] += weightsTOrd.getRawData()[event[1]]
-                        * Float.intBitsToFloat(event[2]);
+                incCur[event[3]] += Float.intBitsToFloat(event[2]);//weightsTOrd.getRawData()[event[1]]
+                        //* Float.intBitsToFloat(event[2]);
                 stdpRule.preTriggered(weightsTOrd, event, lastSpkTimes, dt);
                 // TODO: Fix the event thing to make it not dependent on increment in wts mat, so that callers can apply their own offsets without having to know wts
                 tOrdLastArrivals.setValue(event[1]/2, time, 0);
@@ -303,8 +303,8 @@ public class SynapseMatrix {
         try {
             while (!eventQ.isEmpty() && eventQ.peek()[0] * dt <= time) {
                 event = eventQ.poll();
-                incCur[event[3]] += weightsTOrd.getRawData()[event[1]]
-                        * Float.intBitsToFloat(event[2]);
+                incCur[event[3]] += Float.intBitsToFloat(event[2]); //weightsTOrd.getRawData()[event[1]]
+                   //     * Float.intBitsToFloat(event[2]);
                 // TODO: Fix the event thing to make it not dependent on increment in wts mat, so that callers can apply their own offsets without having to know wts
                 tOrdLastArrivals.setValue(event[1]/2, time, 0);
             }

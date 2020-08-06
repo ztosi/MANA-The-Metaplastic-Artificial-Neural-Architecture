@@ -1,16 +1,31 @@
 package Java.org.network.mana.functions;
 
-import java.util.concurrent.ThreadLocalRandom;
-
 import Java.org.network.mana.base_components.MANANeurons;
 import Java.org.network.mana.base_components.Matrices.InterleavedSparseAddOn;
 import Java.org.network.mana.utils.BufferedFloatArray;
 import Java.org.network.mana.utils.Utils;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 public class MHPFunctions {
 
 	public static double c_plus = 1;
 	public static double c_minus = 1;
+
+//	public static void mhpSoft(final BufferedFloatArray efrsTar, final double[] pfrsTar,
+//								 final BufferedFloatArray efrsSrc, int tarNo, InterleavedSparseAddOn pfrLoc, boolean exc) {
+//		int start = pfrLoc.getStartIndex(tarNo);
+//		int end = pfrLoc.getEndIndex(tarNo);
+//		int[] orderInds = pfrLoc.getRawOrdIndices();
+//		double sum = 0.0f;
+//		for(int ii=start; ii < end; ii += pfrLoc.getInc()) {
+//			sum += pfrLoc.values[ii];
+//		}
+//		double mn =
+//		for(int ii=start; ii < end; ii += pfrLoc.getInc()) {
+//			pfrLoc.values[ii] =
+//		}
+//	}
 
 	public static void mhpStage1(final BufferedFloatArray efrsTar, final double[] pfrsTar,
 								 final BufferedFloatArray efrsSrc, int tarNo, InterleavedSparseAddOn pfrLoc, boolean exc) {

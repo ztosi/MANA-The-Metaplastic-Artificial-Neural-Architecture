@@ -185,7 +185,6 @@ public class MANA_Node implements Updatable {
 
 
     public void structuralPlasticity(int maxInD, int maxOutD, double lambda, double maxDist, double time) {
-        System.out.println("EVT Q Size: " + evtQueue.size());
         double max = srcData.isExcitatory() ?
                 parent_sector.parent.getMaxExcLazy(time) :
                 parent_sector.parent.getMaxInhLazy(time);
@@ -194,7 +193,10 @@ public class MANA_Node implements Updatable {
                 SynType.getConProbBase(srcData.isExcitatory(),
                         targData.isExcitatory())/2, maxDist, time, max);
         pfrLoc = new InterleavedSparseAddOn(synMatrix.getWeightsTOrd(), 1);
-        evtQueue.clear(); // TODO: This is very bad! Figure out a better way!
+        for(int[] evt : evtQueue) {
+            evt[1]=-1; // invalidate
+        }
+        //evtQueue.clear(); // TODO: This is very bad! Figure out a better way!
         structureChanged = true;
     }
 
@@ -293,14 +295,14 @@ public class MANA_Node implements Updatable {
                    // && srcData.isExcitatory()) {
             //    if((int)(time/dt) % (int)(1/dt) == 0) {
                     for (int ii = 0; ii < width; ++ii) {
-                        if(!(targData.excSNon.get(ii) && targData.inhSNon.get(ii)) ) {
-                            if (!(targData.excSNon.get(ii) && targData.inhSNon.get(ii))) {
+//                        if(!(targData.excSNon.get(ii) && targData.inhSNon.get(ii)) ) {
+//                            if (!(targData.excSNon.get(ii) && targData.inhSNon.get(ii))) {
                                 MHPFunctions.mhpStage1(targData.estFR, targData.prefFR, ((MANANeurons) srcData).estFR, ii,
                                         pfrLoc, srcData.isExcitatory());
                                 MHPFunctions.mhpStage2(ii, MHPFunctions.getFp(targData.fVals[ii]),
                                         MHPFunctions.getFm(targData.fVals[ii]), pfrLoc);
-                            }
-                        }
+//                            }
+//                        }
               //      }
                 }
 //            for(int ii=0; ii<width; ++ii) {

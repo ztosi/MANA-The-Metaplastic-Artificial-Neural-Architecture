@@ -116,6 +116,7 @@ public class StructuralPlasticity {
         } else {
             //double a = lgcnst/(maxWt/2);
             //double p = 0.1*Math.exp(a*wVal) * (((double)tarInDegree)/inPoss) * (double)srcOutDegree/outPoss;
+
             double p = (double)srcOutDegree/outPoss* Math.pow((double)tarInDegree/inPoss,2);
             return ThreadLocalRandom.current().nextDouble() < p;
         }

@@ -1,9 +1,9 @@
 package Java.org.network.mana.utils;
 
+import Java.org.network.mana.base_components.SynapseData;
+
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
-
-import Java.org.network.mana.base_components.SynapseData;
 
 public class Utils {
 
@@ -15,8 +15,8 @@ public class Utils {
 			}
 		}, UNIFORM {
 			@Override
-			public double getRandom(double ceil, double floor) {
-				return ThreadLocalRandom.current().nextDouble(ceil, floor);
+			public double getRandom(double floor, double ceil) {
+				return ThreadLocalRandom.current().nextDouble(floor, ceil);
 			}
 		}, LOGNORMAL {
 			@Override

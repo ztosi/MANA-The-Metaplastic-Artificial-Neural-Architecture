@@ -20,7 +20,7 @@ public class InterleavedSparseMatrix {
 
     private final Ordering ordering;
 
-    /** Data values, may be interleaved--interleaving facor is nILFac
+    /** Data values, may be interleaved--interleaving factor is nILFac
      * Arranged in the order of target-major, i.e. the fan-in of each neuron is contiguous. */
     private double [] values;
     /** The position in values where each target neuron's fan in begins capped at the end with the length of values
@@ -296,6 +296,15 @@ public class InterleavedSparseMatrix {
             }
         }
         return min;
+    }
+
+    public double [] getCumulativeDistTar(int offset) {
+        double[] cumDist = new double[nnz];
+        for(int ii=0; ii<noMajor; ++ii) {
+            double [] cuTemp = new double[ptrs[ii+1]-ptrs[ii]];
+//            System.arraycopy(cuTemp, 0, values);
+        }
+        return cumDist;
     }
 
     /**

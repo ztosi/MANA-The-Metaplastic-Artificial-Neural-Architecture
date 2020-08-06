@@ -1,15 +1,17 @@
 package Java.org.network.mana.execution;
 
+import Java.org.network.mana.execution.tasks.*;
+import Java.org.network.mana.mana.MANA_Globals;
+import Java.org.network.mana.nodes.MANA_Node;
+import Java.org.network.mana.nodes.MANA_Sector;
+import Java.org.network.mana.nodes.MANA_Unit;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import Java.org.network.mana.execution.tasks.*;
-import Java.org.network.mana.mana.MANA_Globals;
-import Java.org.network.mana.nodes.*;
 
 public class MANA_Executor {
 	
@@ -61,7 +63,7 @@ public class MANA_Executor {
 	 */
 	public void invoke() throws InterruptedException {
 		invocationComplete.set(false);
-	    if(time > 0 && (int)(time/dt) %  (int)(pruneInterval/dt) == 0 && pruneOn) {
+	    if((time > 0 && (int)(time/dt) %  (int)(pruneInterval/dt) == 0 && pruneOn)) {
 	    	int nnz = 0;
 			for(MANA_Unit unit : units) {
 				nnz += unit.getTotalNNZ();
@@ -75,6 +77,7 @@ public class MANA_Executor {
 			}
 			System.out.println("======== " + nnz2 + " =========");
 			System.out.println("NET: ===== " + (nnz2-nnz) + " =========");
+			System.gc();
         }
 		try {
 			pool.invokeAll(updateTasks);

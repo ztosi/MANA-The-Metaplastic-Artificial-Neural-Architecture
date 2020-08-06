@@ -1,9 +1,9 @@
 package Java.org.network.mana.mana;
 
-import java.io.File;
-
 import Java.org.network.mana.execution.MANA_Executor;
 import Java.org.network.mana.nodes.MANA_Unit;
+
+import java.io.File;
 
 import static Java.org.network.mana.mana.MANA_Globals.dt;
 
@@ -15,10 +15,10 @@ public class RunMANA {
 
 	public static void main(String[] args) { // TODO: enable more complicated command line args...
 		System.out.println(System.getProperty("user.dir"));
-		int numNeu = 2000;
+		int numNeu = 1000;
 		double time_f0 = 7.2E6; // two hours...
 		double plastShutOff0 = time_f0/2;
-		double spInterval = 10000;
+		double spInterval = 5000;
 		String filename = null;
 		String odir = DEF_ODIR;
 		String prefix = DEF_PREFIX;
@@ -95,14 +95,14 @@ public class RunMANA {
 					unit.setSynPlasticOn(false);
 				}
 
-				if(iters%((int)(1/dt)) == 0) {
-                    System.out.println((int)(iters*dt));
-                }
+//				if(iters%((int)(1/dt)) == 0) {
+//                    System.out.println((int)(iters*dt));
+//                }
 
 				exec.invoke();
 
-				if((iters)%(1000/ dt) == 0 && time != 0) {
-					System.out.println("------------- " + time + "------------- " );
+				if((iters)%(1000/dt) == 0) {
+					System.out.println("------------- " + time + "------------- ");
 					if ((iters)%(50000/ dt) == 0 || first || iters == (int)(10000/dt)) {
 						unit.printData(mainOut.toString(), prefix, time, dt);
 						first = false;

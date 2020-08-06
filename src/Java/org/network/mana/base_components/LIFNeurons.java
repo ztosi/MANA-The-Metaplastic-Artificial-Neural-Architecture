@@ -14,7 +14,7 @@ public class LIFNeurons implements SpikingNeuron {
     public static final double init_thresh = -50;
     public static final double default_v_l = -70;
     public static final double default_r_m = 1.0;
-    public static final double default_i_bg = 18;
+    public static final double default_i_bg = 18.5;
     public static final double default_noiseVar = 0.2;
 
     public static final double default_exc_tau_m = 30;
@@ -95,17 +95,18 @@ public class LIFNeurons implements SpikingNeuron {
         v_l = new DataWrapper(N, true, default_v_l);
         i_bg = new DataWrapper(N, true, default_i_bg);
         v_reset = new DataWrapper(N, true, init_v_m);
-        tau_w = new DataWrapper(N, true, 144);
+        tau_w = new DataWrapper(Utils.getRandomArray(Utils.ProbDistType.UNIFORM, 10, 200, N));
+        //tau_w = new DataWrapper(N, true, 144);
 
         if(exc) {
             ref_p = default_exc_ref_p;
-            tau_m = new DataWrapper(N, true, default_exc_tau_m);
-//			tau_m = new DataWrapper(Utils.getRandomArray(Utils.ProbDistType.NORMAL, 23, 1.5, N));
+//            tau_m = new DataWrapper(N, true, default_exc_tau_m);
+			tau_m = new DataWrapper(Utils.getRandomArray(Utils.ProbDistType.NORMAL, 29, 3, N));
             adaptJump = 15;
         } else {
             ref_p = default_inh_ref_p;
-            tau_m = new DataWrapper(N, true, default_inh_tau_m);
-//			tau_m = new DataWrapper(Utils.getRandomArray(Utils.ProbDistType.NORMAL, 26, 2.5, N));
+//            tau_m = new DataWrapper(N, true, default_inh_tau_m);
+			tau_m = new DataWrapper(Utils.getRandomArray(Utils.ProbDistType.NORMAL, 20, 3, N));
             adaptJump = 10;
         }
         Arrays.fill(v_m, init_v_m);
@@ -120,7 +121,7 @@ public class LIFNeurons implements SpikingNeuron {
 //			dv_m[ii] += exc_sf[ii] * i_e[ii] + i_bg.get(ii) * sgn;
 //			dv_m[ii] -= inh_sf[ii] * i_i[ii] * sgn;
             dv_m[ii] += i_e[ii] + i_bg.get(ii) * sgn;
-            dv_m[ii] -= i_i[ii] * sgn;
+            dv_m[ii] -= 5*i_i[ii] * sgn;
         }
         for(int ii=0; ii<N; ++ii) {
             dv_m[ii] -= adapt[ii];
