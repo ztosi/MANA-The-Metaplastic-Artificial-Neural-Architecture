@@ -1,7 +1,5 @@
 package Java.org.network.mana.simulations.mnist_environment;
 
-import Java.org.network.mana.ImageWorld.TiledImArray;
-
 import java.util.concurrent.ThreadLocalRandom;
 
 public class EyeWindow {
@@ -48,8 +46,8 @@ public class EyeWindow {
         dx *= timeStep;
         dy *= timeStep;
 
-        ya += dy;
-        xa += dx;
+        ya += dy+ThreadLocalRandom.current().nextDouble()*0.05 - 0.025;
+        xa += dx+ThreadLocalRandom.current().nextDouble()*0.05 - 0.025;
 
         y = (int)Math.floor(ya);
         x = (int)Math.floor(xa);
@@ -72,14 +70,18 @@ public class EyeWindow {
 //        }
         x+=(int)dx;
         y+=(int)dy;
-        if(xa<0) xa = image.cols + xa;
-        if(ya<0) ya = image.rows + ya;
-        if(xa >= image.cols) xa = xa-image.cols;
-        if(ya >= image.rows) ya = ya-image.rows;
-        if(x<0) x = image.cols + x;
-        if(y<0) y = image.rows + y;
-        if(x >= image.cols) x = x-image.cols;
-        if(y >= image.rows) y = y-image.rows;
+        if(xa<0) xa = 0;//image.cols + xa;
+        if(ya<0) ya = 0;//image.rows + ya;
+        if(xa >= image.cols) xa = image.cols-1;//xa-image.cols;
+        if(ya >= image.rows) ya = image.rows-1;//ya-image.rows;
+        if(x<0) x = 0;//image.cols + xa;
+        if(y<0) y = 0;//image.rows + ya;
+        if(x >= image.cols) x = image.cols-1;//xa-image.cols;
+        if(y >= image.rows) y = image.rows-1;//ya-image.rows;
+//        if(x<0) x = image.cols + x;
+//        if(y<0) y = image.rows + y;
+//        if(x >= image.cols) x = x-image.cols;
+//        if(y >= image.rows) y = y-image.rows;
         image.getWindow(y, x, eye_height, eye_width, data);
 //        for(int ii=0, n=data.length; ii<n; ++ii) {
 //            data[ii] *= alpha;
@@ -88,6 +90,16 @@ public class EyeWindow {
 
     public byte[] getData() {
         return data;
+    }
+
+    public void setX(int x) {
+        this.x=x;
+        xa= (double) x;
+    }
+
+    public void setY(int y) {
+        this.y=y;
+        ya = (double) y;
     }
 
 }

@@ -5,6 +5,7 @@ import Java.org.network.mana.mana.MANA_Globals;
 import Java.org.network.mana.utils.*;
 
 import java.util.Arrays;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class LIFNeurons implements SpikingNeuron {
 
@@ -15,7 +16,7 @@ public class LIFNeurons implements SpikingNeuron {
     public static final double default_v_l = -70;
     public static final double default_r_m = 1.0;
     public static final double default_i_bg = 18.5;
-    public static final double default_noiseVar = 0.2;
+    public static final double default_noiseVar = 0.01;
 
     public static final double default_exc_tau_m = 30;
     public static final double default_inh_tau_m = 20;
@@ -51,6 +52,8 @@ public class LIFNeurons implements SpikingNeuron {
     public int[] excInDegree;
     public int[] inhInDegree;
     public int[] outDegree;
+    public double [] exc_sf;
+    public double [] inh_sf;
 
     /**
      * Creates MANA neurons of the specified polarity with default parameters.
@@ -89,25 +92,29 @@ public class LIFNeurons implements SpikingNeuron {
         outDegree = new int[N];
         i_e = new double[N];
         i_i = new double[N];
+        exc_sf = new double[N];
+        Arrays.fill(exc_sf, 1);
+        inh_sf = new double[N];
+        Arrays.fill(inh_sf, 1);
         adapt = new double[N];
         thresh = new DataWrapper(N, true, init_thresh);
         r_m = new DataWrapper(N, true, default_r_m);
         v_l = new DataWrapper(N, true, default_v_l);
         i_bg = new DataWrapper(N, true, default_i_bg);
         v_reset = new DataWrapper(N, true, init_v_m);
-        tau_w = new DataWrapper(Utils.getRandomArray(Utils.ProbDistType.UNIFORM, 10, 200, N));
-        //tau_w = new DataWrapper(N, true, 144);
+        //tau_w = new DataWrapper(Utils.getRandomArray(Utils.ProbDistType.UNIFORM, 200, 10, N));
+        tau_w = new DataWrapper(N, true, 144);
 
         if(exc) {
             ref_p = default_exc_ref_p;
 //            tau_m = new DataWrapper(N, true, default_exc_tau_m);
-			tau_m = new DataWrapper(Utils.getRandomArray(Utils.ProbDistType.NORMAL, 29, 3, N));
-            adaptJump = 15;
+			tau_m = new DataWrapper(Utils.getRandomArray(Utils.ProbDistType.NORMAL, 25, 2.5, N));
+            adaptJump = 5;//+ThreadLocalRandom.current().nextGaussian();
         } else {
             ref_p = default_inh_ref_p;
 //            tau_m = new DataWrapper(N, true, default_inh_tau_m);
-			tau_m = new DataWrapper(Utils.getRandomArray(Utils.ProbDistType.NORMAL, 20, 3, N));
-            adaptJump = 10;
+			tau_m = new DataWrapper(Utils.getRandomArray(Utils.ProbDistType.NORMAL, 23, 1, N));
+            adaptJump = 5;//+ThreadLocalRandom.current().nextGaussian();
         }
         Arrays.fill(v_m, init_v_m);
         xyzCoors=new double[_N][3];
@@ -117,18 +124,19 @@ public class LIFNeurons implements SpikingNeuron {
     @Override
     public void update(double dt, double time, BoolArray spkBuffer) {
         for(int ii=0; ii<N; ++ii) {
-            int sgn = Utils.checkSign((lastSpkTime.getData(ii)+ref_p)-time);
-//			dv_m[ii] += exc_sf[ii] * i_e[ii] + i_bg.get(ii) * sgn;
-//			dv_m[ii] -= inh_sf[ii] * i_i[ii] * sgn;
-            dv_m[ii] += i_e[ii] + i_bg.get(ii) * sgn;
-            dv_m[ii] -= 5*i_i[ii] * sgn;
+            double sgn = (lastSpkTime.getData(ii) + ref_p) < time ? 1:0;//Utils.checkSign((lastSpkTime.getData(ii)+ref_p)-time);
+			dv_m[ii] += exc_sf[ii] * i_e[ii] + i_bg.get(ii) * sgn;
+			dv_m[ii] -= inh_sf[ii] * i_i[ii] * sgn;
+//            dv_m[ii] += (i_e[ii] + i_bg.get(ii)) * sgn;
+//            dv_m[ii] -= i_i[ii] * sgn;
+   //         dv_m[ii] -= i_i[ii] * sgn;
+            dv_m[ii] += ThreadLocalRandom.current().nextGaussian()*default_noiseVar;
         }
         for(int ii=0; ii<N; ++ii) {
             dv_m[ii] -= adapt[ii];
         }
         for(int ii=0; ii<N; ++ii) {
             i_e[ii] -= dt * i_e[ii]/ SynType.ExcTau;
-
         }
         for(int ii=0; ii<N; ++ii) {
             i_i[ii] -= dt * i_i[ii]/SynType.InhTau;

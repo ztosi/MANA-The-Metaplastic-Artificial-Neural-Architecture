@@ -83,6 +83,8 @@ public class RunMANA {
 				System.exit(1);
 			}
 		}
+		int c_Rat = (int)(1000/dt);
+		System.out.println(c_Rat);
 		long iters = 0;
 		boolean first = true;
 		try {
@@ -101,9 +103,9 @@ public class RunMANA {
 
 				exec.invoke();
 
-				if((iters)%(1000/dt) == 0) {
+				if((iters)%c_Rat == 0) {
 					System.out.println("------------- " + time + "------------- ");
-					if ((iters)%(50000/ dt) == 0 || first || iters == (int)(10000/dt)) {
+					if ((iters)%(50*c_Rat) == 0 || first || iters == (int)(20000/dt)) {
 						unit.printData(mainOut.toString(), prefix, time, dt);
 						first = false;
 					}

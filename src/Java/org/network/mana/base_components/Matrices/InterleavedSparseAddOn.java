@@ -76,7 +76,9 @@ public class InterleavedSparseAddOn {
     public void setValue(int baseIndex, double val, int offset) {
         values[baseIndex * nilFac + offset] = val;
     }
-
+    public double getValue(int baseIndex, int offset) {
+        return values[baseIndex*nilFac+offset];
+    }
 
     /**
      * adds up the values along the major ordering and accumulates them in the array argument
@@ -88,6 +90,12 @@ public class InterleavedSparseAddOn {
             for(int jj=getStartIndex(ii); jj<getEndIndex(ii); ++jj) {
                 su[ii] += values[jj*nilFac+offset];
             }
+        }
+    }
+
+    public void scale(final double a, int offset) {
+        for(int ii=offset; ii<values.length; ii+=nilFac) {
+            values[ii] *= a;
         }
     }
 //

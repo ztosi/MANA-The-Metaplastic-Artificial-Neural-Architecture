@@ -60,7 +60,10 @@ public class MANA_Unit {
 			Math.pow(z0-zf, 2));
 
 	public ConnectSpecs defInpCS = new ConnectSpecs(ConnectRule.Random,
-			new double[]{0.25}, Utils.ProbDistType.NORMAL, new double[]{2, 1}, 2000, SynapseData.MAX_DELAY);
+			new double[]{0.25}, Utils.ProbDistType.NORMAL, new double[]{2.5, 1}, 2000, SynapseData.MAX_DELAY);
+
+	public ConnectSpecs defInpCSInh = new ConnectSpecs(ConnectRule.Random,
+			new double[]{0.1}, Utils.ProbDistType.NORMAL, new double[]{2.5, 1}, 2000, SynapseData.MAX_DELAY);
 
 	public ConnectSpecs defRecCS = new ConnectSpecs(ConnectRule.Distance2,
 			new double[] {300, 300, 150, 100, 1}, Utils.ProbDistType.NORMAL, new double[]{0.1, 0.01}, defMaxDist, SynapseData.MAX_DELAY);
@@ -180,17 +183,17 @@ public class MANA_Unit {
 			unit.inputs.add(inp);
 			unit.noInp += inp.getSize();
 		}
-		if(_N%200 != 0 || _N < 1000) {
-			System.out.println("The number you entered is... "
-					+ "annoying... and I'm too lazy to deal with it. "
-					+ "Rounding up to an easy number. ..."
-					+ " I promise in a future release not to be lazy... maybe.");
-			if(_N<1000) {
-				_N=1000;
-			}
-			_N = (int)(_N/200 * Math.ceil(_N/200));
-			System.out.println("New number is: "+_N);
-		}
+//		if(_N%200 != 0 || _N < 1000) {
+//			System.out.println("The number you entered is... "
+//					+ "annoying... and I'm too lazy to deal with it. "
+//					+ "Rounding up to an easy number. ..."
+//					+ " I promise in a future release not to be lazy... maybe.");
+//			if(_N<1000) {
+//				_N=1000;
+//			}
+//			_N = (int)(_N/200 * Math.ceil(_N/200));
+//			System.out.println("New number is: "+_N);
+//		}
 		// Figure out how much of everything there needs to be...
 		unit.size=_N;
 		unit.fullSize = _N + unit.noInp;
@@ -221,7 +224,13 @@ public class MANA_Unit {
 		for(MANA_Sector tar : unit.sectors.values()) {
 			// First node in each sector is always the node containing connections from the input
 			for(SpikingNeuron inp : externalInputs) {
-				tar.add(inp, unit.defInpCS);
+				MANA_Node mn;
+				if(tar.target.isExcitatory()) {
+					mn = tar.add(inp, unit.defInpCS);
+				} else {
+					mn = tar.add(inp, unit.defInpCSInh);
+				}
+				mn.inputIsExternal = true;
 			}
 			for(MANANeurons src : unit.targets) {
 				// Use default connection specs to connect Java.org.network.mana.mana Java.org.network.mana.nodes to each other (these are recurrent/reservoir synapses)
@@ -251,6 +260,7 @@ public class MANA_Unit {
 			addInput(inp, connectSpecs.get(ii), ignoreInh.get(ii).booleanValue());
 			ii++;
 		}
+		revalidateDegrees();
 	}
 
 	public void addInput(SpikingNeuron inp, ConnectSpecs connectSpecs, boolean ignoreInh) {
@@ -260,6 +270,7 @@ public class MANA_Unit {
 			MANA_Node node = sec.add(inp, connectSpecs);
 			nodes.add(node);
 		}
+		revalidateDegrees();
 	}
 
 	public void addInputs(List<SpikingNeuron> extInps, List<ConnectSpecs> connectSpecs) {
@@ -268,6 +279,7 @@ public class MANA_Unit {
 			addInput(inp, connectSpecs.get(ii));
 			ii++;
 		}
+		revalidateDegrees();
 	}
 
 	public void addInput(SpikingNeuron inp, ConnectSpecs connectSpecs) {
@@ -276,6 +288,7 @@ public class MANA_Unit {
 			MANA_Node node = sec.add(inp, connectSpecs);
 			nodes.add(node);
 		}
+		revalidateDegrees();
 	}
 
 	public void addOutputSector(MANANeurons neu, Layout layout) {
@@ -291,6 +304,10 @@ public class MANA_Unit {
 			sec.add(src, defRecCS);
 		}
 		nodes.addAll(sec.childNodes.values());
+		for(int ii=0; ii<sec.getWidth(); ++ii) {
+			allSpikes.add(new ArrayList<>());
+		}
+		revalidateDegrees();
 	}
 
 	public void addOutputSector(MANANeurons neu, Layout layout, ConnectSpecs cs) {
@@ -304,10 +321,14 @@ public class MANA_Unit {
 		layout.layout(neu);
 		//Populate sector with MANANodes representing inputs to neu from other neurons in the unit
 		for(MANANeurons src : targets) {
-			if(src instanceof MANANeurons && src != neu)
+			if(src != neu)
 				sec.add(src, cs);
 		}
 		nodes.addAll(sec.childNodes.values());
+		for(int ii=0; ii<sec.getWidth(); ++ii) {
+			allSpikes.add(new ArrayList<>());
+		}
+		revalidateDegrees();
 	}
 
 	public void addOutputSector(MANANeurons neu) {
@@ -329,8 +350,12 @@ public class MANA_Unit {
 		// Place neurons in space.
 		layout.layout(neu);
 		//Populate sector with MANANodes representing inputs to neu from other neurons in the unit
+		for(SpikingNeuron src : inputs) {
+			if(src != neu )
+				sec.add(src, cs);
+		}
 		for(MANANeurons src : targets) {
-			if(src instanceof MANANeurons && src != neu)
+			if(src instanceof MANANeurons && src != neu )
 				sec.add(src, cs);
 		}
 		nodes.addAll(sec.childNodes.values());
@@ -339,7 +364,12 @@ public class MANA_Unit {
 		for(MANA_Sector sectors : sectors.values()) {
 			nodes.add(sectors.add(neu, defRecCS));
 		}
-
+		for(int ii=0; ii<sec.getWidth(); ++ii) {
+			allSpikes.add(new ArrayList<>());
+		}
+		revalidateDegrees();
+//		fullSize += sec.getWidth();
+//		size += sec.getWidth();
 
 	}
 
@@ -477,8 +507,8 @@ public class MANA_Unit {
 			System.arraycopy(s.target.prefFR, 0, data.get("PrefFRs"),
 					i_offset, s.getWidth());
 			s.target.estFR.copyTo(data.get("EstFRs"), i_offset);
-			System.arraycopy(s.target.thresh.data(), 0, data.get("Threshs"),
-					i_offset, s.getWidth());
+//			System.arraycopy(s.target.thresh.data(), 0, data.get("Threshs"),
+//					i_offset, s.getWidth());
 			System.arraycopy(s.target.normValsExc, 0, data.get("NormBaseExc"),
 					i_offset, s.getWidth());
 			System.arraycopy(s.target.normValsInh, 0, data.get("NormBaseInh"),
@@ -532,7 +562,7 @@ public class MANA_Unit {
     public void setMhpOn(boolean mhpOn) {
         this.mhpOn = mhpOn;
         for(MANA_Sector sec : sectors.values()) {
-            sec.target.mhpOn = mhpOn;
+            sec.target.setMhpOn(mhpOn);
         }
 
     }

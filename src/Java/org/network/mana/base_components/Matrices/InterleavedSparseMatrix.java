@@ -22,7 +22,7 @@ public class InterleavedSparseMatrix {
 
     /** Data values, may be interleaved--interleaving factor is nILFac
      * Arranged in the order of target-major, i.e. the fan-in of each neuron is contiguous. */
-    private double [] values;
+    private final double [] values;
     /** The position in values where each target neuron's fan in begins capped at the end with the length of values
      * size is num major + 1*/
     private int [] ptrs;

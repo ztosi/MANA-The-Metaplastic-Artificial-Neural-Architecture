@@ -12,20 +12,63 @@ public class MHPFunctions {
 	public static double c_plus = 1;
 	public static double c_minus = 1;
 
-//	public static void mhpSoft(final BufferedFloatArray efrsTar, final double[] pfrsTar,
-//								 final BufferedFloatArray efrsSrc, int tarNo, InterleavedSparseAddOn pfrLoc, boolean exc) {
-//		int start = pfrLoc.getStartIndex(tarNo);
-//		int end = pfrLoc.getEndIndex(tarNo);
-//		int[] orderInds = pfrLoc.getRawOrdIndices();
-//		double sum = 0.0f;
-//		for(int ii=start; ii < end; ii += pfrLoc.getInc()) {
-//			sum += pfrLoc.values[ii];
-//		}
-//		double mn =
-//		for(int ii=start; ii < end; ii += pfrLoc.getInc()) {
-//			pfrLoc.values[ii] =
-//		}
-//	}
+	public static final float alpha = 1.0f;
+	public static final float beta = 0.1f;
+	public static final float omega = 0.25f;
+	public static final float zeta = 4f;
+
+	public static final float sqrt_2 = (float) Math.sqrt(2);
+	public static final float sqrt_2_beta = sqrt_2 * beta;
+	public static final float dm = alpha/(sqrt_2 * beta);
+
+
+	public static void mhpStochastic_1(final MANANeurons src, final MANANeurons tar, int tarNo,
+									   final InterleavedSparseAddOn pfrLoc) {
+		int start = pfrLoc.getStartIndex(tarNo);
+		int end = pfrLoc.getEndIndex(tarNo);
+		int[] orderInds = pfrLoc.getRawOrdIndices();
+		BufferedFloatArray lgETar = tar.logEstFR;
+		BufferedFloatArray lgESrc = src.logEstFR;
+		float [] buffer = new float[(end-start)/pfrLoc.getInc()];
+		try {
+			for (int ii = start; ii < end; ii += pfrLoc.getInc()) {
+				buffer[(ii-start)/pfrLoc.getInc()] = -(lgESrc.getData(orderInds[ii]) - lgETar.getData(tarNo));
+			}
+			for (int ii = start; ii < end; ii += pfrLoc.getInc()) {
+				pfrLoc.values[ii] = Utils.erf_approx(buffer[(ii-start)/pfrLoc.getInc()] /sqrt_2_beta);
+			}
+			for (int ii = start; ii < end; ii += pfrLoc.getInc()) {
+				pfrLoc.values[ii] = 0.5 * (pfrLoc.values[ii] + 1);
+			}
+
+			for (int ii = start; ii < end; ii += pfrLoc.getInc()) {
+				pfrLoc.values[ii] = ThreadLocalRandom.current().nextFloat() < pfrLoc.values[ii] ?
+						ThreadLocalRandom.current().nextFloat() :
+						-ThreadLocalRandom.current().nextFloat();
+			}
+			for (int ii = start; ii < end; ii += pfrLoc.getInc()) {
+				float buff_val = buffer[(ii-start)/pfrLoc.getInc()];
+				pfrLoc.values[ii] *= omega * (float)Math.exp(-zeta*buff_val*buff_val);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void mhpStochastic_2(final MANANeurons tar, final double[] dpfr) {
+		float [] buffer = new float[tar.N];
+		for(int ii = 0; ii<tar.N; ++ii) {
+			buffer[ii] =  (alpha-tar.logEstFR.getData(ii))/sqrt_2_beta;
+		}
+		for(int ii = 0; ii<tar.N; ++ii) {
+			buffer[ii] = (float)(0.5*(Utils.erf_approx(buffer[ii])+1));
+		}
+		for(int ii = 0; ii<tar.N; ++ii) {
+			dpfr[ii] += (ThreadLocalRandom.current().nextFloat() < buffer[ii] ?
+					ThreadLocalRandom.current().nextFloat() :
+					-ThreadLocalRandom.current().nextFloat());
+		}
+	}
 
 	public static void mhpStage1(final BufferedFloatArray efrsTar, final double[] pfrsTar,
 								 final BufferedFloatArray efrsSrc, int tarNo, InterleavedSparseAddOn pfrLoc, boolean exc) {

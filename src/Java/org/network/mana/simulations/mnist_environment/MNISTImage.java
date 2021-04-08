@@ -1,9 +1,9 @@
 package Java.org.network.mana.simulations.mnist_environment;
 
-import Java.org.network.mana.utils.Utils;
-
 public class MNISTImage {
 
+    public static final int HEIGHT = 28;
+    public static final int WIDTH = 28;
     private byte[] pixels;
     private long[] vecField;
 
@@ -21,7 +21,7 @@ public class MNISTImage {
         rows = (int)inputStream[11];
         cols = (int)inputStream[15];
 
-        pixels = new byte[28*28];
+        pixels = new byte[HEIGHT*WIDTH];
 
         System.arraycopy(inputStream, offset, pixels, 0, rows*cols);
         for(int ii=0; ii<pixels.length; ++ii) {
@@ -33,6 +33,22 @@ public class MNISTImage {
         }
     }
 
+    public byte[] getDownSample(int out_size) {
+        int kernel_size = HEIGHT - out_size + 1;
+        byte[] ds = new byte[out_size*out_size];
+        for(int ii=0; ii< out_size; ++ii) {
+            for(int jj=0; jj<out_size; ++jj) {
+                int k_value = 0x0;
+                for(int kk=ii; kk<(ii+kernel_size); ++kk) {
+                    for(int ll=jj; ll<(jj+kernel_size); ++ll) {
+                        k_value += getPixel(kk, ll);
+                    }
+                }
+                ds[ii*kernel_size +jj] = (byte) (k_value/(kernel_size*kernel_size));
+            }
+        }
+        return ds;
+    }
 
 
     public byte[] getWindow(int x, int y, int szX, int szY, byte[] win) {
@@ -66,12 +82,21 @@ public class MNISTImage {
         return win;
     }
 
+
     public byte[] getPixels() {
         return pixels;
     }
 
     public byte getPixel(int ii, int jj) {
         return pixels[ii*cols + jj];
+    }
+
+    public void make_landscape() {
+        for(int ii=0; ii<rows; ++ii) {
+            for(int jj=0; jj<cols; ++jj) {
+                //TODO
+            }
+        }
     }
 
     public static double getIntensity(MNISTImage image, int ii, int jj, double gamma) {

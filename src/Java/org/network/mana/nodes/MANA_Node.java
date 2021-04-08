@@ -3,9 +3,9 @@ package Java.org.network.mana.nodes;
 import Java.org.network.mana.base_components.InputNeurons;
 import Java.org.network.mana.base_components.MANANeurons;
 import Java.org.network.mana.base_components.Matrices.COOManaMat;
+import Java.org.network.mana.base_components.Matrices.InterleavedSparseAddOn;
 import Java.org.network.mana.base_components.Matrices.InterleavedSparseMatrix;
 import Java.org.network.mana.base_components.Matrices.SynapseMatrix;
-import Java.org.network.mana.base_components.Matrices.InterleavedSparseAddOn;
 import Java.org.network.mana.base_components.SpikingNeuron;
 import Java.org.network.mana.base_components.enums.DampFunction;
 import Java.org.network.mana.base_components.enums.SynType;
@@ -15,8 +15,11 @@ import Java.org.network.mana.functions.STDP;
 import Java.org.network.mana.functions.StructuralPlasticity;
 import Java.org.network.mana.utils.BoolArray;
 import Java.org.network.mana.utils.ConnectSpecs;
+import Java.org.network.mana.utils.SrcTarPair;
 import Java.org.network.mana.utils.Utils;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -62,7 +65,7 @@ public class MANA_Node implements Updatable {
      * external input Java.org.network.mana.nodes (and therefore provide no contribution to
      *  meta-homeostatic plastcity)
      */
-    public final boolean inputIsExternal;
+    public boolean inputIsExternal;
 
     /** True if and only if the synapses in this node are "trans-unit" meaning
      * they connect groups of neurons belonging to distinct MANA units. Biologically
@@ -191,13 +194,22 @@ public class MANA_Node implements Updatable {
         synMatrix = StructuralPlasticity.pruneGrow(this, srcData, targData, maxOutD, maxInD,
                 SynType.getLambdaBase(srcData.isExcitatory(), targData.isExcitatory(), lambda),
                 SynType.getConProbBase(srcData.isExcitatory(),
-                        targData.isExcitatory())/2, maxDist, time, max);
+                        targData.isExcitatory())/2, maxDist, time, max, srcData.isExcitatory() ? targData.exc_sf
+                        : targData.inh_sf);
         pfrLoc = new InterleavedSparseAddOn(synMatrix.getWeightsTOrd(), 1);
         for(int[] evt : evtQueue) {
             evt[1]=-1; // invalidate
         }
         //evtQueue.clear(); // TODO: This is very bad! Figure out a better way!
         structureChanged = true;
+    }
+
+    private HashMap<SrcTarPair, List<int[]>> keyEvents() {
+        HashMap<SrcTarPair, List<int[]>> eventDict = new HashMap<SrcTarPair, List<int[]>>();
+
+
+
+        return eventDict;
     }
 
     public SynapseMatrix getSynMatrix() {
@@ -234,7 +246,7 @@ public class MANA_Node implements Updatable {
             throw  new IllegalStateException("Node updates cannot be performed until initialization has been done on parent sector.");
         }
 
-//        System.out.println("HELLO");
+
 
         // Check for pre-synaptic spikes, schedule the events along synapses of neurons that have,
         try {
@@ -290,19 +302,23 @@ public class MANA_Node implements Updatable {
                 synMatrix.calcAndGetSums(localSums);
             }
 
-            if (!inputIsExternal && targData.mhpOn
-                    && !(targData.allInhSNon && targData.allExcSNon) && time > 20000 && srcData instanceof MANANeurons) { //&& (srcData.isExcitatory()==targData.isExcitatory())) {
+            if (targData.getMhpOn() && (!inputIsExternal
+//                    && ((srcData.isExcitatory() && targData.isExcitatory())
+//                    || (!srcData.isExcitatory() && !targData.isExcitatory()))
+                  //  && !(targData.allInhSNon && targData.allExcSNon)
+                     && srcData instanceof MANANeurons)) { //&& (srcData.isExcitatory()==targData.isExcitatory())) {
                    // && srcData.isExcitatory()) {
             //    if((int)(time/dt) % (int)(1/dt) == 0) {
                     for (int ii = 0; ii < width; ++ii) {
 //                        if(!(targData.excSNon.get(ii) && targData.inhSNon.get(ii)) ) {
-//                            if (!(targData.excSNon.get(ii) && targData.inhSNon.get(ii))) {
-                                MHPFunctions.mhpStage1(targData.estFR, targData.prefFR, ((MANANeurons) srcData).estFR, ii,
-                                        pfrLoc, srcData.isExcitatory());
-                                MHPFunctions.mhpStage2(ii, MHPFunctions.getFp(targData.fVals[ii]),
-                                        MHPFunctions.getFm(targData.fVals[ii]), pfrLoc);
+                          //  if (!(targData.excSNon.get(ii) && targData.inhSNon.get(ii))) {
+                                MHPFunctions.mhpStochastic_1((MANANeurons) srcData, targData, ii, pfrLoc);
+//                                MHPFunctions.mhpStage1(targData.estFR, targData.prefFR, ((MANANeurons) srcData).estFR, ii,
+//                                        pfrLoc, srcData.isExcitatory());
+//                                MHPFunctions.mhpStage2(ii, MHPFunctions.getFp(targData.fVals[ii]),
+//                                        MHPFunctions.getFm(targData.fVals[ii]), pfrLoc);
+                          //  }
 //                            }
-//                        }
               //      }
                 }
 //            for(int ii=0; ii<width; ++ii) {
@@ -357,6 +373,52 @@ public class MANA_Node implements Updatable {
     }
 
     public void accumulatePFRSums(final double[] pfrDt) {
+        if(srcData instanceof InputNeurons) { //|| !srcData.isExcitatory() || !targData.isExcitatory()) {
+            return;
+        }
+//        if((srcData.isExcitatory() && targData.isExcitatory())
+////                || (!srcData.isExcitatory() && !targData.isExcitatory())) {
+////            return;
+////        }
+//        if(!srcData.isExcitatory()) {
+////            for(int ii=0, n = pfrDt.length; ii<n; ++ii) {
+////                pfrDt[ii] *= 5;
+////            }
+//            //pfrLoc.scale(5, 0);
+//            for(int ii=0; ii<pfrLoc.values.length; ++ii) {
+//                if(pfrLoc.values[ii] > 0) {
+//                    pfrLoc.values[ii] = 0;
+//                } else {
+//                    pfrLoc.values[ii] *= 4;
+//                }
+//            }
+//        }
+//        if(srcData.isExcitatory()) {
+//            for(int ii=0; ii<pfrLoc.values.length; ++ii) {
+//                if(pfrLoc.values[ii] < 0) {
+//                    pfrLoc.values[ii] = 0;
+//                }
+//            }
+//        }
+
+//        if((srcData.isExcitatory() && !targData.isExcitatory())
+//        || (!srcData.isExcitatory() && targData.isExcitatory())) {
+////            for(int ii=0, n = pfrDt.length; ii<n; ++ii) {
+////                pfrDt[ii] *= -1;
+////            }
+//            pfrLoc.scale(-1, 0);
+//        }
+//        if(srcData.isExcitatory() != targData.isExcitatory()) {
+//            double pfConst = 0.5;
+////            if(srcData.isExcitatory()) {
+////                pfConst = 0.2;
+////            } else {
+////                pfConst = 0.2;
+////            }
+//            for(int ii=0; ii<pfrLoc.values.length; ++ii) {
+//                pfrLoc.values[ii] *= pfConst;
+//            }
+//        }
         pfrLoc.accumSums(pfrDt, 0);
     }
 

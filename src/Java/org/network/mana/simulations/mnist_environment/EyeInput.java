@@ -2,10 +2,10 @@ package Java.org.network.mana.simulations.mnist_environment;
 
 import Java.org.network.mana.base_components.LIFNeurons;
 import Java.org.network.mana.base_components.SpikingNeuron;
+import Java.org.network.mana.execution.tasks.Syncable;
 import Java.org.network.mana.layouts.LatticeLayout;
 import Java.org.network.mana.mana.MANA_Globals;
 import Java.org.network.mana.utils.BoolArray;
-import Java.org.network.mana.execution.tasks.Syncable;
 import Java.org.network.mana.utils.Utils;
 
 import javax.swing.*;
@@ -32,7 +32,7 @@ public class EyeInput implements SpikingNeuron, Syncable {
     private int exposureTime = DEFAULT_EXPOSURE_TIME;
     private MNISTImage currentImage;
     private HashMap<Integer, ArrayList<MNISTImage>> images = new HashMap<>();
-    private double gamma = 60;
+    private double gamma = 40;
     {
         for(int ii=0; ii<10; ++ii) {
             images.put(ii, new ArrayList<>());
@@ -90,9 +90,10 @@ public class EyeInput implements SpikingNeuron, Syncable {
     private EyeInput(EyeWindow inp, HashMap<Integer, ArrayList<MNISTImage>> images) {
         id = MANA_Globals.getID();
         eye = inp;
-        neurons = new LIFNeurons(eye.numPx, true);
+        neurons = new LIFNeurons(eye.numPx*2, true);
+        neurons.adaptJump = 0;
         this.images = images;
-        this.outDegree = new int[eye.numPx];
+        this.outDegree = new int[2*eye.numPx];
         currentImage = images.get(0).get(0);
         neurons.i_bg.makeUncompressible();
         xyzCoors = new double[neurons.getSize()][3];
@@ -100,7 +101,7 @@ public class EyeInput implements SpikingNeuron, Syncable {
 //        frame = new JFrame("Current Image");
     }
 
-
+    private int[] been = new int[28*28];
     /**
      * Updates the eye input. Randomly selects a new MNIST image if the time interval lapses.
      * Moves the eye window over the MNIST image with a given dx, dy. Pixels are assumed to
@@ -118,16 +119,24 @@ public class EyeInput implements SpikingNeuron, Syncable {
         if(frame == null && !headless) {
             frame = new JFrame("Current Image");
         }
+        byte[] down_samp =
         if(iters % exposureIts == 0) {
+          //  eye.setX(14);
+          // eye.setY(14);
             int label = ThreadLocalRandom.current().nextInt(10);
             int ex = ThreadLocalRandom.current().nextInt(images.get(label).size());
             currentImage = images.get(label).get(ex);
             byte[] px = currentImage.getPixels();
+            been = new int[28*28];
+            synchronized (been) {
+                Arrays.fill(been, 10);
+            }
             if(!headless) {
                 im = new BufferedImage(28, 28, BufferedImage.TYPE_INT_RGB);
 
                 for (int ii = 0; ii < px.length; ++ii) {
 //                System.out.println((int)px[ii] +128);
+
                     Color c = new Color(px[ii] + 128, px[ii] + 128, px[ii] + 128);
 //                System.out.println(c.getBlue() + "b");
                     im.setRGB(ii % 28, ii / 28, c.getRGB());
@@ -158,22 +167,29 @@ public class EyeInput implements SpikingNeuron, Syncable {
         }
         int x = eye.getX();
         int y = eye.getY();
-        eye.update(currentImage, dx, dy, dt);
-        if(!headless) {
-            Graphics2D g2 = im.createGraphics();
-            g2.clearRect(20 * x, 20 * y, 15, 15);
-            g2.drawImage(im, 0, 0, theFrame);
-            g2.setColor(Color.RED);
-            g2.fill(new Ellipse2D.Float(20 * eye.getX(), 20 * eye.getY(), 15, 15));
-
-            g2.dispose();
-            theFrame.repaint();
+        synchronized(been) {
+            incBeen(x, y);
+            if (getBeen(x,y) >= 199) {
+                 setBeen(x, y, 199);
+            }
         }
+
+            eye.update(currentImage, dx, dy, dt);
+            if (!headless) {
+                Graphics2D g2 = im.createGraphics();
+                //g2.clearRect(20 * x, 20 * y, 15, 15);
+                g2.drawImage(im, 0, 0, theFrame);
+                g2.setColor(new Color(0.005f * getBeen(x,y), 0f, 0f));
+                g2.fill(new Ellipse2D.Float(20 * eye.getX(), 20 * eye.getY(), 15, 15));
+                g2.dispose();
+                theFrame.repaint();
+            }
+
         for(int ii=0; ii<eye.eye_height; ii++) {
             for(int jj=0; jj<eye.eye_width; ++jj) {
                 int ind = ii*eye.eye_width + jj;
-                double intensity = eye.getData()[ind]/255.0 + 0.5;
-                intensity = 1-intensity;
+                double intensity = eye.getData()[ind]/255.0;
+                //intensity = 1-intensity;
 //                if(intensity<0.1) {
 //                    double spkProb = 0.01;
 //                    spkProb*=dt;
@@ -183,11 +199,28 @@ public class EyeInput implements SpikingNeuron, Syncable {
 //                    }
 //                    neurons.i_bg.setAt(18, ind);
 //                } else {
-                    neurons.i_bg.setAt(14+intensity*gamma, ind);
+                    neurons.i_bg.setAt(15+intensity*gamma, ind);
+                    neurons.i_bg.setAt(15+(1-intensity)*gamma, ind+(eye.eye_height*eye.eye_width));
+
 //                }
             }
         }
         neurons.update(dt, time, spkBuffer);
+//        for(int ii=0; ii<spkBuffer.length; ++ii) {
+//            if(spkBuffer.get(ii)) {
+//                System.out.println("Spike " + ii);
+//            }
+//        }
+    }
+
+    public synchronized void incBeen(final int x, final int y) {
+        been[y*28+x]++;
+    }
+    public synchronized void setBeen(final int x, final int y, final int val) {
+        been[y*28+x]=val;
+    }
+    public synchronized int getBeen(final int x, final int y) {
+        return been[y*28+x];
     }
 
     public void setdXdY(double dx, double dy) {
@@ -212,7 +245,7 @@ public class EyeInput implements SpikingNeuron, Syncable {
     }
 
     public int getSize() {
-        return eye.numPx;
+        return neurons.getSize();
     }
 
     @Override

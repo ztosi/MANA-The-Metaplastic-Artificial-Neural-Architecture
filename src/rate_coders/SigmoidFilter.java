@@ -1,6 +1,6 @@
 package rate_coders;
 
-import Java.org.network.mana.base_components.SpikingNeuron;
+import Java.org.network.mana.base_components.LIFNeurons;
 import Java.org.network.mana.execution.tasks.Updatable;
 
 import java.util.Arrays;
@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class SigmoidFilter implements Updatable {
 
-    private SpikingNeuron neurons;
+    public LIFNeurons neurons;
 
     private float ceil = 2;
     private float floor = -2;
@@ -21,14 +21,14 @@ public class SigmoidFilter implements Updatable {
 
     private AtomicBoolean updated = new AtomicBoolean(false);
 
-    public SigmoidFilter(SpikingNeuron neurons) {
+    public SigmoidFilter(LIFNeurons neurons) {
         this.neurons = neurons;
         filterInputs = new float[neurons.getSize()];
         filterVals = new float[neurons.getSize()];
-        Arrays.fill(filterInputs, 100);
+        Arrays.fill(filterInputs, 1);
     }
 
-    public SigmoidFilter(SpikingNeuron neurons, float floor, float ceil, float k, float b, float leakRate) {
+    public SigmoidFilter(LIFNeurons neurons, float floor, float ceil, float k, float b, float leakRate) {
         this(neurons);
         this.floor = floor;
         this.ceil = ceil;
@@ -41,7 +41,7 @@ public class SigmoidFilter implements Updatable {
     public void update(final double time, final double dt) {
         for(int ii=0; ii<neurons.getSize(); ++ii) {
             double val = neurons.getSpikes().get(ii) ? dt*.5:0;
-            filterVals[ii] -= dt*filterVals[ii]/50;
+            filterVals[ii] -= dt*filterVals[ii]/25;
             filterVals[ii] += val;
             filterVals[ii] = filterVals[ii] > 3 ? 3:filterVals[ii];
 

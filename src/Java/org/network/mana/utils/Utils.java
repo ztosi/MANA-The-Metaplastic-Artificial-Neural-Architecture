@@ -311,6 +311,18 @@ public class Utils {
 		return (int)(Double.doubleToLongBits(value) >>> 63);
 	}
 
+	public static double xx1(double value) {
+		return value/(value+1);
+	}
+
+	public static final double[] erf_apc = {0.278393, 0.230389, 0.000972, 0.078108};
+	public static double erf_approx(double x){
+		int sign = -2*checkSign(x)+1;
+		x = Math.abs(x);
+		double denom = 1 + erf_apc[0]*x + erf_apc[1]*x*x + erf_apc[2]*x*x*x + erf_apc[3]*x*x*x*x;
+		denom = denom*denom*denom*denom;
+		return sign*(1-1/denom);
+	}
 
 	public static void main(String [] args ) {
 		double b = -5;

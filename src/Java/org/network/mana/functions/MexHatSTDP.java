@@ -19,7 +19,7 @@ public final class MexHatSTDP implements  STDP {
 
     public double lRate = 1E-3;
 
-    public static double a = 25;
+    public static double a = 12;
 
     public static final double twentRt = Math.pow(20, 1.0/4.0);
 
@@ -28,10 +28,11 @@ public final class MexHatSTDP implements  STDP {
     }
 
     public MexHatSTDP(double wPlus, double wMinus,
-                      double sig, double lRate) {
+                      double sig, double lRate, double a) {
         this.lRate = lRate;
         this.wMinus = wMinus;
         this.wPlus = wPlus;
+        this.a = a;
         setSigma(sig);
     }
 
@@ -41,8 +42,8 @@ public final class MexHatSTDP implements  STDP {
         int laLoc = wts.getStartIndex(neuNo, lastArrs.getInc());
         int end = wts.getEndIndex(neuNo);
         for(int ii = start; ii<end; ii+=wts.getInc()) {
-            if(wts.getRawData()[ii] > 20) {
-                wts.getRawData()[ii] = 20;
+            if(wts.getRawData()[ii] >= 20) {
+                wts.getRawData()[ii] = 19.9;
             }
         }
         for (int ii = start; ii < end; ii += wts.getInc()) {
@@ -59,8 +60,8 @@ public final class MexHatSTDP implements  STDP {
         if(dataPack[1]==-1) {
             return;
         }
-        if(wts.getRawData()[dataPack[1]] > 20) {
-            wts.getRawData()[dataPack[1]] = 20;
+        if(wts.getRawData()[dataPack[1]] >= 20) {
+            wts.getRawData()[dataPack[1]] = 19.9;
         }
         wts.getRawData()[dataPack[1] + 1] = mexicanHatWindow(sigSq, nrmTerm,
                 wPlus, wMinus,
@@ -71,7 +72,7 @@ public final class MexHatSTDP implements  STDP {
                                           double wminus, double delta_t, double lrate, double wt) {
         double dw = a * mexicanHatFunction(delta_t, sigmaSq, normTerm);
         if (dw < 0) {
-            dw *= -wminus;
+            dw *= wminus;
         } else {
             dw *= wplus * Math.pow(-wt+20, 0.25)/twentRt;
         }

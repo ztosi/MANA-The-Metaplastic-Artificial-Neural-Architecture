@@ -101,8 +101,9 @@ public class MANA_Sector implements Syncable {
         double[] dummy = new double[secExcSums.length];
         System.arraycopy(secExcSums,0, dummy, 0, dummy.length);
         for(int ii=0; ii<dummy.length; ++ii) {
-            dummy[ii] += MANANeurons.default_sat_c + 20;
+            dummy[ii] += MANANeurons.default_sat_c;
         }
+        target.calcNewNorms();
         target.setSatC(dummy);
         initialized = true;
     }
@@ -195,7 +196,7 @@ public class MANA_Sector implements Syncable {
         if(time > 20000)
             target.updateTriggers(secExcSums, secInhSums);
 
-        if (target.mhpOn && !(target.allExcSNon && target.allInhSNon)) {
+        if (target.getMhpOn()) {
             for (MANA_Node node : childNodes.values()) {
                node.accumulatePFRSums(pfrAccum);
             }
@@ -237,6 +238,7 @@ public class MANA_Sector implements Syncable {
         target.spks.copyInto(spkBuffer);
         spkBuffer.clear();
         target.estFR.pushBufferShallow();
+        target.logEstFR.pushBufferShallow();
         target.lastSpkTime.pushBufferDeep();
         spkDat.pushSpks(target.spks); // record spiking data
         //   System.out.println(id + "SYNCHRONIZED");
