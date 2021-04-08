@@ -36,16 +36,30 @@ public class MNISTImage {
     public byte[] getDownSample(int out_size) {
         int kernel_size = HEIGHT - out_size + 1;
         byte[] ds = new byte[out_size*out_size];
+        double [] intensity = new double[out_size*out_size];
         for(int ii=0; ii< out_size; ++ii) {
             for(int jj=0; jj<out_size; ++jj) {
                 int k_value = 0x0;
                 for(int kk=ii; kk<(ii+kernel_size); ++kk) {
                     for(int ll=jj; ll<(jj+kernel_size); ++ll) {
-                        k_value += getPixel(kk, ll);
+                        k_value += 128+(int)getPixel(kk, ll);
                     }
                 }
-                ds[ii*kernel_size +jj] = (byte) (k_value/(kernel_size*kernel_size));
+                int mean = (k_value/(kernel_size*kernel_size));
+                double mnSq = (mean*mean)/65536.0;
+                intensity[ii*out_size +jj] = mnSq;
             }
+        }
+        double max = Double.MIN_VALUE;
+        for(int ii=0;ii<out_size*out_size;++ii) {
+            if(intensity[ii] > max) {
+                max = intensity[ii];
+            }
+        }
+        for(int ii=0;ii<out_size*out_size;++ii) {
+            intensity[ii] /= max;
+            intensity[ii] = (intensity[ii]*253)-125; // to make sure there's no under/over
+            ds[ii] = (byte)(intensity[ii]);
         }
         return ds;
     }

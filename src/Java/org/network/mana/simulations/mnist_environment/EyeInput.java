@@ -11,10 +11,8 @@ import Java.org.network.mana.utils.Utils;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.Ellipse2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -53,6 +51,7 @@ public class EyeInput implements SpikingNeuron, Syncable {
     private JFrame frame;
     private BufferedImage im;
     private JPanel theFrame;
+    private BufferedImage bob;
 
     private volatile double dx = 0, dy = 0;
 
@@ -90,18 +89,24 @@ public class EyeInput implements SpikingNeuron, Syncable {
     private EyeInput(EyeWindow inp, HashMap<Integer, ArrayList<MNISTImage>> images) {
         id = MANA_Globals.getID();
         eye = inp;
-        neurons = new LIFNeurons(eye.numPx*2, true);
+        down_samp_size = (int)(2*eye.eye_width);
+        int numDs = down_samp_size*down_samp_size;
+        neurons = new LIFNeurons(2*eye.numPx+numDs, true);
         neurons.adaptJump = 0;
         this.images = images;
-        this.outDegree = new int[2*eye.numPx];
+        this.outDegree = new int[numDs+2*eye.numPx];
         currentImage = images.get(0).get(0);
         neurons.i_bg.makeUncompressible();
         xyzCoors = new double[neurons.getSize()][3];
 
+
 //        frame = new JFrame("Current Image");
     }
-
-    private int[] been = new int[28*28];
+    private byte[] down_samp = null;
+    private byte[] px = null;
+    private int [][] c_change = null;
+    private int down_samp_size;
+//    private int[] been = new int[28*28];
     /**
      * Updates the eye input. Randomly selects a new MNIST image if the time interval lapses.
      * Moves the eye window over the MNIST image with a given dx, dy. Pixels are assumed to
@@ -112,97 +117,139 @@ public class EyeInput implements SpikingNeuron, Syncable {
      */
     public void update(double dt, double time, BoolArray wow) {
         BoolArray spkBuffer = neurons.spks;
-        int exposureIts = (int) (exposureTime/dt);
-        if(theFrame == null && !headless) {
+        int exposureIts = (int) (exposureTime / dt);
+        if (theFrame == null && !headless) {
             theFrame = new JPanel();
         }
-        if(frame == null && !headless) {
+        if (frame == null && !headless) {
             frame = new JFrame("Current Image");
         }
-        byte[] down_samp =
-        if(iters % exposureIts == 0) {
-          //  eye.setX(14);
-          // eye.setY(14);
+
+        int x = eye.getX();
+        int y = eye.getY();
+        if (iters % exposureIts == 0) {
+            //  eye.setX(14);
+            // eye.setY(14);
             int label = ThreadLocalRandom.current().nextInt(10);
             int ex = ThreadLocalRandom.current().nextInt(images.get(label).size());
             currentImage = images.get(label).get(ex);
-            byte[] px = currentImage.getPixels();
-            been = new int[28*28];
-            synchronized (been) {
-                Arrays.fill(been, 10);
+            down_samp = currentImage.getDownSample(down_samp_size);
+            px = currentImage.getPixels();
+            c_change = new int[px.length][3];
+            for (int ii = 0; ii < px.length; ++ii) {
+                c_change[ii] = new int[]{px[ii], px[ii], px[ii]};
             }
-            if(!headless) {
+        }
+//            been = new int[28*28];
+//            synchronized (been) {
+//                Arrays.fill(been, 10);
+//            }
+
+//            synchronized(been) {
+//                incBeen(x, y);
+//                if (getBeen(x,y) >= 199) {
+//                    setBeen(x, y, 199);
+//                }
+//            }
+        for (int ii = 0; ii < down_samp_size; ii++) {
+            for (int jj = 0; jj < down_samp_size; ++jj) {
+                int ind = ii * down_samp_size + jj;
+                double intensity = down_samp[ind] / 255.0;
+                ind = ind+2*eye.numPx;
+                //neurons.i_bg.setAt(15+intensity*gamma, ind);
+                neurons.i_bg.setAt(15 + (intensity) * gamma, ind);
+
+            }
+        }
+
+        if (!headless) {
+
+            int ind = y*28 + x;
+            if (c_change[ind][0] < 127) {
+                c_change[ind][0]++;
+            } else {
+                c_change[ind][0] = 127;
+            }
+            if (c_change[ind][1] > -127) {
+                c_change[ind][1]--;
+            } else {
+                c_change[ind][1] = -127;
+            }
+            if (c_change[ind][2] > -127) {
+                c_change[ind][2]--;
+            } else {
+                c_change[ind][2] = -127;
+            }
+
+            if (iters % exposureIts == 0) {
                 im = new BufferedImage(28, 28, BufferedImage.TYPE_INT_RGB);
-
                 for (int ii = 0; ii < px.length; ++ii) {
-//                System.out.println((int)px[ii] +128);
-
-                    Color c = new Color(px[ii] + 128, px[ii] + 128, px[ii] + 128);
-//                System.out.println(c.getBlue() + "b");
+                    Color c = new Color((int)px[ii] + 128, (int)px[ii] + 128, (int)px[ii] + 128);
+                    //                System.out.println(c.getBlue() + "b");
+                    //System.out.println(c.toString());
                     im.setRGB(ii % 28, ii / 28, c.getRGB());
-//                System.out.println((im.getRGB(ii/28, ii%28) &0xFF) + "bim");
-
+                    //                System.out.println((im.getRGB(ii/28, ii%28) &0xFF) + "bim");
                 }
+
+                BufferedImage lowRes = new BufferedImage(down_samp_size, down_samp_size, BufferedImage.TYPE_INT_RGB);
+                for (int ii = 0; ii < down_samp.length; ++ii) {
+                    Color c = new Color(down_samp[ii] + 128, down_samp[ii] + 128, down_samp[ii] + 128);
+                    lowRes.setRGB(ii % down_samp_size, ii / down_samp_size, c.getRGB());
+                }
+
                 theFrame.removeAll();
                 FlowLayout fl = new FlowLayout();
                 theFrame.setLayout(fl);
-
                 AffineTransform af = AffineTransform.getScaleInstance(20, 20);
-
-                BufferedImage bob = new BufferedImage(560, 560, BufferedImage.TYPE_INT_RGB);
+                bob = new BufferedImage(560, 560, BufferedImage.TYPE_INT_RGB);
                 Graphics2D g = bob.createGraphics();
                 g.drawRenderedImage(im, af);
                 JLabel bobL = new JLabel(new ImageIcon(bob));
                 bobL.setVisible(true);
                 theFrame.add(bobL, fl);
+                AffineTransform af2 = AffineTransform.getScaleInstance(560 / down_samp_size, 560 / down_samp_size);
+                BufferedImage bob2 = new BufferedImage(560, 560, BufferedImage.TYPE_INT_RGB);
+                Graphics2D g2 = bob2.createGraphics();
+                g2.drawRenderedImage(lowRes, af2);
+                JLabel bobLR = new JLabel(new ImageIcon(bob2));
+                bobLR.setVisible(true);
+                theFrame.add(bobLR, fl);
                 theFrame.setVisible(true);
                 theFrame.repaint();
                 frame.setLocation(200, 200);
-                frame.setSize(560, 560);
+                frame.setSize(2*560, 560);
                 frame.add(theFrame);
                 frame.pack();
                 frame.setVisible(true);
-                im = bob;
+                //im = bob;
             }
-        }
-        int x = eye.getX();
-        int y = eye.getY();
-        synchronized(been) {
-            incBeen(x, y);
-            if (getBeen(x,y) >= 199) {
-                 setBeen(x, y, 199);
+            int blck_size = 560/28;
+            Color c = new Color(c_change[ind][0]+ 128, c_change[ind][1] + 128, c_change[ind][2] + 128);
+            for(int ii=0; ii<blck_size; ++ii) {
+                for(int jj=0; jj<blck_size; ++jj) {
+                    bob.setRGB( x*20+jj, y*20+ii, c.getRGB());
+                }
             }
-        }
+            theFrame.repaint();
 
+        }
             eye.update(currentImage, dx, dy, dt);
-            if (!headless) {
-                Graphics2D g2 = im.createGraphics();
-                //g2.clearRect(20 * x, 20 * y, 15, 15);
-                g2.drawImage(im, 0, 0, theFrame);
-                g2.setColor(new Color(0.005f * getBeen(x,y), 0f, 0f));
-                g2.fill(new Ellipse2D.Float(20 * eye.getX(), 20 * eye.getY(), 15, 15));
-                g2.dispose();
-                theFrame.repaint();
-            }
+//            if (!headless) {
+//                Graphics2D g2 = im.createGraphics();
+//                //g2.clearRect(20 * x, 20 * y, 15, 15);
+//                g2.drawImage(im, 0, 0, theFrame);
+//                g2.setColor(new Color(0.005f * getBeen(x,y), 0f, 0f));
+//                g2.fill(new Ellipse2D.Float(20 * eye.getX(), 20 * eye.getY(), 15, 15));
+//                g2.dispose();
+//                theFrame.repaint();
+//            }
 
         for(int ii=0; ii<eye.eye_height; ii++) {
             for(int jj=0; jj<eye.eye_width; ++jj) {
                 int ind = ii*eye.eye_width + jj;
                 double intensity = eye.getData()[ind]/255.0;
-                //intensity = 1-intensity;
-//                if(intensity<0.1) {
-//                    double spkProb = 0.01;
-//                    spkProb*=dt;
-//                    if(ThreadLocalRandom.current().nextDouble() < spkProb) {
-//                        spkBuffer.set(ind, true);
-//                        neurons.lastSpkTime.setBuffer(ind, time);
-//                    }
-//                    neurons.i_bg.setAt(18, ind);
-//                } else {
-                    neurons.i_bg.setAt(15+intensity*gamma, ind);
-                    neurons.i_bg.setAt(15+(1-intensity)*gamma, ind+(eye.eye_height*eye.eye_width));
-
-//                }
+                neurons.i_bg.setAt(15+intensity*gamma, ind);
+                neurons.i_bg.setAt(15+(1-intensity)*gamma, ind+(eye.eye_height*eye.eye_width));
             }
         }
         neurons.update(dt, time, spkBuffer);
@@ -213,15 +260,15 @@ public class EyeInput implements SpikingNeuron, Syncable {
 //        }
     }
 
-    public synchronized void incBeen(final int x, final int y) {
-        been[y*28+x]++;
-    }
-    public synchronized void setBeen(final int x, final int y, final int val) {
-        been[y*28+x]=val;
-    }
-    public synchronized int getBeen(final int x, final int y) {
-        return been[y*28+x];
-    }
+//    public synchronized void incBeen(final int x, final int y) {
+//        been[y*28+x]++;
+//    }
+//    public synchronized void setBeen(final int x, final int y, final int val) {
+//        been[y*28+x]=val;
+//    }
+//    public synchronized int getBeen(final int x, final int y) {
+//        return been[y*28+x];
+//    }
 
     public void setdXdY(double dx, double dy) {
         this.dx = dx;
