@@ -65,8 +65,8 @@ public class MHPFunctions {
 		}
 		for(int ii = 0; ii<tar.N; ++ii) {
 			dpfr[ii] += (ThreadLocalRandom.current().nextFloat() < buffer[ii] ?
-					ThreadLocalRandom.current().nextFloat() :
-					-ThreadLocalRandom.current().nextFloat());
+					ThreadLocalRandom.current().nextFloat()/2 :
+					-ThreadLocalRandom.current().nextFloat())/2;
 		}
 	}
 

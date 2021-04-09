@@ -60,10 +60,10 @@ public class MANA_Unit {
 			Math.pow(z0-zf, 2));
 
 	public ConnectSpecs defInpCS = new ConnectSpecs(ConnectRule.Random,
-			new double[]{0.25}, Utils.ProbDistType.NORMAL, new double[]{2.5, 1}, 2000, SynapseData.MAX_DELAY);
+			new double[]{0.25}, Utils.ProbDistType.NORMAL, new double[]{2, 0.5}, 2000, SynapseData.MAX_DELAY);
 
 	public ConnectSpecs defInpCSInh = new ConnectSpecs(ConnectRule.Random,
-			new double[]{0.1}, Utils.ProbDistType.NORMAL, new double[]{2.5, 1}, 2000, SynapseData.MAX_DELAY);
+			new double[]{0.1}, Utils.ProbDistType.NORMAL, new double[]{2, 0.5}, 2000, SynapseData.MAX_DELAY);
 
 	public ConnectSpecs defRecCS = new ConnectSpecs(ConnectRule.Distance2,
 			new double[] {300, 300, 150, 100, 1}, Utils.ProbDistType.NORMAL, new double[]{0.1, 0.01}, defMaxDist, SynapseData.MAX_DELAY);

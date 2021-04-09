@@ -41,7 +41,7 @@ public class SigmoidFilter implements Updatable {
     public void update(final double time, final double dt) {
         for(int ii=0; ii<neurons.getSize(); ++ii) {
             double val = neurons.getSpikes().get(ii) ? 1.0/dt:0;
-            filterVals[ii] -= dt*filterVals[ii]/20;
+            filterVals[ii] -= dt*filterVals[ii]/15;
             filterVals[ii] += 0.05*val;
             filterVals[ii] = filterVals[ii] > 3 ? 3:filterVals[ii];
 

@@ -58,7 +58,7 @@ public class MNISTImage {
         }
         for(int ii=0;ii<out_size*out_size;++ii) {
             intensity[ii] /= max;
-            intensity[ii] = (intensity[ii]*253)-125; // to make sure there's no under/over
+            intensity[ii] = (intensity[ii]*255)-128; // to make sure there's no under/over
             ds[ii] = (byte)(intensity[ii]);
         }
         return ds;

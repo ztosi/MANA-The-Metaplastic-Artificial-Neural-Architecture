@@ -23,7 +23,7 @@ public class MnistMANANet {
 
     private MANA_Unit centralRes;
     private MANA_Unit second_res;
-    private int resSize = 1000;
+    //private int resSize = 2000;
     private double[][] resBounds = new double[3][2];
     {
         resBounds[0][0] = 0;
@@ -234,7 +234,7 @@ public class MnistMANANet {
     }
 
     public static void main(String[] args) {
-        MnistMANANet net = new MnistMANANet(1000, "train-images-idx3-ubyte",
+        MnistMANANet net = new MnistMANANet(2000, "train-images-idx3-ubyte",
                 "train-labels-idx1-ubyte");
         net.runNetwork(0, dt);
     }

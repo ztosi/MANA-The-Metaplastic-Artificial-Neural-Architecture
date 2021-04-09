@@ -89,7 +89,7 @@ public class EyeInput implements SpikingNeuron, Syncable {
     private EyeInput(EyeWindow inp, HashMap<Integer, ArrayList<MNISTImage>> images) {
         id = MANA_Globals.getID();
         eye = inp;
-        down_samp_size = (int)(2*eye.eye_width);
+        down_samp_size = (int)(2.5*eye.eye_width);
         int numDs = down_samp_size*down_samp_size;
         neurons = new LIFNeurons(2*eye.numPx+numDs, true);
         neurons.adaptJump = 0;
