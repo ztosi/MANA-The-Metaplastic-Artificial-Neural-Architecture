@@ -138,7 +138,7 @@ public class MANA_Node implements Updatable {
                                                      //int srcOffset, int tarOffset) {
         SynapseMatrix synMat = new SynapseMatrix(srcNeu, tarNeu,
                 specs.maxDist, specs.maxDly, specs);
-        MANA_Node tmp = new MANA_Node(srcNeu, tarNeu, parent, isTransUnit, synMat.type);
+        MANA_Node tmp = new MANA_Node(srcNeu, tarNeu, parent, isTransUnit, synMat);
         tmp.synMatrix = synMat;
         tmp.dampener = dampener;
         tmp.stdpRule = stdpRule;
@@ -149,9 +149,9 @@ public class MANA_Node implements Updatable {
     public static MANA_Node buildNodeFromCOO(MANA_Sector parent, SpikingNeuron srcNeu, MANANeurons tarNeu,
                                              COOManaMat cooMat, DampFunction dampener, STDP stdpRule,
                                              boolean isTransUnit) {
-        MANA_Node tmp = new MANA_Node(srcNeu, tarNeu, parent, isTransUnit,
-                SynType.getSynType(srcNeu.isExcitatory(), tarNeu.isExcitatory()));
-        tmp.synMatrix = new SynapseMatrix(cooMat, srcNeu, tarNeu);
+        SynapseMatrix  synMat= new SynapseMatrix(cooMat, srcNeu, tarNeu);
+        MANA_Node tmp = new MANA_Node(srcNeu, tarNeu, parent, isTransUnit, synMat);
+
         tmp.dampener = dampener;
         tmp.stdpRule = stdpRule;
         tmp.pfrLoc = new InterleavedSparseAddOn(tmp.synMatrix.getWeightsTOrd(), 1);
@@ -161,7 +161,7 @@ public class MANA_Node implements Updatable {
     public static MANA_Node buildNodeFromMatrix(MANA_Sector parent, SpikingNeuron srcNeu, MANANeurons tarNeu,
                                                 SynapseMatrix synMatrix, DampFunction dampener, STDP stdpRule,
                                                 boolean isTransUnit)  {
-        MANA_Node tmp = new MANA_Node(srcNeu, tarNeu, parent, isTransUnit, synMatrix.type);
+        MANA_Node tmp = new MANA_Node(srcNeu, tarNeu, parent, isTransUnit, synMatrix);
         tmp.synMatrix = synMatrix;
         tmp.dampener = dampener;
         tmp.stdpRule = stdpRule;
@@ -170,12 +170,13 @@ public class MANA_Node implements Updatable {
     }
 
     private MANA_Node(SpikingNeuron srcNeu, MANANeurons tarNeu, MANA_Sector parent, boolean isTransUnit,
-                      SynType type)  {
+                      SynapseMatrix synMat)  {
         this.parent_sector = parent;
         this.srcData = srcNeu;
         this.targData = tarNeu;
         this.isTransUnit = isTransUnit;
-        this.type = type;
+        this.type = synMat.type;
+        this.synMatrix = synMat;
         normVals = srcNeu.isExcitatory() ? targData.normValsExc : targData.normValsInh;
         normFlags = srcNeu.isExcitatory() ? targData.excSNon : targData.inhSNon;
         sectorSums = srcNeu.isExcitatory() ? parent.secExcSums : parent.secInhSums;
@@ -184,6 +185,10 @@ public class MANA_Node implements Updatable {
         inputIsExternal = srcData instanceof InputNeurons;
         locCurrents = new double[width];
         localSums = new double[width];
+        int [] inD = srcNeu.isExcitatory() ? tarNeu.excInDegree : tarNeu.inhInDegree;
+        accumInDegrees(inD);
+        accumInDegrees(tarNeu.inDegree);
+        accumOutDegrees(srcNeu.getOutDegree());
     }
 
 
@@ -278,7 +283,7 @@ public class MANA_Node implements Updatable {
 
                 // Calculate new dws for synapses tied to arriving events, add their currents to the correct target
                 synMatrix.processEventsSTDP(evtQueue, locCurrents, stdpRule,
-                        targData.lastSpkTime, time, dt);
+                        targData.lastSpkTime, time, dt, srcData.isExcitatory(), targData.isExcitatory());
 
                 // Check for post-synaptic spikes and adjust synapses incoming to them accordingly.
                 for (int ii = 0; ii < width; ++ii) {

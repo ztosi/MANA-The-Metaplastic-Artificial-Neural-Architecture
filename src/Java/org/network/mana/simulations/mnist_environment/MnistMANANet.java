@@ -121,10 +121,10 @@ public class MnistMANANet {
         int oN = 500000;
         float[][] outputs = new float[oN][14];
         eye.setdXdY(1,1);
-        motionOutputP.setMhpOn(false);
-        motionOutputN.setMhpOn(false);
-        motionOutputN.noMHP = true;
-        motionOutputP.noMHP = true;
+        motionOutputP.setMhpOn(true);
+        motionOutputN.setMhpOn(true);
+        //motionOutputN.noMHP = true;
+        //motionOutputP.noMHP = true;
         long start = System.nanoTime();
         centralRes.setMhpOn(false);
         eye.setHeadless(false);
@@ -163,10 +163,10 @@ public class MnistMANANet {
 
                 if(iters==40000) {
                     centralRes.setMhpOn(true);
-                    motionOutputP.setMhpOn(false);
-                    motionOutputN.setMhpOn(false);
-                    motionOutputN.noMHP = true;
-                    motionOutputP.noMHP = true;
+                //    motionOutputP.setMhpOn(false);
+                //    motionOutputN.setMhpOn(false);
+                //    motionOutputN.noMHP = true;
+                //    motionOutputP.noMHP = true;
                 }
                 if(iters % 10000 == 0) {
                     for(String s : sectorNames) {
@@ -203,10 +203,15 @@ public class MnistMANANet {
                 rep_motion.update(time, dt, target_location);
                 //System.out.println(Arrays.toString(rep_motion.position));
 
-                eye.neurons.spks.clear();
+
                 eye.update(dt, time, null);
                 // Update Everyone
                 exec.invoke();
+                eye.neurons.spks.clear();
+                eye.neurons.spks.copyInto(eye.spkBuffer);
+                eye.spkBuffer.clear();
+                eye.neurons.lastSpkTime.pushBufferDeep();
+
 
                 // get the new dx and dy for the eye window
                 dxdy.update(time, dt);
@@ -234,7 +239,7 @@ public class MnistMANANet {
     }
 
     public static void main(String[] args) {
-        MnistMANANet net = new MnistMANANet(2000, "train-images-idx3-ubyte",
+        MnistMANANet net = new MnistMANANet(1000, "train-images-idx3-ubyte",
                 "train-labels-idx1-ubyte");
         net.runNetwork(0, dt);
     }

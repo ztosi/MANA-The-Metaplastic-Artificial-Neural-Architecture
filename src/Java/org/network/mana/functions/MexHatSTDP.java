@@ -2,6 +2,7 @@ package Java.org.network.mana.functions;
 
 import Java.org.network.mana.base_components.Matrices.InterleavedSparseMatrix;
 import Java.org.network.mana.base_components.Matrices.InterleavedSparseAddOn;
+import Java.org.network.mana.base_components.enums.SynType;
 import Java.org.network.mana.utils.BufferedDoubleArray;
 import Java.org.network.mana.utils.Utils;
 
@@ -56,10 +57,11 @@ public final class MexHatSTDP implements  STDP {
 
     // data pack is {arrTime, rel tar ind, udfMultiplier}
 
-    public void preTriggered(InterleavedSparseMatrix wts, int[] dataPack, BufferedDoubleArray lastSpkTimes, double dt) {
+    public void preTriggered(InterleavedSparseMatrix wts, int[] dataPack, BufferedDoubleArray lastSpkTimes, double dt, boolean exc_src, boolean exc_tar) {
         if(dataPack[1]==-1) {
             return;
         }
+        wts.getRawData()[dataPack[1]] -= lRate * SynType.alpha;
         if(wts.getRawData()[dataPack[1]] >= 20) {
             wts.getRawData()[dataPack[1]] = 19.9;
         }

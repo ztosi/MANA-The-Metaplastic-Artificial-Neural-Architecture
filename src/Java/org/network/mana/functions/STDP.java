@@ -10,5 +10,5 @@ public interface STDP {
 
     // data pack is {arrTime, rel tar ind, udfMultiplier}
 
-    void preTriggered(InterleavedSparseMatrix wts, int[] dataPack, BufferedDoubleArray lastSpkTimes, double dt);
+    void preTriggered(InterleavedSparseMatrix wts, int[] dataPack, BufferedDoubleArray lastSpkTimes, double dt, boolean src_exc, boolean tar_exc);
 }

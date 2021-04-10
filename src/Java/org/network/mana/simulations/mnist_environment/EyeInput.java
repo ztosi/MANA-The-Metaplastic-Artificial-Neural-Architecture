@@ -36,6 +36,7 @@ public class EyeInput implements SpikingNeuron, Syncable {
             images.put(ii, new ArrayList<>());
         }
     }
+    public BoolArray spkBuffer;
 
     private boolean headless = false;
 
@@ -89,16 +90,18 @@ public class EyeInput implements SpikingNeuron, Syncable {
     private EyeInput(EyeWindow inp, HashMap<Integer, ArrayList<MNISTImage>> images) {
         id = MANA_Globals.getID();
         eye = inp;
-        down_samp_size = (int)(2.5*eye.eye_width);
+        down_samp_size = (int)(2*eye.eye_width);
         int numDs = down_samp_size*down_samp_size;
-        neurons = new LIFNeurons(2*eye.numPx+numDs, true);
+        neurons = new LIFNeurons(eye.numPx+numDs, true);
         neurons.adaptJump = 0;
         this.images = images;
-        this.outDegree = new int[numDs+2*eye.numPx];
+        this.outDegree = new int[numDs+eye.numPx];
         currentImage = images.get(0).get(0);
         neurons.i_bg.makeUncompressible();
         xyzCoors = new double[neurons.getSize()][3];
-
+        intense = new float[down_samp_size*down_samp_size];
+        spkBuffer = new BoolArray(numDs+eye.numPx);
+        eyeIntense = new float[eye.numPx];
 
 //        frame = new JFrame("Current Image");
     }
@@ -106,6 +109,11 @@ public class EyeInput implements SpikingNeuron, Syncable {
     private byte[] px = null;
     private int [][] c_change = null;
     private int down_samp_size;
+    private float [] intense;
+    private float [] eyeIntense;
+    BufferedImage intenseOut;
+    BufferedImage eyewindow;
+    boolean show_spks = false;
 //    private int[] been = new int[28*28];
     /**
      * Updates the eye input. Randomly selects a new MNIST image if the time interval lapses.
@@ -116,7 +124,7 @@ public class EyeInput implements SpikingNeuron, Syncable {
      * @param time
      */
     public void update(double dt, double time, BoolArray wow) {
-        BoolArray spkBuffer = neurons.spks;
+        //BoolArray spkBuffer = neurons.spks;
         int exposureIts = (int) (exposureTime / dt);
         if (theFrame == null && !headless) {
             theFrame = new JPanel();
@@ -151,13 +159,24 @@ public class EyeInput implements SpikingNeuron, Syncable {
 //                    setBeen(x, y, 199);
 //                }
 //            }
+
         for (int ii = 0; ii < down_samp_size; ii++) {
             for (int jj = 0; jj < down_samp_size; ++jj) {
                 int ind = ii * down_samp_size + jj;
-                double intensity = down_samp[ind] / 255.0;
-                ind = ind+2*eye.numPx;
+                intense[ind] += -dt*intense[ind]/10 + (neurons.spks.get(ind+eye.numPx) ? 50:0);
+                if(intense[ind] > 254) {
+                    intense[ind]=254;
+                }
+                if(intense[ind]<0) {
+                    intense[ind]=0;
+                }
+//                if(neurons.spks.get(ind+2*eye.numPx)) {
+//                    System.out.println("SPK");
+//                }
+                double intensity = (down_samp[ind]+128) / 255.0;
+                int neurind = ind+eye.numPx;
                 //neurons.i_bg.setAt(15+intensity*gamma, ind);
-                neurons.i_bg.setAt(15 + (intensity) * gamma, ind);
+                neurons.i_bg.setAt(15 + (intensity) * 60, neurind);
 
             }
         }
@@ -196,28 +215,46 @@ public class EyeInput implements SpikingNeuron, Syncable {
                     Color c = new Color(down_samp[ii] + 128, down_samp[ii] + 128, down_samp[ii] + 128);
                     lowRes.setRGB(ii % down_samp_size, ii / down_samp_size, c.getRGB());
                 }
+                BufferedImage ioLowRes = new BufferedImage(down_samp_size, down_samp_size, BufferedImage.TYPE_INT_RGB);
+                for(int ii=0; ii<intense.length; ++ii) {
+                    Color c = new Color((int)intense[ii], (int)intense[ii],(int)intense[ii]);
+                    ioLowRes.setRGB(ii%down_samp_size, ii/down_samp_size, c.getRGB());
+                }
 
                 theFrame.removeAll();
-                FlowLayout fl = new FlowLayout();
-                theFrame.setLayout(fl);
+                GridLayout lay = new GridLayout(2,2);
+                theFrame.setLayout(lay);
                 AffineTransform af = AffineTransform.getScaleInstance(20, 20);
                 bob = new BufferedImage(560, 560, BufferedImage.TYPE_INT_RGB);
                 Graphics2D g = bob.createGraphics();
                 g.drawRenderedImage(im, af);
                 JLabel bobL = new JLabel(new ImageIcon(bob));
                 bobL.setVisible(true);
-                theFrame.add(bobL, fl);
+                theFrame.add(bobL);
                 AffineTransform af2 = AffineTransform.getScaleInstance(560 / down_samp_size, 560 / down_samp_size);
                 BufferedImage bob2 = new BufferedImage(560, 560, BufferedImage.TYPE_INT_RGB);
                 Graphics2D g2 = bob2.createGraphics();
                 g2.drawRenderedImage(lowRes, af2);
                 JLabel bobLR = new JLabel(new ImageIcon(bob2));
                 bobLR.setVisible(true);
-                theFrame.add(bobLR, fl);
+                theFrame.add(bobLR);
+                if(show_spks) {
+                    AffineTransform af3 = AffineTransform.getScaleInstance(560 / down_samp_size, 560 / down_samp_size);
+                    intenseOut = new BufferedImage(560, 560, BufferedImage.TYPE_INT_RGB);
+                    Graphics2D g3 = intenseOut.createGraphics();
+                    g3.drawRenderedImage(ioLowRes, af3);
+                    JLabel inten = new JLabel(new ImageIcon(intenseOut));
+                    inten.setVisible(true);
+                    theFrame.add(inten);
+                    eyewindow = new BufferedImage(560, 560, BufferedImage.TYPE_INT_RGB);
+                    JLabel ew = new JLabel(new ImageIcon(eyewindow));
+                    ew.setVisible(true);
+                    theFrame.add(ew);
+                }
                 theFrame.setVisible(true);
                 theFrame.repaint();
                 frame.setLocation(200, 200);
-                frame.setSize(2*560, 560);
+                frame.setSize(3*560, 560);
                 frame.add(theFrame);
                 frame.pack();
                 frame.setVisible(true);
@@ -228,6 +265,30 @@ public class EyeInput implements SpikingNeuron, Syncable {
             for(int ii=0; ii<blck_size; ++ii) {
                 for(int jj=0; jj<blck_size; ++jj) {
                     bob.setRGB( x*20+jj, y*20+ii, c.getRGB());
+                }
+            }
+            if(show_spks) {
+                for (int ii = 0; ii < intense.length; ++ii) {
+                    Color c2 = new Color((int) intense[ii], (int) intense[ii], (int) intense[ii]);
+                    int col = ii % down_samp_size;
+                    int row = ii / down_samp_size;
+                    for (int kk = 0; kk < blck_size; ++kk) {
+                        for (int jj = 0; jj < blck_size; ++jj) {
+                            intenseOut.setRGB(col * 20 + jj, row * 20 + kk, c2.getRGB());
+                        }
+                    }
+                }
+                int blockSz = 560 / eye.eye_width;
+                for (int ii = 0; ii < eye.eye_height; ++ii) {
+                    for (int jj = 0; jj < eye.eye_width; ++jj) {
+                        int index = ii * eye.eye_width + jj;
+                        Color ce = new Color((int) eyeIntense[index], (int) eyeIntense[index], (int) eyeIntense[index]);
+                        for (int kk = 0; kk < blockSz; ++kk) {
+                            for (int ll = 0; ll < blockSz; ++ll) {
+                                eyewindow.setRGB(jj * blockSz + kk, ii * blockSz + ll, ce.getRGB());
+                            }
+                        }
+                    }
                 }
             }
             theFrame.repaint();
@@ -248,8 +309,15 @@ public class EyeInput implements SpikingNeuron, Syncable {
             for(int jj=0; jj<eye.eye_width; ++jj) {
                 int ind = ii*eye.eye_width + jj;
                 double intensity = eye.getData()[ind]/255.0;
+                eyeIntense[ind] = (float)-dt*eyeIntense[ind]/10 + (neurons.spks.get(ind) ? 50:0);
+                if(eyeIntense[ind] > 255) {
+                    eyeIntense[ind]=255;
+                }
+                if(eyeIntense[ind] < 0) {
+                    eyeIntense[ind]=0;
+                }
                 neurons.i_bg.setAt(15+intensity*gamma, ind);
-                neurons.i_bg.setAt(15+(1-intensity)*gamma, ind+(eye.eye_height*eye.eye_width));
+                //neurons.i_bg.setAt(15+(1-intensity)*gamma, ind+(eye.eye_height*eye.eye_width));
             }
         }
         neurons.update(dt, time, spkBuffer);

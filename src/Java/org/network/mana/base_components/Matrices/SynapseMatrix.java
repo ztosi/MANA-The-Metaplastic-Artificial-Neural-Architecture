@@ -271,7 +271,7 @@ public class SynapseMatrix {
      * @param dt simulation delta t
      */
     public void processEventsSTDP(PriorityBlockingQueue<int[]> eventQ, double[] incCur, STDP stdpRule,
-                                  BufferedDoubleArray lastSpkTimes, double time, double dt) {
+                                  BufferedDoubleArray lastSpkTimes, double time, double dt, boolean src_exc, boolean tar_exc) {
         int [] event = null;
         try {
             while (!eventQ.isEmpty() && eventQ.peek()[0] * dt <= time) {
@@ -281,7 +281,7 @@ public class SynapseMatrix {
 //                if(event[1]==-1) {
 //                    return;
 //                }
-                stdpRule.preTriggered(weightsTOrd, event, lastSpkTimes, dt);
+                stdpRule.preTriggered(weightsTOrd, event, lastSpkTimes, dt, src_exc, tar_exc);
                 // TODO: Fix the event thing to make it not dependent on increment in wts mat, so that callers can apply their own offsets without having to know wts
                 if(tOrdLastArrivals.values.length != 0)
                     tOrdLastArrivals.setValue(event[1]/2, time, 0);

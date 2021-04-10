@@ -159,7 +159,8 @@ public enum SynType {
     private static final double[] IEUDF = new double[]{0.25, 700, 20};
     private static final double[] IIUDF = new double[]{0.32, 144, 60};
 
-    public static final double DEF_LEARNING_RATE = 2.5e-6;
+    public static final double DEF_LEARNING_RATE = 5e-6;
+    public static final double alpha=10;
 
     public static final double DEF_EE_C = 0.3;//3
     public static final double DEF_EI_C = 0.3;//2
@@ -167,25 +168,28 @@ public enum SynType {
     public static final double DEF_II_C = 0.2;//1
 
     public static final double ExcTau = 3.0;
-    public static final double InhTau = 6.0;
+    public static final double InhTau = 5.0;
 
     public static final double eeTauPlus = 25;
     public static final double eeTauMinus = 100;
     public static final double eiTauPlus = 20;
     public static final double eiTauMinus = 100;
+    public static final double ieTauPlus = 100;
+    public static final double ieTauMinus = 20;
     public static final double ieSigma = 22;
-    public static final double iiSigma = 12;
+    public static final double iiSigma = 20;
 
     public static final double eeWPlus = 5.1;
     public static final double eeWMinus = 0.9;
     public static final double eiWPlus = 5;
     public static final double eiWMinus = 1;
-    public static final double ieWPlus = 2;
-    public static final double ieWMinus = 1.4;
-    public static final double iiWPlus = 2.2;
-    public static final double iiWMinus = 1.4;
+    public static final double ieWPlus = -1;
+    public static final double ieWMinus = -5;
+    public static final double iiWPlus = 1;
+    public static final double iiWMinus = 1;
     public static final double ie_a = 15;
     public static final double ii_a = 30;
+
 
     public static final double ieNrmSq = 2.0/(Math.sqrt(3*ieSigma)*PI_4TH_RT);
     public static final double ieSigSq = ieSigma * ieSigma;
@@ -235,7 +239,8 @@ public enum SynType {
                 return new HebSTDP(eiTauPlus, eiTauMinus, eiWPlus, eiWMinus, DEF_LEARNING_RATE);
         } else {
             if (tarExc)
-                return new MexHatSTDP(ieWPlus, ieWMinus, ieSigma, DEF_LEARNING_RATE, ie_a);
+                return new HebSTDP(ieTauPlus, ieTauMinus, ieWPlus, ieWMinus, DEF_LEARNING_RATE);
+                //return new MexHatSTDP(ieWPlus, ieWMinus, ieSigma, DEF_LEARNING_RATE, ie_a);
             else
                 return new MexHatSTDP(iiWPlus, iiWMinus, iiSigma, DEF_LEARNING_RATE, ii_a);
         }

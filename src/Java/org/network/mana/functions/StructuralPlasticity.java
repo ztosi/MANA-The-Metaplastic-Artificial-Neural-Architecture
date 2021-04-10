@@ -70,22 +70,22 @@ public class StructuralPlasticity {
                // if (noAdded[ii] < maxAdd) { // We have not added the maximum number of allowed synapses from this source
                     double newDly = growDecision(src.getCoordinates(false)[ii], tar.getCoordinates(false)[jj],
                             //(0.1 * Math.exp(-inDegs[jj]/5.0))*
-                                      0.2,//SynType.getConProbBase(src.isExcitatory(), tar.isExcitatory())/2,
+                                      0.1,//SynType.getConProbBase(src.isExcitatory(), tar.isExcitatory())/2,
                             lambda, maxDist);
-                    if (!tar.isExcitatory()) {
-                        if(src.isExcitatory() && src instanceof  MANANeurons) {
-                            if(((MANANeurons)src).estFR.getData(ii) < tar.estFR.getData(jj)) {
-                                newDly = -1; // If the source is excitatory and target inhibitory and the source is firing slower, no new synapses...
-                            }
-                        }
-                    }
-                if (tar.isExcitatory()) {
-                    if(!src.isExcitatory()) {
-                        if(((MANANeurons)src).estFR.getData(ii) > tar.estFR.getData(jj)) {
-                            newDly = -1; // If the source is inhibitory and target excitatory and the source is firing faster, no new synapses...
-                        }
-                    }
-                }
+//                    if (!tar.isExcitatory()) {
+//                        if(src.isExcitatory() && src instanceof  MANANeurons) {
+//                            if(((MANANeurons)src).estFR.getData(ii) < tar.estFR.getData(jj)) {
+//                                newDly = -1; // If the source is excitatory and target inhibitory and the source is firing slower, no new synapses...
+//                            }
+//                        }
+//                    }
+//                if (tar.isExcitatory()) {
+//                    if(!src.isExcitatory()) {
+//                        if(((MANANeurons)src).estFR.getData(ii) > tar.estFR.getData(jj)) {
+//                            newDly = -1; // If the source is inhibitory and target excitatory and the source is firing faster, no new synapses...
+//                        }
+//                    }
+//                }
                     if(newDly > 0) {
                         double[] data = new double[11];
                         data[0] = SynapseData.DEF_NEW_WEIGHT;
@@ -147,7 +147,7 @@ public class StructuralPlasticity {
 
     public static double growDecision(double[] xyz1, double xyz2[], double c_x, double lambda, double maxDist) {
         double dist = Utils.euclidean(xyz1, xyz2);
-        double prob = 0.2*c_x * Math.exp(-(dist*dist)/(lambda*lambda));
+        double prob = 0.1*c_x * Math.exp(-(dist*dist)/(lambda*lambda)) - 0.001;
         if (ThreadLocalRandom.current().nextDouble() < prob) {
             return (dist/maxDist)*SynapseData.MAX_DELAY;
         }

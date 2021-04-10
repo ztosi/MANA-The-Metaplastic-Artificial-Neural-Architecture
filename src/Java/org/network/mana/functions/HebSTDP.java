@@ -2,6 +2,7 @@ package Java.org.network.mana.functions;
 
 import Java.org.network.mana.base_components.Matrices.InterleavedSparseAddOn;
 import Java.org.network.mana.base_components.Matrices.InterleavedSparseMatrix;
+import Java.org.network.mana.base_components.enums.SynType;
 import Java.org.network.mana.utils.BufferedDoubleArray;
 
 public final class HebSTDP implements STDP {
@@ -43,7 +44,7 @@ public final class HebSTDP implements STDP {
         }
 
         for(int ii = start; ii<end; ii+=wts.getInc()) {
-            wts.getRawData()[ii+1] = lRate* wPlus * Math.pow(-wts.getRawData()[ii]+20, 0.25)/twentRt;
+            wts.getRawData()[ii+1] += lRate* wPlus;// * Math.pow(-wts.getRawData()[ii]+20, 0.25)/twentRt;
         }
         for(int ii = start; ii<end; ii+=wts.getInc()) {
             wts.getRawData()[ii+1] *= Math.exp((lastArrs.values[laLoc]-time)/tauPlus);
@@ -55,10 +56,12 @@ public final class HebSTDP implements STDP {
     // data pack is {arrTime, rel tar ind, udfMultiplier, abs tar ind}
 
     @Override
-    public void preTriggered(InterleavedSparseMatrix wts, int[] dataPack, BufferedDoubleArray lastSpkTimes, double dt) {
+    public void preTriggered(InterleavedSparseMatrix wts, int[] dataPack, BufferedDoubleArray lastSpkTimes, double dt, boolean src_exc, boolean tar_exc) {
         if(dataPack[1]==-1) {
             return;
         }
+        if(!src_exc || !tar_exc)
+            wts.getRawData()[dataPack[1]] -= lRate * SynType.alpha;
         wts.getRawData()[dataPack[1]+1] = -lRate * wMinus
                 * Math.exp((lastSpkTimes.getData(dataPack[3])-(double)dataPack[0]*dt)/tauMinus);
 //        if(wts.getRawData()[dataPack[1]]+1 < (-lRate * wMinus)) {
