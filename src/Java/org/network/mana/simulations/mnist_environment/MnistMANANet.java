@@ -90,10 +90,10 @@ public class MnistMANANet {
         //representation = new SigmoidFilter(repOut);
         rep_motion = new MotionOutput(repOutP, repOutN, 10);
 
-        centralRes.addSector(repOutP, centralRes.defLayout, centralRes.defInpCS);
-        centralRes.addSector(repOutN, centralRes.defLayout, centralRes.defInpCS);
-        centralRes.addSector(motionOutputN, centralRes.defLayout, centralRes.defInpCS);
-        centralRes.addSector(motionOutputP, centralRes.defLayout, centralRes.defInpCS);
+        centralRes.addSector(repOutP, centralRes.defLayout, centralRes.defInpCS2);
+        centralRes.addSector(repOutN, centralRes.defLayout, centralRes.defInpCS2);
+        centralRes.addSector(motionOutputN, centralRes.defLayout, centralRes.defInpCS2);
+        centralRes.addSector(motionOutputP, centralRes.defLayout, centralRes.defInpCS2);
 
         //motionOutputN.i_bg.setAt(19.9, );
 
@@ -211,6 +211,10 @@ public class MnistMANANet {
                 eye.neurons.spks.copyInto(eye.spkBuffer);
                 eye.spkBuffer.clear();
                 eye.neurons.lastSpkTime.pushBufferDeep();
+                motionOutputP.setPrefFRs(20);
+                motionOutputN.setPrefFRs(20);
+                motionOutputN.updateThreshold(dt);
+                motionOutputP.updateThreshold(dt);
 
 
                 // get the new dx and dy for the eye window

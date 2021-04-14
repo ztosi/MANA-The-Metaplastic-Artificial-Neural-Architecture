@@ -124,7 +124,7 @@ public class LIFNeurons implements SpikingNeuron {
     public void update(double dt, double time, BoolArray spkBuffer) {
         for(int ii=0; ii<N; ++ii) {
             double sgn = (lastSpkTime.getData(ii) + ref_p) < time ? 1:0;//Utils.checkSign((lastSpkTime.getData(ii)+ref_p)-time);
-			dv_m[ii] += exc_sf[ii] * i_bg.get(ii);
+			dv_m[ii] = exc_sf[ii] * i_bg.get(ii);
             dv_m[ii] += exc_sf[ii] * (10*i_e[ii]/(excInDegree[ii]+1)) * (0-v_m[ii]); //* sgn;
 			dv_m[ii] += inh_sf[ii] * (10*i_i[ii]/(inhInDegree[ii]+1))*(-80 - v_m[ii]); //* sgn;
 //            dv_m[ii] += (i_e[ii] + i_bg.get(ii)) * sgn;

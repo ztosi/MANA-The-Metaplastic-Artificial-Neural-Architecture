@@ -4,6 +4,7 @@ import Java.org.network.mana.base_components.LIFNeurons;
 import Java.org.network.mana.execution.tasks.Updatable;
 
 import java.util.Arrays;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class SigmoidFilter implements Updatable {
@@ -41,8 +42,8 @@ public class SigmoidFilter implements Updatable {
     public void update(final double time, final double dt) {
         for(int ii=0; ii<neurons.getSize(); ++ii) {
             double val = neurons.getSpikes().get(ii) ? 1.0/dt:0;
-            filterVals[ii] -= dt*filterVals[ii]/10;
-            filterVals[ii] += 0.01*val;
+            filterVals[ii] -= dt*filterVals[ii]/40;
+            filterVals[ii] += 0.01*(val + 0.1* ThreadLocalRandom.current().nextDouble());
             filterVals[ii] = filterVals[ii] > 2 ? 2:filterVals[ii];
 
             //filterInputs[ii] = (float) (dt/leakRate * val + ((1-(dt/leakRate))*filterInputs[ii]));
