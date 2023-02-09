@@ -66,9 +66,9 @@ public class MnistMANANet {
 //        }
 
 
-        motionOutputP = new MANANeurons(2, true);
+        motionOutputP = new MANANeurons(20, true);
         //motionOutputP.mhpFrozen = true;
-        motionOutputN = new MANANeurons(2, true);
+        motionOutputN = new MANANeurons(20, true);
      //   motionOutputN.mhpFrozen = true;
         //motionOutputP.i_bg.setAll(20);
         //motionOutputN.i_bg.setAll(20);

@@ -108,12 +108,12 @@ public class LIFNeurons implements SpikingNeuron {
         if(exc) {
             ref_p = default_exc_ref_p;
 //            tau_m = new DataWrapper(N, true, default_exc_tau_m);
-			tau_m = new DataWrapper(Utils.getRandomArray(Utils.ProbDistType.NORMAL, 25, 1, N));
+			tau_m = new DataWrapper(Utils.getRandomArray(Utils.ProbDistType.NORMAL, 30, 2, N));
             adaptJump = 60;//+ThreadLocalRandom.current().nextGaussian();
         } else {
             ref_p = default_inh_ref_p;
 //            tau_m = new DataWrapper(N, true, default_inh_tau_m);
-			tau_m = new DataWrapper(Utils.getRandomArray(Utils.ProbDistType.NORMAL, 25, 1, N));
+			tau_m = new DataWrapper(Utils.getRandomArray(Utils.ProbDistType.NORMAL, 30, 2, N));
             adaptJump = 60;//+ThreadLocalRandom.current().nextGaussian();
         }
         Arrays.fill(v_m, init_v_m);

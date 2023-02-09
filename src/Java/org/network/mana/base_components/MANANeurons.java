@@ -18,7 +18,7 @@ public class MANANeurons extends LIFNeurons {
 	public static final double init_tau_HP = 1E-4;
 	public static final double final_tau_HP = 1E-5;
 	public static final double init_tau_MHP = 0.01;
-	public static final double final_tau_MHP = 1E-4;
+	public static final double final_tau_MHP = 0;
 	public static final double hp_decay = 5E-6;
 	public static final double mhp_decay = 5E-6;
 	public static final double default_alpha = 2;

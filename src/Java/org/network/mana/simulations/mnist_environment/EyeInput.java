@@ -19,7 +19,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public class EyeInput implements SpikingNeuron, Syncable {
 
     public static final Utils.ProbDistType def_pd = Utils.ProbDistType.NORMAL;
-    public static final int DEFAULT_EXPOSURE_TIME = 5000;
+    public static final int DEFAULT_EXPOSURE_TIME = 10000;
 
     public final int id;
 
@@ -92,15 +92,15 @@ public class EyeInput implements SpikingNeuron, Syncable {
         eye = inp;
         down_samp_size = (int)(2*eye.eye_width);
         int numDs = down_samp_size*down_samp_size;
-        neurons = new LIFNeurons(eye.numPx+numDs, true);
+        neurons = new LIFNeurons(2*eye.numPx+numDs, true);
         neurons.adaptJump = 0;
         this.images = images;
-        this.outDegree = new int[numDs+eye.numPx];
+        this.outDegree = new int[numDs+2*eye.numPx];
         currentImage = images.get(0).get(0);
         neurons.i_bg.makeUncompressible();
         xyzCoors = new double[neurons.getSize()][3];
         intense = new float[down_samp_size*down_samp_size];
-        spkBuffer = new BoolArray(numDs+eye.numPx);
+        spkBuffer = new BoolArray(numDs+2*eye.numPx);
         eyeIntense = new float[eye.numPx];
 
 //        frame = new JFrame("Current Image");
@@ -178,7 +178,7 @@ public class EyeInput implements SpikingNeuron, Syncable {
 //                    System.out.println("SPK");
 //                }
                 double intensity = (down_samp[ind]+128) / 255.0 ;
-                int neurind = ind+eye.numPx;
+                int neurind = ind+2*eye.numPx;
                 //neurons.i_bg.setAt(15+intensity*gamma, ind);
                 neurons.i_bg.setAt(15 + (intensity) * 60, neurind);
 
@@ -276,9 +276,10 @@ public class EyeInput implements SpikingNeuron, Syncable {
                     Color c2 = new Color((int) intense[ii], (int) intense[ii], (int) intense[ii]);
                     int col = ii % down_samp_size;
                     int row = ii / down_samp_size;
+                    blck_size = 560/down_samp_size;
                     for (int kk = 0; kk < blck_size; ++kk) {
                         for (int jj = 0; jj < blck_size; ++jj) {
-                            intenseOut.setRGB(col * 20 + jj, row * 20 + kk, c2.getRGB());
+                            intenseOut.setRGB(col * (560/down_samp_size) + jj, row * (560/down_samp_size) + kk, c2.getRGB());
                         }
                     }
                 }
@@ -311,17 +312,33 @@ public class EyeInput implements SpikingNeuron, Syncable {
 
         for(int ii=0; ii<eye.eye_height; ii++) {
             for(int jj=0; jj<eye.eye_width; ++jj) {
+                double onCentInt = 0;
+                double offCentInt = 0;
+                for(int kk=ii-1; kk<ii+2; kk++) {
+                    if(kk<0 || kk >= eye.eye_height) continue;
+                    for(int ll=jj-1; ll < eye.eye_width;++ll) {
+                        if(ll<0 || ll>=eye.eye_width) continue;
+                        int ind = kk*eye.eye_width + ll;
+                        double intensity = eye.getData()[ind]/255.0;
+                        if(kk==ii && jj==ll){
+                            onCentInt += intensity;
+                            offCentInt -= intensity;
+                        } else {
+                            onCentInt -= 0.125*intensity;
+                            offCentInt += 0.125*intensity;
+                        }
+                    }
+                }
                 int ind = ii*eye.eye_width + jj;
-                double intensity = eye.getData()[ind]/255.0;
-                eyeIntense[ind] = (float)-dt*eyeIntense[ind]/10 + (neurons.spks.get(ind) ? 50:0);
+                eyeIntense[ind] = (float)(-dt*eyeIntense[ind]/10 + (neurons.spks.get(ind) ? 50:0));
                 if(eyeIntense[ind] > 255) {
                     eyeIntense[ind]=255;
                 }
                 if(eyeIntense[ind] < 0) {
                     eyeIntense[ind]=0;
                 }
-                neurons.i_bg.setAt(15+intensity*gamma, ind);
-                //neurons.i_bg.setAt(15+(1-intensity)*gamma, ind+(eye.eye_height*eye.eye_width));
+                neurons.i_bg.setAt(15+onCentInt*gamma, ind);
+                neurons.i_bg.setAt(15+offCentInt*gamma, ind+(eye.eye_height*eye.eye_width));
             }
         }
         for (int ii = 0; ii < down_samp_size; ii++) {
@@ -331,9 +348,9 @@ public class EyeInput implements SpikingNeuron, Syncable {
                 xDiff*=xDiff;
                 int yDiff = dsY-ii;
                 yDiff*=yDiff;
-                double intensity = (down_samp[ind]+128) / 255.0 * 2*Math.exp(-Math.sqrt(yDiff+xDiff)/10);
+                double intensity = (-down_samp[ind]+128) / 255.0 * 2*Math.exp(-Math.sqrt(yDiff+xDiff)/10);
                 int neurind = ind+eye.numPx;
-                neurons.i_bg.setAt(15 + (intensity) * 60, neurind);
+                neurons.i_bg.setAt(15 + (intensity) * 15, neurind);
             }
         }
         neurons.update(dt, time, spkBuffer);

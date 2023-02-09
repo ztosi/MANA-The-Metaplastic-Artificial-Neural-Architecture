@@ -147,7 +147,7 @@ public class StructuralPlasticity {
 
     public static double growDecision(double[] xyz1, double xyz2[], double c_x, double lambda, double maxDist) {
         double dist = Utils.euclidean(xyz1, xyz2);
-        double prob = 0.1*c_x * Math.exp(-(dist*dist)/(lambda*lambda)) - 0.001;
+        double prob = 0.1*c_x * Math.exp(-(dist*dist)/(lambda*lambda/2)) - 0.001;
         if (ThreadLocalRandom.current().nextDouble() < prob) {
             return (dist/maxDist)*SynapseData.MAX_DELAY;
         }

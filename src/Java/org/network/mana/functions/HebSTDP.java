@@ -44,7 +44,7 @@ public final class HebSTDP implements STDP {
         }
 
         for(int ii = start; ii<end; ii+=wts.getInc()) {
-            wts.getRawData()[ii+1] += lRate* wPlus;// * Math.pow(-wts.getRawData()[ii]+20, 0.25)/twentRt;
+            wts.getRawData()[ii+1] += lRate* wPlus * Math.pow(-wts.getRawData()[ii]+20, 0.25)/twentRt;
         }
         for(int ii = start; ii<end; ii+=wts.getInc()) {
             wts.getRawData()[ii+1] *= Math.exp((lastArrs.values[laLoc]-time)/tauPlus);
